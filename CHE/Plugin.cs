@@ -1,0 +1,32 @@
+using BepInEx;
+using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP;
+using HarmonyLib;
+
+namespace CHE;
+
+[BepInPlugin(Id, Name, Version)]
+[BepInProcess("Among Us.exe")]
+public class CHEPlugin : BasePlugin
+{
+    public const string Id = "com.mikuqiayou.che";
+    public const string Name = "CHE";
+    public const string Version = "1.0.0";
+
+    public static CHEPlugin Instance { get; private set; } = null!;
+    public static new ManualLogSource Log => Instance.log;
+
+    private ManualLogSource log = null!;
+    private Harmony? _harmony;
+
+    public override void Load()
+    {
+        Instance = this;
+        log = base.Log;
+
+        _harmony = new Harmony(Id);
+        _harmony.PatchAll();
+
+        log.LogInfo($"{Name} v{Version} 已加载 — by 米裤恰油");
+    }
+}
