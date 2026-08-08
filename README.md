@@ -8,7 +8,7 @@
 
 | 依赖 | 版本 | 说明 |
 | --- | --- | --- |
-| Among Us (Steam) | 2026.3.31 | 与 `AmongUs.GameLibs.Steam` 包锁定一致 |
+| Among Us (Steam) | 2026.3.31 | 直接引用游戏目录 `BepInEx\interop` 中已生成的互操作程序集 |
 | BepInEx.Unity.IL2CPP | 6.0.0-be.735 | 模组加载器 |
 | HarmonyX | 2.10.2 | 方法补丁库 |
 | .NET SDK | 6.0+（目标框架 net6.0） | 开发构建 |
