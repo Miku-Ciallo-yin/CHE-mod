@@ -44,4 +44,22 @@ public abstract class RoleBase
     public virtual void OnReset()
     {
     }
+
+    /// <summary>该职业的玩家被投票放逐时调用（小丑类职业在此判定获胜）</summary>
+    public virtual void OnExile()
+    {
+    }
+
+    /// <summary>本机玩家持有该职业时，每个 FixedUpdate 调用（驱动技能逻辑）</summary>
+    public virtual void OnUpdate()
+    {
+    }
+
+    /// <summary>该职业的玩家成功击杀目标时调用</summary>
+    public virtual void OnMurder(PlayerControl target)
+    {
+    }
+
+    /// <summary>名字下方显示的状态行（如冷却、进度），空字符串表示不显示</summary>
+    public virtual string GetStatusText() => string.Empty;
 }

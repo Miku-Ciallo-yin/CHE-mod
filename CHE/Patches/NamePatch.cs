@@ -21,8 +21,14 @@ public static class NamePatch
         var nameText = __instance.cosmetics.nameText;
         if (nameText == null) return;
 
+        var status = role.GetStatusText();
+        var statusLine = string.IsNullOrEmpty(status)
+            ? string.Empty
+            : $"\n<color=#FFFFFF><size=60%>{status}</size></color>";
+
         nameText.text =
             $"{__instance.Data.PlayerName}\n" +
-            $"{role.ColorTag}<size=75%>{role.Name} / {role.NameEn}</size></color>";
+            $"{role.ColorTag}<size=75%>{role.Name} / {role.NameEn}</size></color>" +
+            statusLine;
     }
 }

@@ -15,6 +15,7 @@ public static class CustomRoleManager
     private static readonly List<Func<RoleBase>> RoleFactories = new()
     {
         () => new Sheriff(), // 船员阵营示例
+        () => new Farmer(),  // 船员阵营：佃农
         () => new Jester(),  // 中立阵营示例
     };
 
@@ -26,6 +27,11 @@ public static class CustomRoleManager
 
     /// <summary>本局是否已完成分配</summary>
     public static bool Assigned { get; private set; }
+
+    /// <summary>
+    /// 通过自定义条件获胜的玩家（如小丑被投出）。非 null 时结算画面只显示该玩家。
+    /// </summary>
+    public static PlayerControl? CustomWinner { get; set; }
 
     /// <summary>
     /// 随机分配职业（每种职业最多一名玩家）。
@@ -65,6 +71,19 @@ public static class CustomRoleManager
         return PlayerRoles.TryGetValue(player.PlayerId, out var role) ? role : null;
     }
 
+    /// <summary>
+    /// 获取玩家阵营：有自定义职业按职业算；无职业时按原版身份（内鬼 / 船员）。
+    /// </summary>
+    public static Faction GetFaction(PlayerControl player)
+    {
+        var role = GetRole(player);
+        if (role != null) return role.Faction;
+
+        if (player.Data != null && player.Data.Role != null && player.Data.Role.IsImpostor)
+            return Faction.Impostor;
+        return Faction.Crewmate;
+    }
+
     /// <summary>清空分配（游戏结束 / 返回大厅时调用）</summary>
     public static void Reset()
     {
@@ -72,5 +91,6 @@ public static class CustomRoleManager
             role.OnReset();
         PlayerRoles.Clear();
         Assigned = false;
+        CustomWinner = null;
     }
 }
