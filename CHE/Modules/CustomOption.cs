@@ -75,6 +75,7 @@ public static class CustomOptions
     public const byte ModGroupId = 0;
 
     public static CustomOption ImpostorKnowEachOther { get; private set; } = null!;
+    public static CustomOption TestMode { get; private set; } = null!;
     public static CustomOption GuesserCanGuessAddons { get; private set; } = null!;
     public static CustomOption FarmerStealChance { get; private set; } = null!;
     public static CustomOption FarmerStealsForKill { get; private set; } = null!;
@@ -88,6 +89,8 @@ public static class CustomOptions
         // 模组全局设置（ID 100 起）
         ImpostorKnowEachOther = CustomOption.Register(100, ModGroupId, "内鬼互认",
             ModConfig.ImpostorKnowEachOther.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        TestMode = CustomOption.Register(106, ModGroupId, "测试模式",
+            ModConfig.TestMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
 
         // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())

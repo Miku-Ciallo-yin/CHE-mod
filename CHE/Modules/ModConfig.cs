@@ -26,6 +26,9 @@ public static class ModConfig
     /// <summary>赌怪：是否可以猜测附加职业（默认关）</summary>
     public static ConfigEntry<bool> GuesserCanGuessAddons { get; private set; } = null!;
 
+    /// <summary>模组设置：测试模式，游戏不会正常结束（默认关）</summary>
+    public static ConfigEntry<bool> TestMode { get; private set; } = null!;
+
     public static void Init(ConfigFile config)
     {
         FarmerStealChance = config.Bind("佃农 Farmer", "抢夺概率 StealChance", 0.2f,
@@ -42,5 +45,8 @@ public static class ModConfig
 
         GuesserCanGuessAddons = config.Bind("赌怪 Guesser", "可猜测附加职业 CanGuessAddons", false,
             "开启后赌怪的猜测列表包含附加职业");
+
+        TestMode = config.Bind("模组设置 Mod", "测试模式 TestMode", false,
+            "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");
     }
 }
