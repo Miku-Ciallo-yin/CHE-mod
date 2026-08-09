@@ -1,6 +1,7 @@
 using CHE.Roles;
 using HarmonyLib;
 using InnerNet;
+using AmongUs.GameOptions;
 
 namespace CHE.Patches;
 
@@ -26,6 +27,14 @@ public static class RoleAssignPatch
 
         if (CustomRoleManager.Assigned) return;
         if (PlayerControl.LocalPlayer == null) return;
+
+        // 职业系统只在经典模式启用（躲猫猫等模式不分配职业）
+        var options = GameOptionsManager.Instance?.CurrentGameOptions;
+        if (options != null && options.GameMode != GameModes.Normal
+            && options.GameMode != GameModes.NormalFools) return;
+
+        // 联机时只有主机分配（随后 RPC 广播）；单机 / 离线局（无其他客户端）直接本地分配
+        if (!client.AmHost && client.allClients.Count > 0) return;
 
         CustomRoleManager.AssignRoles();
     }

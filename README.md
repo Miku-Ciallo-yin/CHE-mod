@@ -13,7 +13,7 @@
 | HarmonyX | 2.10.2 | 方法补丁库 |
 | .NET SDK | 6.0+（目标框架 net6.0） | 开发构建 |
 
-以上版本与 `D:\st\steamapps\common\Among Us\TOME\TONE 200A5` 中的实际运行环境一致。
+以上版本与游戏目录 `D:\st\steamapps\common\Among Us\CNE` 中的实际运行环境一致（编译直接引用该目录 `BepInEx\interop` 的互操作程序集）。
 
 ## 构建
 
@@ -30,7 +30,9 @@ dotnet build
 CHE/
 ├── Plugin.cs                 # BepInEx 插件入口
 ├── Modules/
-│   └── ModConfig.cs          # 配置项（BepInEx\config\com.mikuqiayou.che.cfg）
+│   ├── ModConfig.cs          # BepInEx 配置（作为游戏内选项的默认值）
+│   ├── CustomOption.cs       # 自定义游戏选项（大厅设置菜单，RPC 同步）
+│   └── RpcSync.cs            # 自定义 RPC：职业分配 217 / 选项值 218
 ├── Roles/
 │   ├── Faction.cs            # 阵营枚举：船员 / 内鬼 / 中立
 │   ├── RoleBase.cs           # 职业基类（OnUpdate / OnExile / OnMurder 钩子）
@@ -39,11 +41,16 @@ CHE/
 │   ├── Crewmate/Farmer.cs    # 佃农（船员，抢任务解锁击杀，误杀船员转中立）
 │   └── Neutral/Jester.cs     # 小丑（中立，被投出即获胜）
 └── Patches/
-    ├── RoleAssignPatch.cs    # 对局开始分配职业、结束重置
+    ├── RoleAssignPatch.cs    # 对局开始分配职业（主机）、结束重置
+    ├── RpcPatch.cs           # 自定义 RPC 接收入口（拦截 CHE CallId）
+    ├── ModGameOptionsMenu.cs  # 设置 UI 共享状态（页签编号/布局常量）
+    ├── ModSettingsMenuPatch.cs # 设置菜单页签：模板克隆、按钮、ChangeTab 拦截
+    ├── ModOptionsMenuPatch.cs # 页签内容构建（参考 TOHE，Initialize/CreateSettings 接管）
     ├── RoleUpdatePatch.cs    # 职业技能驱动（每帧 OnUpdate）
     ├── MurderPatch.cs        # 击杀结算钩子（OnMurder）
     ├── NamePatch.cs          # 名字下方显示职业与状态行
     ├── ExilePatch.cs         # 放逐检测，触发职业 OnExile 钩子
+    ├── ImpostorVisionPatch.cs # 内鬼不互认（名字颜色覆盖，对局+会议）
     └── EndGamePatch.cs       # 结算画面覆盖（自定义胜利者）
 ```
 
@@ -57,25 +64,44 @@ CHE/
 
 ## 配置
 
-配置文件：`BepInEx\config\com.mikuqiayou.che.cfg`（首次运行自动生成，改完重启游戏生效）
+两种方式，游戏内选项优先：
 
-| 配置项 | 默认值 | 说明 |
+- **大厅设置菜单（推荐）**：创建房间后打开"游戏设置 → 编辑"，顶部页签除原版的
+  预设 / 游戏设置 / 职业设置外，新增 **"模组设置"** 和 **"职业设置"** 两个 CHE 页签：
+  - 模组设置：全局功能开关（内鬼互认等），平铺调整。
+  - 职业设置：一级为职业名称按钮（右侧显示当前生成概率），点击职业名进入该职业的配置页面，
+    "← 返回"回到职业列表。
+  仅主机可修改，修改后经 RPC 同步给所有客户端。
+- **BepInEx 配置文件**：`BepInEx\config\com.mikuqiayou.che.cfg`（首次运行自动生成），
+  仅作为游戏内选项的**默认值**，改完重启游戏生效。
+
+| 游戏内选项 | 默认值 | 说明 |
 | --- | --- | --- |
-| 抢夺概率 StealChance | 0.2 | 佃农靠近船员时每秒抢夺一个任务的概率（0~1） |
-| 解锁击杀所需任务数 StealsForKill | 3 | 抢夺多少个任务后（并完成现有任务）获得击杀能力 |
-| 击杀冷却 KillCooldown | 30 | 佃农击杀冷却（秒） |
-| 抢夺范围 StealRange | 1.5 | 佃农抢夺任务的靠近范围（游戏单位） |
+| 模组设置：内鬼互认 | 开 | 关闭后内鬼互不相识：对局和会议中内鬼看其他内鬼名字不再显示红色 |
+| 生成概率% | 100 | 该职业在开局分配中出现的概率（0~100，步进 10） |
+| 佃农：抢夺概率% | 20 | 靠近船员时每秒抢夺一个任务的概率 |
+| 佃农：解锁击杀任务数 | 3 | 抢夺多少个任务后（并完成现有任务）获得击杀能力 |
+| 佃农：击杀CD(秒) | 30 | 击杀能力冷却时间 |
+| 佃农：抢夺范围×0.1 | 15（=1.5） | 抢夺任务的靠近范围（游戏单位） |
 
 ## 添加新职业
 
 1. 在 `CHE/Roles/<阵营>/` 下新建类，继承 `RoleBase`，实现 `Name` / `NameEn` / `Faction` / `Color`。
-2. 在 `CustomRoleManager.RoleFactories` 中注册一行 `() => new YourRole()`。
+2. 在 `CustomRoleManager.RoleRegistry` 中注册一行 `(新ID, () => new YourRole())`（ID 用于 RPC 同步，不要改动已有 ID）。
+
+## 联机同步说明
+
+- **职业分配**：开局由主机随机分配（按各职业"生成概率"），通过自定义 RPC（CallId 217）广播，各端本地应用。
+- **选项值**：主机在大厅设置菜单修改 CHE 选项后，通过 RPC（CallId 218）实时广播；开局分配时再全量同步一次。
+- **状态同步**：放逐（小丑获胜）、击杀（佃农转中立）等事件游戏本身会在每个客户端执行，
+  任务转移走官方 `RpcSetTasks`，因此这些状态无需额外 RPC 即可保持一致。
+- 所有玩家都需要安装本模组才能正常联机游玩。
 
 ## TODO（参考 TONE 的完整功能）
 
-- [ ] RPC 同步职业分配结果（当前仅本机分配，联机需广播）
+- [x] RPC 同步职业分配结果（主机广播，客户端应用）
 - [ ] 职业技能按钮与冷却系统
 - [x] 中立阵营独立胜利判定（小丑被投出获胜已实现）
-- [ ] 职业生成概率 / 数量选项（ lobby 设置界面）
+- [x] 职业生成概率选项（大厅设置界面，含佃农职业参数）
 - [ ] 职业介绍过场动画（IntroCutscene 补丁）
 - [ ] 本地化多语言支持

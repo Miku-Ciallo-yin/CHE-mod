@@ -20,6 +20,9 @@ public static class ModConfig
     /// <summary>佃农：抢夺任务的靠近范围（游戏单位，默认 1.5）</summary>
     public static ConfigEntry<float> FarmerStealRange { get; private set; } = null!;
 
+    /// <summary>模组设置：内鬼是否互认（默认开）</summary>
+    public static ConfigEntry<bool> ImpostorKnowEachOther { get; private set; } = null!;
+
     public static void Init(ConfigFile config)
     {
         FarmerStealChance = config.Bind("佃农 Farmer", "抢夺概率 StealChance", 0.2f,
@@ -30,5 +33,8 @@ public static class ModConfig
             "击杀能力冷却时间（秒）");
         FarmerStealRange = config.Bind("佃农 Farmer", "抢夺范围 StealRange", 1.5f,
             "距离船员多近可以抢夺任务（游戏单位）");
+
+        ImpostorKnowEachOther = config.Bind("模组设置 Mod", "内鬼互认 ImpostorKnowEachOther", true,
+            "内鬼之间是否互相可见（红色名字）；关闭后内鬼互不相识");
     }
 }

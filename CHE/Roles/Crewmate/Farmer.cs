@@ -65,8 +65,8 @@ public class Farmer : RoleBase
     /// <summary>对范围内的每个船员按概率抢夺一个任务</summary>
     private void TryStealFromNearby()
     {
-        var range = ModConfig.FarmerStealRange.Value;
-        var chance = Mathf.Clamp01(ModConfig.FarmerStealChance.Value);
+        var range = CustomOptions.FarmerStealRange.ScaledValue;
+        var chance = Mathf.Clamp01(CustomOptions.FarmerStealChance.ScaledValue);
         if (chance <= 0f) return;
 
         foreach (var victim in PlayerControl.AllPlayerControls)
@@ -105,14 +105,14 @@ public class Farmer : RoleBase
         StealCount++;
         CHEPlugin.Log.LogInfo(
             $"[CHE] 佃农抢夺了 {victim.Data.PlayerName} 的一个任务 " +
-            $"({StealCount}/{ModConfig.FarmerStealsForKill.Value})");
+            $"({StealCount}/{CustomOptions.FarmerStealsForKill.Value})");
         return true;
     }
 
     /// <summary>抢够数量且现有任务全部完成时解锁击杀能力</summary>
     private void CheckKillUnlock()
     {
-        if (StealCount < ModConfig.FarmerStealsForKill.Value) return;
+        if (StealCount < CustomOptions.FarmerStealsForKill.Value) return;
         if (Player!.Data!.Tasks.ToArray().Any(t => !t.Complete)) return;
 
         HasKillAbility = true;
@@ -133,7 +133,7 @@ public class Farmer : RoleBase
         if (target == null) return;
 
         Player.RpcMurderPlayer(target, true);
-        KillTimer = ModConfig.FarmerKillCooldown.Value;
+        KillTimer = CustomOptions.FarmerKillCooldown.ScaledValue;
         CHEPlugin.Log.LogInfo($"[CHE] 佃农击杀了 {target.Data!.PlayerName}");
     }
 
@@ -151,6 +151,6 @@ public class Farmer : RoleBase
     {
         if (HasKillAbility)
             return KillTimer > 0f ? $"击杀冷却 {KillTimer:0}s" : "[Q] 击杀就绪";
-        return $"抢夺进度 {StealCount}/{ModConfig.FarmerStealsForKill.Value}";
+        return $"抢夺进度 {StealCount}/{CustomOptions.FarmerStealsForKill.Value}";
     }
 }

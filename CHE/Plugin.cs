@@ -28,6 +28,7 @@ public class CHEPlugin : BasePlugin
         _harmony.PatchAll();
 
         Modules.ModConfig.Init(Config);
+        Modules.CustomOptions.Init();
 
         log.LogInfo($"{Name} v{Version} 已加载 — by 米裤恰油");
     }

@@ -1,3 +1,4 @@
+using CHE.Modules;
 using CHE.Roles.Crewmate;
 using CHE.Roles.Neutral;
 
@@ -5,18 +6,18 @@ namespace CHE.Roles;
 
 /// <summary>
 /// 职业管理器：注册职业、分配职业、查询玩家职业。
-/// 注意：当前骨架仅做本机分配，多人同步需要通过 RPC（TODO）。
+/// 联机时由主机随机分配并通过 RPC 广播，客户端收到后本地应用（见 <see cref="RpcSync"/>）。
 /// </summary>
 public static class CustomRoleManager
 {
     /// <summary>
-    /// 已注册的职业工厂。新增职业在这里加一行即可参与随机分配。
+    /// 已注册的职业表：稳定 ID -> 工厂。ID 用于 RPC 同步，新增职业时请勿改动已有 ID。
     /// </summary>
-    private static readonly List<Func<RoleBase>> RoleFactories = new()
+    private static readonly (byte Id, Func<RoleBase> Factory)[] RoleRegistry =
     {
-        () => new Sheriff(), // 船员阵营示例
-        () => new Farmer(),  // 船员阵营：佃农
-        () => new Jester(),  // 中立阵营示例
+        (1, () => new Sheriff()), // 船员阵营示例
+        (2, () => new Farmer()),  // 船员阵营：佃农
+        (3, () => new Jester()),  // 中立阵营：小丑
     };
 
     /// <summary>PlayerId -> 职业实例</summary>
@@ -34,35 +35,69 @@ public static class CustomRoleManager
     public static PlayerControl? CustomWinner { get; set; }
 
     /// <summary>
-    /// 随机分配职业（每种职业最多一名玩家）。
-    /// TODO: 参考 TONE 增加职业数量配置、按阵营配比、RPC 广播分配结果。
+    /// 主机随机分配职业（每种职业最多一名玩家），并广播给所有客户端。
+    /// TODO: 参考 TONE 增加职业数量配置、按阵营配比。
     /// </summary>
     public static void AssignRoles()
     {
-        Reset();
-
         var players = PlayerControl.AllPlayerControls.ToArray()
             .Where(p => p != null && p.Data != null)
             .ToList();
         if (players.Count == 0) return;
 
         var rng = new Random();
-        foreach (var factory in RoleFactories)
+        var assignments = new List<(byte PlayerId, byte RoleId)>();
+        var taken = new HashSet<byte>();
+
+        foreach (var (id, _) in RoleRegistry)
         {
-            var candidates = players.Where(p => !PlayerRoles.ContainsKey(p.PlayerId)).ToList();
+            // 按大厅设置中的生成概率决定该职业是否出场
+            if (rng.Next(100) >= CustomOptions.GetRoleChance(id)) continue;
+
+            var candidates = players.Where(p => !taken.Contains(p.PlayerId)).ToList();
             if (candidates.Count == 0) break;
 
             var pick = candidates[rng.Next(candidates.Count)];
-            var role = factory();
-            role.OnAssign(pick);
-            PlayerRoles[pick.PlayerId] = role;
+            taken.Add(pick.PlayerId);
+            assignments.Add((pick.PlayerId, id));
+        }
 
-            CHEPlugin.Log.LogInfo($"[CHE] {pick.Data.PlayerName} -> {role.Name} ({role.Faction})");
+        ApplyRoleAssignments(assignments);
+        RpcSync.BroadcastOptions();
+        RpcSync.BroadcastRoleAssignments(assignments);
+    }
+
+    /// <summary>
+    /// 应用一份分配结果（主机本地应用 / 客户端收到 RPC 后应用）。
+    /// </summary>
+    public static void ApplyRoleAssignments(IReadOnlyList<(byte PlayerId, byte RoleId)> assignments)
+    {
+        Reset();
+
+        foreach (var (playerId, roleId) in assignments)
+        {
+            var player = PlayerControl.AllPlayerControls.ToArray()
+                .FirstOrDefault(p => p != null && p.PlayerId == playerId);
+            var factory = RoleRegistry.FirstOrDefault(r => r.Id == roleId).Factory;
+            if (player == null || player.Data == null || factory == null) continue;
+
+            var role = factory();
+            role.OnAssign(player);
+            PlayerRoles[playerId] = role;
+
+            CHEPlugin.Log.LogInfo($"[CHE] {player.Data.PlayerName} -> {role.Name} ({role.Faction})");
         }
 
         Assigned = true;
         foreach (var role in PlayerRoles.Values)
             role.OnGameStart();
+    }
+
+    /// <summary>已注册职业（ID 与名称），供选项系统生成"生成概率"设置项</summary>
+    public static IEnumerable<(byte Id, string Name)> GetRegisteredRoles()
+    {
+        foreach (var (id, factory) in RoleRegistry)
+            yield return (id, factory().Name);
     }
 
     /// <summary>获取玩家职业，无职业返回 null</summary>
