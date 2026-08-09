@@ -54,6 +54,7 @@ CHE/
     ├── GuesserPatch.cs       # 赌怪：会议准星标记 + 猜测面板
     ├── ForceEndPatch.cs      # /end 聊天命令 + ALT+F4 强制结束（仅主机对局中）
     ├── TestModePatch.cs      # 测试模式：跳过正常结束判定
+    ├── StartAnyCountPatch.cs # 任意人数直接开局（跳过 4 人下限检查）
     └── EndGamePatch.cs       # 结算画面覆盖（自定义胜利者）
 ```
 
