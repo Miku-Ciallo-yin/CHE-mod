@@ -39,7 +39,7 @@ public static class MainMenuPatch
             CustomPopup.Setup(__instance.quitButton, tmpTemplate);
             SetupBackground(__instance);
             MakeLeftPanelTransparent(__instance);
-            RemoveRightFrame(__instance);
+            RemoveFloatersAndFrame(__instance);
             CreateVersionBadge(__instance, tmpTemplate);
             CreateButtons(__instance);
 
@@ -91,16 +91,32 @@ public static class MainMenuPatch
         {
             if (sr == null) continue;
             var c = sr.color;
-            c.a *= 0.55f;
+            c.a *= 0.3f;
             sr.color = c;
         }
     }
 
-    /// <summary>去掉右侧黑色方框（菜单下的 Square 对象），让背景图完整显示</summary>
-    private static void RemoveRightFrame(MainMenuManager menu)
+    /// <summary>
+    /// 去掉漂浮小人和右侧边框（对象路径来自场景诊断）：
+    /// - 漂浮小人：场景对象 Ambience/PlayerParticles
+    /// - 右侧边框：MainUI/AspectScaler/RightPanel 自身的背景精灵及其 Background/Square 直接子级
+    /// </summary>
+    private static void RemoveFloatersAndFrame(MainMenuManager menu)
     {
-        var square = menu.transform.Find("Square");
-        if (square != null) square.gameObject.SetActive(false);
+        var particles = GameObject.Find("Ambience")?.transform.Find("PlayerParticles");
+        if (particles != null) particles.gameObject.SetActive(false);
+
+        var rightPanel = menu.transform.Find("MainUI/AspectScaler/RightPanel");
+        if (rightPanel == null) return;
+
+        foreach (var sr in rightPanel.GetComponents<SpriteRenderer>())
+            if (sr != null) sr.enabled = false;
+        for (var i = 0; i < rightPanel.childCount; i++)
+        {
+            var child = rightPanel.GetChild(i);
+            if (child.name is "Background" or "Square")
+                child.gameObject.SetActive(false);
+        }
     }
 
     /// <summary>从 CHE-DATA 加载自定义背景（优先 background.png，否则取目录里第一张 PNG）</summary>
