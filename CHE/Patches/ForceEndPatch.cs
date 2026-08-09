@@ -46,8 +46,19 @@ public static class ForceEndPatch
         {
             if (string.IsNullOrEmpty(chatText)) return true;
             if (!__instance.AmOwner) return true;
-            if (chatText.Trim().ToLowerInvariant() != "/end") return true;
 
+            var text = chatText.Trim();
+            if (text.Equals("/end", System.StringComparison.OrdinalIgnoreCase))
+                return HandleEnd();
+            if (text.StartsWith("/start", System.StringComparison.OrdinalIgnoreCase))
+                return HandleStart(text);
+
+            return true;
+        }
+
+        /// <summary>/end：强制结束对局（仅主机、对局中）</summary>
+        private static bool HandleEnd()
+        {
             if (AmongUsClient.Instance == null
                 || !AmongUsClient.Instance.AmHost
                 || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
@@ -58,6 +69,33 @@ public static class ForceEndPatch
 
             ForceEnd();
             return false;
+        }
+
+        /// <summary>/start [秒数]：以指定倒计时开始游戏（仅主机、大厅中）</summary>
+        private static bool HandleStart(string text)
+        {
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost)
+            {
+                CHEPlugin.Log.LogWarning("[CHE] /start 仅主机可用");
+                return false;
+            }
+
+            var sec = StartAnyCountPatch.DefaultCountdown;
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length > 1)
+                int.TryParse(parts[1], out sec);
+            sec = UnityEngine.Mathf.Clamp(sec, 0, 99);
+
+            var manager = GameStartManager.Instance;
+            if (manager == null)
+            {
+                CHEPlugin.Log.LogWarning("[CHE] /start 仅在大厅中可用");
+                return false;
+            }
+
+            CHEPlugin.Log.LogInfo($"[CHE] /start：{sec} 秒倒计时开始游戏");
+            manager.SetStartCounter((sbyte)sec);
+            return false; // 拦截命令，不发送到聊天
         }
     }
 }
