@@ -39,9 +39,22 @@ public static class MainMenuPatch
             CustomPopup.Setup(__instance.quitButton, tmpTemplate);
             SetupBackground(__instance);
             MakeLeftPanelTransparent(__instance);
-            RemoveFloatersAndFrame(__instance);
             CreateVersionBadge(__instance, tmpTemplate);
             CreateButtons(__instance);
+
+            // 诊断：输出 AspectScaler 下精灵的路径/尺寸/颜色（定位黑色边框与黑色底图）
+            var scaler = __instance.transform.Find("MainUI/AspectScaler");
+            if (scaler != null)
+                foreach (var sr in scaler.GetComponentsInChildren<SpriteRenderer>(true))
+                {
+                    if (sr == null) continue;
+                    var path = sr.name;
+                    var t = sr.transform.parent;
+                    while (t != null && t.name != "AspectScaler") { path = t.name + "/" + path; t = t.parent; }
+                    var s = sr.bounds.size;
+                    CHEPlugin.Log.LogInfo(
+                        $"[CHE-DUMP] {path} | size=({s.x:0.0},{s.y:0.0}) | color={sr.color}");
+                }
 
             CHEPlugin.Log.LogInfo("[CHE] 主菜单定制已创建");
         }
@@ -81,42 +94,56 @@ public static class MainMenuPatch
         if (vanilla != null) vanilla.SetActive(false);
     }
 
-    /// <summary>左侧菜单面板（含按钮背景）改为半透明，让背景图透出来</summary>
+    /// <summary>左侧菜单：隐藏黑色底图（LeftPanel 自身精灵），按钮透明度调至 80%</summary>
     private static void MakeLeftPanelTransparent(MainMenuManager menu)
     {
         var panel = menu.playButton.transform.parent;
         if (panel == null) return;
 
+        // 面板自身的黑色底图直接隐藏
+        foreach (var sr in panel.GetComponents<SpriteRenderer>())
+            if (sr != null) sr.enabled = false;
+
+        // 其余（按钮背景等）透明度 80%
         foreach (var sr in panel.GetComponentsInChildren<SpriteRenderer>(true))
         {
-            if (sr == null) continue;
+            if (sr == null || !sr.enabled) continue;
             var c = sr.color;
-            c.a *= 0.3f;
+            c.a *= 0.8f;
             sr.color = c;
         }
     }
 
     /// <summary>
-    /// 去掉漂浮小人和右侧边框（对象路径来自场景诊断）：
+    /// 去掉漂浮小人和右侧边框（对象来自场景诊断）：
     /// - 漂浮小人：场景对象 Ambience/PlayerParticles
-    /// - 右侧边框：MainUI/AspectScaler/RightPanel 自身的背景精灵及其 Background/Square 直接子级
+    /// - 右侧边框：AspectScaler 下的 RightPanel 自身精灵（8x5.1 黑色边框）
     /// </summary>
     private static void RemoveFloatersAndFrame(MainMenuManager menu)
     {
         var particles = GameObject.Find("Ambience")?.transform.Find("PlayerParticles");
         if (particles != null) particles.gameObject.SetActive(false);
 
-        var rightPanel = menu.transform.Find("MainUI/AspectScaler/RightPanel");
-        if (rightPanel == null) return;
+        var rightPanel = FindDirectChild(menu.transform, "MainUI/AspectScaler", "RightPanel");
+        if (rightPanel == null)
+        {
+            CHEPlugin.Log.LogWarning("[CHE] 未找到 RightPanel，边框隐藏跳过");
+            return;
+        }
 
         foreach (var sr in rightPanel.GetComponents<SpriteRenderer>())
             if (sr != null) sr.enabled = false;
-        for (var i = 0; i < rightPanel.childCount; i++)
-        {
-            var child = rightPanel.GetChild(i);
-            if (child.name is "Background" or "Square")
-                child.gameObject.SetActive(false);
-        }
+    }
+
+    /// <summary>先按斜杠路径找到父级，再在直接子级里按名字查找（避免多级 Find 失效）</summary>
+    private static Transform? FindDirectChild(Transform root, string parentPath, string childName)
+    {
+        var parent = root.Find(parentPath);
+        if (parent == null) return null;
+        for (var i = 0; i < parent.childCount; i++)
+            if (parent.GetChild(i).name == childName)
+                return parent.GetChild(i);
+        return null;
     }
 
     /// <summary>从 CHE-DATA 加载自定义背景（优先 background.png，否则取目录里第一张 PNG）</summary>
