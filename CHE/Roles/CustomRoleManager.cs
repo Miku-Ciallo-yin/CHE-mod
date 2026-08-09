@@ -1,11 +1,12 @@
 using CHE.Modules;
+using CHE.Roles.Addons;
 using CHE.Roles.Crewmate;
 using CHE.Roles.Neutral;
 
 namespace CHE.Roles;
 
 /// <summary>
-/// 职业管理器：注册职业、分配职业、查询玩家职业。
+/// 职业管理器：注册职业/附加职业、分配、查询。
 /// 联机时由主机随机分配并通过 RPC 广播，客户端收到后本地应用（见 <see cref="RpcSync"/>）。
 /// </summary>
 public static class CustomRoleManager
@@ -20,8 +21,19 @@ public static class CustomRoleManager
         (3, () => new Jester()),  // 中立阵营：小丑
     };
 
+    /// <summary>
+    /// 已注册的附加职业表（ID 与职业同空间，从 4 起）。附加职业可与主职业叠加。
+    /// </summary>
+    private static readonly (byte Id, Func<AddonBase> Factory)[] AddonRegistry =
+    {
+        (Guesser.AddonId, () => new Guesser()), // 附加：赌怪
+    };
+
     /// <summary>PlayerId -> 职业实例</summary>
     private static readonly Dictionary<byte, RoleBase> PlayerRoles = new();
+
+    /// <summary>PlayerId -> 附加职业列表</summary>
+    private static readonly Dictionary<byte, List<AddonBase>> PlayerAddons = new();
 
     /// <summary>本局已分配的全部职业</summary>
     public static IReadOnlyCollection<RoleBase> ActiveRoles => PlayerRoles.Values;
@@ -35,7 +47,7 @@ public static class CustomRoleManager
     public static PlayerControl? CustomWinner { get; set; }
 
     /// <summary>
-    /// 主机随机分配职业（每种职业最多一名玩家），并广播给所有客户端。
+    /// 主机随机分配职业和附加职业（每种最多一名玩家），并广播给所有客户端。
     /// TODO: 参考 TONE 增加职业数量配置、按阵营配比。
     /// </summary>
     public static void AssignRoles()
@@ -62,15 +74,27 @@ public static class CustomRoleManager
             assignments.Add((pick.PlayerId, id));
         }
 
-        ApplyRoleAssignments(assignments);
+        // 附加职业：与主职业独立，可叠加在任意玩家身上
+        var addonAssignments = new List<(byte PlayerId, byte AddonId)>();
+        foreach (var (addonId, _) in AddonRegistry)
+        {
+            if (rng.Next(100) >= CustomOptions.GetRoleChance(addonId)) continue;
+
+            var pick = players[rng.Next(players.Count)];
+            addonAssignments.Add((pick.PlayerId, addonId));
+        }
+
+        ApplyRoleAssignments(assignments, addonAssignments);
         RpcSync.BroadcastOptions();
-        RpcSync.BroadcastRoleAssignments(assignments);
+        RpcSync.BroadcastRoleAssignments(assignments, addonAssignments);
     }
 
     /// <summary>
     /// 应用一份分配结果（主机本地应用 / 客户端收到 RPC 后应用）。
     /// </summary>
-    public static void ApplyRoleAssignments(IReadOnlyList<(byte PlayerId, byte RoleId)> assignments)
+    public static void ApplyRoleAssignments(
+        IReadOnlyList<(byte PlayerId, byte RoleId)> assignments,
+        IReadOnlyList<(byte PlayerId, byte AddonId)> addonAssignments)
     {
         Reset();
 
@@ -82,10 +106,28 @@ public static class CustomRoleManager
             if (player == null || player.Data == null || factory == null) continue;
 
             var role = factory();
+            role.Id = roleId;
             role.OnAssign(player);
             PlayerRoles[playerId] = role;
 
             CHEPlugin.Log.LogInfo($"[CHE] {player.Data.PlayerName} -> {role.Name} ({role.Faction})");
+        }
+
+        foreach (var (playerId, addonId) in addonAssignments)
+        {
+            var player = PlayerControl.AllPlayerControls.ToArray()
+                .FirstOrDefault(p => p != null && p.PlayerId == playerId);
+            var factory = AddonRegistry.FirstOrDefault(a => a.Id == addonId).Factory;
+            if (player == null || player.Data == null || factory == null) continue;
+
+            var addon = factory();
+            addon.Id = addonId;
+            addon.OnAssign(player);
+            if (!PlayerAddons.TryGetValue(playerId, out var list))
+                PlayerAddons[playerId] = list = new List<AddonBase>();
+            list.Add(addon);
+
+            CHEPlugin.Log.LogInfo($"[CHE] {player.Data.PlayerName} -> 附加:{addon.Name}");
         }
 
         Assigned = true;
@@ -103,10 +145,32 @@ public static class CustomRoleManager
         }
     }
 
+    /// <summary>已注册附加职业（ID、名称）</summary>
+    public static IEnumerable<(byte Id, string Name)> GetRegisteredAddons()
+    {
+        foreach (var (id, factory) in AddonRegistry)
+            yield return (id, factory().Name);
+    }
+
     /// <summary>获取玩家职业，无职业返回 null</summary>
     public static RoleBase? GetRole(PlayerControl player)
     {
         return PlayerRoles.TryGetValue(player.PlayerId, out var role) ? role : null;
+    }
+
+    /// <summary>获取玩家的附加职业列表（无则空列表）</summary>
+    public static IReadOnlyList<AddonBase> GetAddons(PlayerControl player)
+    {
+        return PlayerAddons.TryGetValue(player.PlayerId, out var list)
+            ? list
+            : System.Array.Empty<AddonBase>();
+    }
+
+    /// <summary>玩家是否拥有指定附加职业</summary>
+    public static bool HasAddon(PlayerControl player, byte addonId)
+    {
+        return PlayerAddons.TryGetValue(player.PlayerId, out var list)
+               && list.Any(a => a.Id == addonId);
     }
 
     /// <summary>
@@ -128,6 +192,7 @@ public static class CustomRoleManager
         foreach (var role in PlayerRoles.Values)
             role.OnReset();
         PlayerRoles.Clear();
+        PlayerAddons.Clear();
         Assigned = false;
         CustomWinner = null;
     }

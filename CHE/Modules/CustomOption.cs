@@ -1,4 +1,5 @@
 using CHE.Roles;
+using CHE.Roles.Addons;
 
 namespace CHE.Modules;
 
@@ -74,6 +75,7 @@ public static class CustomOptions
     public const byte ModGroupId = 0;
 
     public static CustomOption ImpostorKnowEachOther { get; private set; } = null!;
+    public static CustomOption GuesserCanGuessAddons { get; private set; } = null!;
     public static CustomOption FarmerStealChance { get; private set; } = null!;
     public static CustomOption FarmerStealsForKill { get; private set; } = null!;
     public static CustomOption FarmerKillCooldown { get; private set; } = null!;
@@ -90,6 +92,14 @@ public static class CustomOptions
         // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())
             CustomOption.Register(id, id, "生成概率%", 100, 0, 100, 10, 1f);
+
+        // 每个附加职业一项生成概率（ID 与 AddonRegistry 的 ID 相同）
+        foreach (var (id, name) in CustomRoleManager.GetRegisteredAddons())
+            CustomOption.Register(id, id, "生成概率%", 100, 0, 100, 10, 1f);
+
+        // 赌怪参数（RoleId 4 = Guesser.AddonId）
+        GuesserCanGuessAddons = CustomOption.Register(105, Guesser.AddonId, "可猜测附加职业",
+            ModConfig.GuesserCanGuessAddons.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
 
         // 佃农职业参数（ID 从 101 起；RoleId 2 对应 RoleRegistry 中的 Farmer）
         const byte farmerRoleId = 2;

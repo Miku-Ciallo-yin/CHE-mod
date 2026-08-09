@@ -51,16 +51,18 @@ CHE/
     ├── NamePatch.cs          # 名字下方显示职业与状态行
     ├── ExilePatch.cs         # 放逐检测，触发职业 OnExile 钩子
     ├── ImpostorVisionPatch.cs # 内鬼不互认（名字颜色覆盖，对局+会议）
+    ├── GuesserPatch.cs       # 赌怪：会议准星标记 + 猜测面板
     └── EndGamePatch.cs       # 结算画面覆盖（自定义胜利者）
 ```
 
 ## 职业一览
 
-| 职业 | 阵营 | 能力 |
+| 职业 | 类型 | 能力 |
 | --- | --- | --- |
 | 小丑 Jester | 中立 | 被投票放逐即单独获胜 |
 | 佃农 Farmer | 船员（可转化） | 靠近船员概率抢夺其任务；抢够数量并完成现有任务后按 `Q` 击杀最近玩家；误杀船员则转为中立阵营 |
 | 警长 Sheriff | 船员 | 占位示例，技能未实现 |
+| 赌怪 Guesser | 附加 | 会议中点击他人名牌前的准星打开猜测面板，猜中其职业则对方死亡，猜错自己死亡 |
 
 ## 配置
 
@@ -83,11 +85,14 @@ CHE/
 | 佃农：解锁击杀任务数 | 3 | 抢夺多少个任务后（并完成现有任务）获得击杀能力 |
 | 佃农：击杀CD(秒) | 30 | 击杀能力冷却时间 |
 | 佃农：抢夺范围×0.1 | 15（=1.5） | 抢夺任务的靠近范围（游戏单位） |
+| 赌怪：可猜测附加职业 | 关 | 开启后赌怪的猜测列表包含附加职业（如赌怪本身） |
 
-## 添加新职业
+## 添加新职业 / 附加职业
 
-1. 在 `CHE/Roles/<阵营>/` 下新建类，继承 `RoleBase`，实现 `Name` / `NameEn` / `Faction` / `Color`。
-2. 在 `CustomRoleManager.RoleRegistry` 中注册一行 `(新ID, () => new YourRole())`（ID 用于 RPC 同步，不要改动已有 ID）。
+- 主职业：在 `CHE/Roles/<阵营>/` 下新建类继承 `RoleBase`，在 `CustomRoleManager.RoleRegistry` 注册 `(新ID, () => new YourRole())`。
+- 附加职业：在 `CHE/Roles/Addons/` 下新建类继承 `AddonBase`，在 `CustomRoleManager.AddonRegistry` 注册（ID 与主职业同空间，勿冲突）。
+
+注册后自动生成"生成概率"设置项并归入对应分类页，ID 用于 RPC 同步，不要改动已有 ID。
 
 ## 联机同步说明
 

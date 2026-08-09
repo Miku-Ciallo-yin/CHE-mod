@@ -23,6 +23,9 @@ public static class ModConfig
     /// <summary>模组设置：内鬼是否互认（默认开）</summary>
     public static ConfigEntry<bool> ImpostorKnowEachOther { get; private set; } = null!;
 
+    /// <summary>赌怪：是否可以猜测附加职业（默认关）</summary>
+    public static ConfigEntry<bool> GuesserCanGuessAddons { get; private set; } = null!;
+
     public static void Init(ConfigFile config)
     {
         FarmerStealChance = config.Bind("佃农 Farmer", "抢夺概率 StealChance", 0.2f,
@@ -36,5 +39,8 @@ public static class ModConfig
 
         ImpostorKnowEachOther = config.Bind("模组设置 Mod", "内鬼互认 ImpostorKnowEachOther", true,
             "内鬼之间是否互相可见（红色名字）；关闭后内鬼互不相识");
+
+        GuesserCanGuessAddons = config.Bind("赌怪 Guesser", "可猜测附加职业 CanGuessAddons", false,
+            "开启后赌怪的猜测列表包含附加职业");
     }
 }

@@ -8,6 +8,9 @@ namespace CHE.Roles;
 /// </summary>
 public abstract class RoleBase
 {
+    /// <summary>注册表 ID（分配时写入，RPC 同步用）</summary>
+    public byte Id { get; internal set; }
+
     /// <summary>职业名（中文）</summary>
     public abstract string Name { get; }
 

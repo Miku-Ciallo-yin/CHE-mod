@@ -35,7 +35,9 @@ public static class RpcSync
     }
 
     /// <summary>主机：把分配结果广播给所有客户端（单人 / 离线局不发送）。</summary>
-    public static void BroadcastRoleAssignments(IReadOnlyList<(byte PlayerId, byte RoleId)> assignments)
+    public static void BroadcastRoleAssignments(
+        IReadOnlyList<(byte PlayerId, byte RoleId)> assignments,
+        IReadOnlyList<(byte PlayerId, byte AddonId)> addonAssignments)
     {
         var client = AmongUsClient.Instance;
         if (client == null || client.allClients.Count <= 1) return;
@@ -47,6 +49,12 @@ public static class RpcSync
         {
             writer.Write(playerId);
             writer.Write(roleId);
+        }
+        writer.Write((byte)addonAssignments.Count);
+        foreach (var (playerId, addonId) in addonAssignments)
+        {
+            writer.Write(playerId);
+            writer.Write(addonId);
         }
         client.FinishRpcImmediately(writer);
     }
@@ -63,7 +71,12 @@ public static class RpcSync
             for (var i = 0; i < count; i++)
                 assignments.Add((reader.ReadByte(), reader.ReadByte()));
 
-            CustomRoleManager.ApplyRoleAssignments(assignments);
+            var addonCount = reader.ReadByte();
+            var addonAssignments = new List<(byte PlayerId, byte AddonId)>(addonCount);
+            for (var i = 0; i < addonCount; i++)
+                addonAssignments.Add((reader.ReadByte(), reader.ReadByte()));
+
+            CustomRoleManager.ApplyRoleAssignments(assignments, addonAssignments);
             return true;
         }
 

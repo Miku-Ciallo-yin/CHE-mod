@@ -191,7 +191,7 @@ public static class ModOptionsMenuPatch
             return y;
         }
 
-        // 第二级：某分类下的职业列表（返回 → 分类列表）
+        // 第二级：某分类下的职业/附加职业列表（返回 → 分类列表）
         if (ModGameOptionsMenu.DetailCategory is { } category)
         {
             var back = CreateDisplayRow(menu, "← 返回", CategoryNames[category], y);
@@ -201,6 +201,23 @@ public static class ModOptionsMenuPatch
                 BuildContent(menu);
             });
             y -= RowHeight;
+
+            // 分类 3 是附加职业，其余按阵营归类主职业
+            if (category == 3)
+            {
+                foreach (var (addonId, addonName) in CustomRoleManager.GetRegisteredAddons())
+                {
+                    var row = CreateDisplayRow(menu, addonName, $"{CustomOptions.GetRoleChance(addonId)}%", y);
+                    var id = addonId;
+                    MakeClickable(row, () =>
+                    {
+                        ModGameOptionsMenu.DetailRoleId = id;
+                        BuildContent(menu);
+                    });
+                    y -= RowHeight;
+                }
+                return y;
+            }
 
             foreach (var (roleId, roleName, faction) in CustomRoleManager.GetRegisteredRoles())
             {
@@ -221,8 +238,9 @@ public static class ModOptionsMenuPatch
         // 第一级：四个职业分类按钮（右侧显示该分类职业数）
         for (var cat = 0; cat < CategoryNames.Length; cat++)
         {
-            var count = CustomRoleManager.GetRegisteredRoles()
-                .Count(r => CategoryOf(r.Faction) == cat);
+            var count = cat == 3
+                ? CustomRoleManager.GetRegisteredAddons().Count()
+                : CustomRoleManager.GetRegisteredRoles().Count(r => CategoryOf(r.Faction) == cat);
             var row = CreateDisplayRow(menu, CategoryNames[cat], $"{count}个", y);
             var c = cat;
             MakeClickable(row, () =>
