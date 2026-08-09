@@ -59,20 +59,33 @@ public static class CustomPopup
         var label = ok.transform.FindChild("FontPlacer").GetChild(0).gameObject;
         label.DestroyTranslator();
         label.GetComponent<TextMeshPro>().text = "确 定";
-        ok.OnClick.RemoveAllListeners();
-        ok.OnClick.AddListener((UnityAction)(() => Close()));
+        // 克隆的按钮可能继承原按钮的序列化事件（如退出游戏），全部清空
+        ClearButtonEvents(ok);
+        ok.OnClick.AddListener((UnityAction)(() => _closeRequested = true));
         ok.transform.localPosition = new Vector3(0f, -2.3f, -1f);
+    }
+
+    /// <summary>清空按钮的点击事件：换成全新 UnityEvent，彻底丢掉克隆来的旧监听</summary>
+    public static void ClearButtonEvents(PassiveButton button)
+    {
+        button.OnClick = new UnityEngine.UI.Button.ButtonClickedEvent();
     }
 
     public static void Close()
     {
         if (_root != null) Object.Destroy(_root);
         _root = null;
+        _closeRequested = false;
     }
 
     public static void Update()
     {
         if (_root == null) return;
-        if (Input.GetKeyDown(KeyCode.Escape)) Close();
+
+        // 在按钮回调中不立即销毁（会导致原生层崩溃），延迟到下一帧
+        if (_closeRequested || Input.GetKeyDown(KeyCode.Escape))
+            Close();
     }
+
+    private static bool _closeRequested;
 }
