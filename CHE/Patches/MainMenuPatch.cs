@@ -94,30 +94,32 @@ public static class MainMenuPatch
         if (vanilla != null) vanilla.SetActive(false);
     }
 
-    /// <summary>左侧菜单：隐藏黑色底图（LeftPanel 自身精灵），按钮透明度调至 80%</summary>
+    /// <summary>左侧菜单：黑色底图精灵设为全透明（游戏会恢复 enabled，故不用隐藏），按钮透明度调至 80%</summary>
     private static void MakeLeftPanelTransparent(MainMenuManager menu)
     {
         var panel = menu.playButton.transform.parent;
         if (panel == null) return;
 
-        // 面板自身的黑色底图直接隐藏
-        foreach (var sr in panel.GetComponents<SpriteRenderer>())
-            if (sr != null) sr.enabled = false;
-
         // 其余（按钮背景等）透明度 80%
         foreach (var sr in panel.GetComponentsInChildren<SpriteRenderer>(true))
         {
-            if (sr == null || !sr.enabled) continue;
+            if (sr == null) continue;
             var c = sr.color;
             c.a *= 0.8f;
             sr.color = c;
         }
+
+        // LeftPanel 自身的黑色底图（含边框）设为全透明
+        var leftPanel = FindDirectChild(menu.transform, "MainUI/AspectScaler", "LeftPanel");
+        if (leftPanel != null)
+            foreach (var sr in leftPanel.GetComponents<SpriteRenderer>())
+                if (sr != null) sr.color = new Color(1f, 1f, 1f, 0f);
     }
 
     /// <summary>
     /// 去掉漂浮小人和右侧边框（对象来自场景诊断）：
     /// - 漂浮小人：场景对象 Ambience/PlayerParticles
-    /// - 右侧边框：AspectScaler 下的 RightPanel 自身精灵（8x5.1 黑色边框）
+    /// - 右侧边框：AspectScaler 下的 RightPanel 自身精灵（8x5.1 黑色边框），设为全透明
     /// </summary>
     private static void RemoveFloatersAndFrame(MainMenuManager menu)
     {
@@ -132,7 +134,7 @@ public static class MainMenuPatch
         }
 
         foreach (var sr in rightPanel.GetComponents<SpriteRenderer>())
-            if (sr != null) sr.enabled = false;
+            if (sr != null) sr.color = new Color(1f, 1f, 1f, 0f);
     }
 
     /// <summary>先按斜杠路径找到父级，再在直接子级里按名字查找（避免多级 Find 失效）</summary>
