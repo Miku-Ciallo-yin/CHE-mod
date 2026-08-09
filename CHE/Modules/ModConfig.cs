@@ -29,6 +29,12 @@ public static class ModConfig
     /// <summary>模组设置：测试模式，游戏不会正常结束（默认关）</summary>
     public static ConfigEntry<bool> TestMode { get; private set; } = null!;
 
+    /// <summary>主菜单：GitHub 按钮链接</summary>
+    public static ConfigEntry<string> GithubUrl { get; private set; } = null!;
+
+    /// <summary>主菜单：交流群按钮链接</summary>
+    public static ConfigEntry<string> CommunityUrl { get; private set; } = null!;
+
     public static void Init(ConfigFile config)
     {
         FarmerStealChance = config.Bind("佃农 Farmer", "抢夺概率 StealChance", 0.2f,
@@ -48,5 +54,10 @@ public static class ModConfig
 
         TestMode = config.Bind("模组设置 Mod", "测试模式 TestMode", false,
             "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");
+
+        GithubUrl = config.Bind("主菜单 MainMenu", "GitHub 地址 GithubUrl", "https://github.com/",
+            "主菜单 GitHub 按钮打开的链接");
+        CommunityUrl = config.Bind("主菜单 MainMenu", "交流群地址 CommunityUrl", "https://qm.qq.com/",
+            "主菜单交流群按钮打开的链接");
     }
 }

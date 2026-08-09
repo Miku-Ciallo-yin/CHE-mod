@@ -55,6 +55,7 @@ CHE/
     ├── ForceEndPatch.cs      # /end 聊天命令 + ALT+F4 强制结束（仅主机对局中）
     ├── TestModePatch.cs      # 测试模式：跳过正常结束判定
     ├── StartAnyCountPatch.cs # 取消开局人数下限（保留倒计时）+ /start 命令
+    ├── MainMenuPatch.cs      # TONE 风格主菜单：版本徽章 + 关于/GitHub/交流群按钮
     └── EndGamePatch.cs       # 结算画面覆盖（自定义胜利者）
 ```
 
