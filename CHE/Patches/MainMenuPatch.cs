@@ -79,18 +79,23 @@ public static class MainMenuPatch
         if (vanilla != null) vanilla.SetActive(false);
     }
 
-    /// <summary>从 CHE-DATA/background.png 加载自定义背景</summary>
+    /// <summary>从 CHE-DATA 加载自定义背景（优先 background.png，否则取目录里第一张 PNG）</summary>
     private static Sprite? LoadCustomBackground()
     {
         try
         {
-            var path = Path.Combine(Environment.CurrentDirectory, "CHE-DATA", "background.png");
-            if (!File.Exists(path)) return null;
+            var dir = Path.Combine(Environment.CurrentDirectory, "CHE-DATA");
+            if (!Directory.Exists(dir)) return null;
+
+            var path = Path.Combine(dir, "background.png");
+            if (!File.Exists(path))
+                path = Directory.GetFiles(dir, "*.png").FirstOrDefault();
+            if (path == null) return null;
 
             var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             if (!ImageConversion.LoadImage(tex, File.ReadAllBytes(path))) return null;
 
-            CHEPlugin.Log.LogInfo("[CHE] 已加载自定义主菜单背景 background.png");
+            CHEPlugin.Log.LogInfo($"[CHE] 已加载自定义主菜单背景 {Path.GetFileName(path)}");
             return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
                 new Vector2(0.5f, 0.5f), 100f);
         }
@@ -145,24 +150,30 @@ public static class MainMenuPatch
         aspect.updateAlways = true;
     }
 
-    /// <summary>左侧竖排自定义按钮（对齐 TONE 布局：菜单一列下方居中竖排）</summary>
+    /// <summary>左侧竖排自定义按钮（以"退出"按钮为参照向右偏移竖排，对齐 TONE 布局）</summary>
     private static void CreateButtons(MainMenuManager menu)
     {
         var template = menu.creditsButton.gameObject;
+        var basePos = menu.quitButton.transform.localPosition;
 
-        CreateButton(menu, template, "关于 CHE", new Vector2(0.34f, 0.40f),
+        CreateButton(menu, template, "关于 CHE", basePos + new Vector3(2.4f, 0f, 0f),
             () => CustomPopup.Show(menu.transform, "关于 CHE", AboutText));
-        CreateButton(menu, template, "GitHub", new Vector2(0.34f, 0.335f),
+        CreateButton(menu, template, "GitHub", basePos + new Vector3(2.4f, -0.75f, 0f),
             () => Application.OpenURL(ModConfig.GithubUrl.Value));
-        CreateButton(menu, template, "交流群", new Vector2(0.34f, 0.27f),
+        CreateButton(menu, template, "交流群", basePos + new Vector3(2.4f, -1.5f, 0f),
             () => Application.OpenURL(ModConfig.CommunityUrl.Value));
     }
 
-    private static void CreateButton(MainMenuManager menu, GameObject template, string text, Vector2 anchor, System.Action action)
+    private static void CreateButton(MainMenuManager menu, GameObject template, string text, Vector3 localPos, System.Action action)
     {
         var button = Object.Instantiate(template, template.transform.parent);
         button.name = "CHE_" + text;
         button.gameObject.SetActive(true);
+
+        // 克隆按钮自带的 AspectPosition 会按锚点覆盖位置，销毁后用局部坐标定位
+        var aspect = button.GetComponent<AspectPosition>();
+        if (aspect != null) Object.Destroy(aspect);
+        button.transform.localPosition = localPos;
 
         var label = button.transform.FindChild("FontPlacer").GetChild(0).gameObject;
         label.DestroyTranslator();
@@ -180,8 +191,5 @@ public static class MainMenuPatch
             passive.activeSprites.GetComponent<SpriteRenderer>().color = CheColor;
         if (passive.selectedSprites != null)
             passive.selectedSprites.GetComponent<SpriteRenderer>().color = CheColor;
-
-        var aspect = button.GetComponent<AspectPosition>();
-        if (aspect != null) aspect.anchorPoint = anchor;
     }
 }
