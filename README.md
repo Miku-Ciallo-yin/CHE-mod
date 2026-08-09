@@ -52,6 +52,7 @@ CHE/
     ├── ExilePatch.cs         # 放逐检测，触发职业 OnExile 钩子
     ├── ImpostorVisionPatch.cs # 内鬼不互认（名字颜色覆盖，对局+会议）
     ├── GuesserPatch.cs       # 赌怪：会议准星标记 + 猜测面板
+    ├── ForceEndPatch.cs      # /end 聊天命令 + ALT+F4 强制结束（仅主机对局中）
     └── EndGamePatch.cs       # 结算画面覆盖（自定义胜利者）
 ```
 

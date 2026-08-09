@@ -29,6 +29,7 @@ public class CHEPlugin : BasePlugin
 
         Modules.ModConfig.Init(Config);
         Modules.CustomOptions.Init();
+        Patches.ForceEndPatch.Init();
 
         log.LogInfo($"{Name} v{Version} 已加载 — by 米裤恰油");
     }
