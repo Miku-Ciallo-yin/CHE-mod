@@ -157,12 +157,24 @@ public static class ModOptionsMenuPatch
             if (header != null) Object.Destroy(header.gameObject);
     }
 
-    /// <summary>职业设置页：列表页 / 详情页</summary>
+    /// <summary>职业分类名称（索引即 DetailCategory 的值）</summary>
+    private static readonly string[] CategoryNames = { "船员职业", "中立职业", "内鬼职业", "附加职业" };
+
+    /// <summary>Faction → 分类索引（附加职业暂无，预留分类 3）</summary>
+    private static int CategoryOf(Faction faction) => faction switch
+    {
+        Faction.Crewmate => 0,
+        Faction.Neutral => 1,
+        Faction.Impostor => 2,
+        _ => 3,
+    };
+
+    /// <summary>职业设置页：分类列表 / 分类内职业列表 / 职业详情页</summary>
     private static float BuildRolesTab(GameOptionsMenu menu, float y)
     {
+        // 第三级：职业详情页（返回 → 职业列表）
         if (ModGameOptionsMenu.DetailRoleId is { } detailRoleId)
         {
-            // 详情页：返回行 + 该职业的配置项
             var back = CreateDisplayRow(menu, "← 返回", string.Empty, y);
             MakeClickable(back, () =>
             {
@@ -179,14 +191,43 @@ public static class ModOptionsMenuPatch
             return y;
         }
 
-        // 列表页：每个职业一个名称按钮（右侧显示当前生成概率）
-        foreach (var (roleId, roleName) in CustomRoleManager.GetRegisteredRoles())
+        // 第二级：某分类下的职业列表（返回 → 分类列表）
+        if (ModGameOptionsMenu.DetailCategory is { } category)
         {
-            var row = CreateDisplayRow(menu, roleName, $"{CustomOptions.GetRoleChance(roleId)}%", y);
-            var id = roleId;
+            var back = CreateDisplayRow(menu, "← 返回", CategoryNames[category], y);
+            MakeClickable(back, () =>
+            {
+                ModGameOptionsMenu.DetailCategory = null;
+                BuildContent(menu);
+            });
+            y -= RowHeight;
+
+            foreach (var (roleId, roleName, faction) in CustomRoleManager.GetRegisteredRoles())
+            {
+                if (CategoryOf(faction) != category) continue;
+
+                var row = CreateDisplayRow(menu, roleName, $"{CustomOptions.GetRoleChance(roleId)}%", y);
+                var id = roleId;
+                MakeClickable(row, () =>
+                {
+                    ModGameOptionsMenu.DetailRoleId = id;
+                    BuildContent(menu);
+                });
+                y -= RowHeight;
+            }
+            return y;
+        }
+
+        // 第一级：四个职业分类按钮（右侧显示该分类职业数）
+        for (var cat = 0; cat < CategoryNames.Length; cat++)
+        {
+            var count = CustomRoleManager.GetRegisteredRoles()
+                .Count(r => CategoryOf(r.Faction) == cat);
+            var row = CreateDisplayRow(menu, CategoryNames[cat], $"{count}个", y);
+            var c = cat;
             MakeClickable(row, () =>
             {
-                ModGameOptionsMenu.DetailRoleId = id;
+                ModGameOptionsMenu.DetailCategory = c;
                 BuildContent(menu);
             });
             y -= RowHeight;

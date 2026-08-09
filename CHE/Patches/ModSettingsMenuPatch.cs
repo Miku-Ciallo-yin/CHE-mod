@@ -161,7 +161,8 @@ public static class ModSettingsMenuPatch
 
             if (_tabs.TryGetValue(tabNum, out var settingsTab) && settingsTab != null)
             {
-                ModGameOptionsMenu.DetailRoleId = null; // 每次切页签回到列表页
+                ModGameOptionsMenu.DetailRoleId = null; // 每次切页签回到分类列表
+                ModGameOptionsMenu.DetailCategory = null;
                 settingsTab.gameObject.SetActive(true);
                 ModOptionsMenuPatch.EnsureContent(settingsTab);
 
@@ -196,5 +197,6 @@ public static class ModSettingsMenuPatch
         _buttons.Clear();
         _tabs.Clear();
         ModGameOptionsMenu.DetailRoleId = null;
+        ModGameOptionsMenu.DetailCategory = null;
     }
 }

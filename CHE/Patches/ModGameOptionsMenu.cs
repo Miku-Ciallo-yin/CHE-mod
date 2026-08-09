@@ -17,8 +17,11 @@ public static class ModGameOptionsMenu
     /// <summary>当前页签编号（ChangeTab 时更新）</summary>
     public static int TabIndex;
 
-    /// <summary>职业设置页当前详情页职业 ID；null 表示职业列表页</summary>
+    /// <summary>职业设置页当前详情页职业 ID；null 表示不在详情页</summary>
     public static byte? DetailRoleId;
+
+    /// <summary>职业设置页当前分类（0 船员 / 1 中立 / 2 内鬼 / 3 附加）；null 表示分类列表页</summary>
+    public static int? DetailCategory;
 
     /// <summary>克隆用模板（OnEnable 中克隆一次，隐藏保留复用）</summary>
     public static GameOptionsMenu? TemplateMenu;

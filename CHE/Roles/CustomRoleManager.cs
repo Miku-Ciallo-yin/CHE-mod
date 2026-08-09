@@ -93,11 +93,14 @@ public static class CustomRoleManager
             role.OnGameStart();
     }
 
-    /// <summary>已注册职业（ID 与名称），供选项系统生成"生成概率"设置项</summary>
-    public static IEnumerable<(byte Id, string Name)> GetRegisteredRoles()
+    /// <summary>已注册职业（ID、名称、阵营），供选项系统生成设置项和分类列表</summary>
+    public static IEnumerable<(byte Id, string Name, Faction Faction)> GetRegisteredRoles()
     {
         foreach (var (id, factory) in RoleRegistry)
-            yield return (id, factory().Name);
+        {
+            var sample = factory();
+            yield return (id, sample.Name, sample.Faction);
+        }
     }
 
     /// <summary>获取玩家职业，无职业返回 null</summary>

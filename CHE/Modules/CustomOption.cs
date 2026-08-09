@@ -88,7 +88,7 @@ public static class CustomOptions
             ModConfig.ImpostorKnowEachOther.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
 
         // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
-        foreach (var (id, name) in CustomRoleManager.GetRegisteredRoles())
+        foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())
             CustomOption.Register(id, id, "生成概率%", 100, 0, 100, 10, 1f);
 
         // 佃农职业参数（ID 从 101 起；RoleId 2 对应 RoleRegistry 中的 Farmer）
