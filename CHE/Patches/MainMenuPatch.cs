@@ -38,6 +38,8 @@ public static class MainMenuPatch
 
             CustomPopup.Setup(__instance.quitButton, tmpTemplate);
             SetupBackground(__instance);
+            MakeLeftPanelTransparent(__instance);
+            RemoveRightFrame(__instance);
             CreateVersionBadge(__instance, tmpTemplate);
             CreateButtons(__instance);
 
@@ -77,6 +79,28 @@ public static class MainMenuPatch
         // 隐藏原版星空背景，露出自定义背景
         var vanilla = GameObject.Find("BackgroundTexture");
         if (vanilla != null) vanilla.SetActive(false);
+    }
+
+    /// <summary>左侧菜单面板（含按钮背景）改为半透明，让背景图透出来</summary>
+    private static void MakeLeftPanelTransparent(MainMenuManager menu)
+    {
+        var panel = menu.playButton.transform.parent;
+        if (panel == null) return;
+
+        foreach (var sr in panel.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            if (sr == null) continue;
+            var c = sr.color;
+            c.a *= 0.55f;
+            sr.color = c;
+        }
+    }
+
+    /// <summary>去掉右侧黑色方框（菜单下的 Square 对象），让背景图完整显示</summary>
+    private static void RemoveRightFrame(MainMenuManager menu)
+    {
+        var square = menu.transform.Find("Square");
+        if (square != null) square.gameObject.SetActive(false);
     }
 
     /// <summary>从 CHE-DATA 加载自定义背景（优先 background.png，否则取目录里第一张 PNG）</summary>
@@ -156,11 +180,11 @@ public static class MainMenuPatch
         var template = menu.creditsButton.gameObject;
         var basePos = menu.quitButton.transform.localPosition;
 
-        CreateButton(menu, template, "关于 CHE", basePos + new Vector3(2.4f, 0f, 0f),
+        CreateButton(menu, template, "关于 CHE", basePos + new Vector3(2.4f, 0.8f, 0f),
             () => CustomPopup.Show(menu.transform, "关于 CHE", AboutText));
-        CreateButton(menu, template, "GitHub", basePos + new Vector3(2.4f, -0.75f, 0f),
+        CreateButton(menu, template, "GitHub", basePos + new Vector3(2.4f, 1.55f, 0f),
             () => Application.OpenURL(ModConfig.GithubUrl.Value));
-        CreateButton(menu, template, "交流群", basePos + new Vector3(2.4f, -1.5f, 0f),
+        CreateButton(menu, template, "交流群", basePos + new Vector3(2.4f, 2.3f, 0f),
             () => Application.OpenURL(ModConfig.CommunityUrl.Value));
     }
 
