@@ -94,7 +94,7 @@ public static class ForceEndPatch
             }
 
             CHEPlugin.Log.LogInfo($"[CHE] /start：{sec} 秒倒计时开始游戏");
-            manager.SetStartCounter((sbyte)sec);
+            StartAnyCountPatch.StartCountdown(manager, sec);
             return false; // 拦截命令，不发送到聊天
         }
     }
