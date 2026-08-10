@@ -54,6 +54,11 @@ public static class ForceEndPatch
                 return HandleStart(text);
             if (text.Equals("/dump", System.StringComparison.OrdinalIgnoreCase))
             {
+                if (!IsHost())
+                {
+                    Modules.ChatHelper.Show("[CHE] /dump 仅房主可用");
+                    return false;
+                }
                 Modules.LogDumper.Dump();
                 return false; // 拦截命令，不发送到聊天
             }
@@ -66,6 +71,12 @@ public static class ForceEndPatch
             return true;
         }
 
+        /// <summary>是否房主</summary>
+        private static bool IsHost()
+        {
+            return AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
+        }
+
         /// <summary>/help：输出全部指令及功能（合并为一条气泡，超长自动拆分）</summary>
         private static void ShowHelp()
         {
@@ -73,10 +84,10 @@ public static class ForceEndPatch
             {
                 "<color=#4FC3F7>===== CHE 指令帮助 =====</color>",
                 "/help — 显示本帮助",
-                "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅主机/大厅）",
-                "/end — 强制结束对局返回大厅（仅主机/对局中）",
-                "/dump — 导出日志到桌面并显示最近日志",
-                "快捷键：ALT+F4 — 强制结束对局（仅主机/对局中）",
+                "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主）",
+                "/end — 强制结束对局返回大厅（仅房主/对局中）",
+                "/dump — 导出日志到桌面并显示最近日志（仅房主）",
+                "快捷键：ALT+F4 — 强制结束对局（仅房主/对局中）",
             });
         }
 
