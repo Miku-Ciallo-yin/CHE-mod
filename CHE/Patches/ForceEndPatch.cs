@@ -57,8 +57,24 @@ public static class ForceEndPatch
                 Modules.LogDumper.Dump();
                 return false; // 拦截命令，不发送到聊天
             }
+            if (text.Equals("/help", System.StringComparison.OrdinalIgnoreCase))
+            {
+                ShowHelp();
+                return false;
+            }
 
             return true;
+        }
+
+        /// <summary>/help：输出全部指令及功能</summary>
+        private static void ShowHelp()
+        {
+            Modules.ChatHelper.Show("<color=#4FC3F7>===== CHE 指令帮助 =====</color>");
+            Modules.ChatHelper.Show("/help — 显示本帮助");
+            Modules.ChatHelper.Show("/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅主机/大厅）");
+            Modules.ChatHelper.Show("/end — 强制结束对局返回大厅（仅主机/对局中）");
+            Modules.ChatHelper.Show("/dump — 导出日志到桌面并显示最近日志");
+            Modules.ChatHelper.Show("快捷键：ALT+F4 — 强制结束对局（仅主机/对局中）");
         }
 
         /// <summary>/end：强制结束对局（仅主机、对局中）</summary>

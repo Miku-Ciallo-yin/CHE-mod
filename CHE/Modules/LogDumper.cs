@@ -54,10 +54,5 @@ public static class LogDumper
         }
     }
 
-    private static void ShowInChat(string message)
-    {
-        var hud = DestroyableSingleton<HudManager>.Instance;
-        if (hud == null || hud.Chat == null) return;
-        hud.Chat.AddChatWarning(message);
-    }
+    private static void ShowInChat(string message) => ChatHelper.Show(message);
 }
