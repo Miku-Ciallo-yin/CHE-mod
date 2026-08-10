@@ -93,6 +93,8 @@ public static class CustomOptions
     public static CustomOption CopAutoKillTime { get; private set; } = null!;
     public static CustomOption CopAutoKillsToConvert { get; private set; } = null!;
     public static CustomOption CopKillCrewmateAlsoDies { get; private set; } = null!;
+    public static CustomOption RepenterKillsToConvert { get; private set; } = null!;
+    public static CustomOption RepenterSuicideTime { get; private set; } = null!;
     public static CustomOption GuesserCanGuessAddons { get; private set; } = null!;
     public static CustomOption FarmerStealChance { get; private set; } = null!;
     public static CustomOption FarmerStealsForKill { get; private set; } = null!;
@@ -138,6 +140,12 @@ public static class CustomOptions
             ModConfig.CopAutoKillsToConvert.Value, 1, 10, 1, 1f);
         CopKillCrewmateAlsoDies = CustomOption.Register(119, 6, "手动击杀船员时船员是否死亡",
             ModConfig.CopKillCrewmateAlsoDies.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+
+        // 忏悔者参数（RoleId 7 = Repenter）
+        RepenterKillsToConvert = CustomOption.Register(120, 7, "击杀多少人可转换阵营",
+            ModConfig.RepenterKillsToConvert.Value, 1, 10, 1, 1f);
+        RepenterSuicideTime = CustomOption.Register(121, 7, "转换阵营后多少秒自杀",
+            ModConfig.RepenterSuicideTime.Value, 10, 300, 10, 1f);
 
         // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())

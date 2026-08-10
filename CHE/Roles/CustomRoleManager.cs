@@ -1,6 +1,7 @@
 using CHE.Modules;
 using CHE.Roles.Addons;
 using CHE.Roles.Crewmate;
+using CHE.Roles.Impostor;
 using CHE.Roles.Neutral;
 
 namespace CHE.Roles;
@@ -20,6 +21,7 @@ public static class CustomRoleManager
         (3, () => new Jester()),  // 中立阵营：小丑
         (5, () => new Coward()),  // 中立阵营（敌对）：懦弱者
         (6, () => new Cop()),     // 船员阵营：美警
+        (7, () => new Repenter()), // 内鬼阵营：忏悔者
     };
 
     /// <summary>

@@ -55,6 +55,11 @@ public static class ModConfig
     /// <summary>美警：手动击杀船员时船员是否也死亡（默认关，美警始终自杀抵命）</summary>
     public static ConfigEntry<bool> CopKillCrewmateAlsoDies { get; private set; } = null!;
 
+    /// <summary>忏悔者：击杀多少人可转换阵营（默认 3）</summary>
+    public static ConfigEntry<int> RepenterKillsToConvert { get; private set; } = null!;
+    /// <summary>忏悔者：转换阵营后多少秒自杀（默认 60）</summary>
+    public static ConfigEntry<int> RepenterSuicideTime { get; private set; } = null!;
+
     /// <summary>模组设置：测试模式，游戏不会正常结束（默认关）</summary>
     public static ConfigEntry<bool> TestMode { get; private set; } = null!;
 
@@ -105,6 +110,11 @@ public static class ModConfig
             "自动击杀多少名深色船员后转变为内鬼阵营");
         CopKillCrewmateAlsoDies = config.Bind("美警 Cop", "手动击杀船员时船员是否死亡 KillCrewmateAlsoDies", false,
             "开启后美警手动击杀船员时船员也死亡（美警仍会自杀抵命）；关闭则只有美警死亡");
+
+        RepenterKillsToConvert = config.Bind("忏悔者 Repenter", "击杀多少人可转换阵营 KillsToConvert", 3,
+            "击杀多少人后可以使用变形转变为船员阵营");
+        RepenterSuicideTime = config.Bind("忏悔者 Repenter", "转换阵营后多少秒自杀 SuicideTime", 60,
+            "转变为船员阵营后多少秒自裁（秒）");
 
         TestMode = config.Bind("模组设置 Mod", "测试模式 TestMode", false,
             "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");

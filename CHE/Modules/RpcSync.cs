@@ -26,6 +26,20 @@ public static class RpcSync
     /// <summary>猜测请求（非主机模组端 -> 主机）。</summary>
     public const byte GuessRequestCallId = 221;
 
+    /// <summary>忏悔者变形请求（非主机模组端 -> 主机）。</summary>
+    public const byte ConvertRequestCallId = 222;
+
+    /// <summary>非主机模组端：向主机发送变形请求（忏悔者按 F）。</summary>
+    public static void SendConvertRequest()
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.AmHost || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, ConvertRequestCallId, SendOption.Reliable, client.HostId);
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>非主机模组端：向主机发送猜测请求。</summary>
     public static void SendGuessRequest(byte targetId, bool isAddon, byte guessId)
     {
@@ -143,7 +157,7 @@ public static class RpcSync
                 .FirstOrDefault(p => p != null && p.PlayerId == targetId);
             if (target == null) return true;
 
-            // 按请求者职业路由击杀请求（佃农 / 懦弱者 / 美警）
+            // 按请求者职业路由击杀请求（佃农 / 懦弱者 / 美警 / 忏悔者）
             switch (CustomRoleManager.GetRole(sender))
             {
                 case Roles.Crewmate.Farmer farmer:
@@ -154,6 +168,9 @@ public static class RpcSync
                     break;
                 case Roles.Crewmate.Cop cop:
                     cop.ServerKillRequest(target);
+                    break;
+                case Roles.Impostor.Repenter repenter:
+                    repenter.ServerKillRequest(target);
                     break;
             }
             return true;
@@ -180,6 +197,15 @@ public static class RpcSync
 
             Patches.GuesserPatch.ExecuteGuess(sender, target,
                 new Patches.GuesserPatch.GuessEntry { IsAddon = isAddon, Id = guessId });
+            return true;
+        }
+
+        if (callId == ConvertRequestCallId)
+        {
+            // 只有主机处理变形请求，ServerConvert 内含击杀数校验
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return true;
+            if (CustomRoleManager.GetRole(sender) is Roles.Impostor.Repenter repenter)
+                repenter.ServerConvert();
             return true;
         }
 
