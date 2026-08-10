@@ -60,6 +60,19 @@ public static class ModConfig
     /// <summary>忏悔者：转换阵营后多少秒自杀（默认 60）</summary>
     public static ConfigEntry<int> RepenterSuicideTime { get; private set; } = null!;
 
+    /// <summary>内阁：是否单独设置任务数量（默认关）</summary>
+    public static ConfigEntry<bool> MinisterCustomTaskCount { get; private set; } = null!;
+    /// <summary>内阁：长任务数（默认 1）</summary>
+    public static ConfigEntry<int> MinisterLongTasks { get; private set; } = null!;
+    /// <summary>内阁：中任务数（默认 2）</summary>
+    public static ConfigEntry<int> MinisterMidTasks { get; private set; } = null!;
+    /// <summary>内阁：短任务数（默认 2）</summary>
+    public static ConfigEntry<int> MinisterShortTasks { get; private set; } = null!;
+    /// <summary>内阁：完成任务时夺取的任务数量（默认 2）</summary>
+    public static ConfigEntry<int> MinisterStealCount { get; private set; } = null!;
+    /// <summary>内阁：美警击杀内阁距离 ×0.1（默认 20 = 2.0）</summary>
+    public static ConfigEntry<int> CopKillMinisterRange { get; private set; } = null!;
+
     /// <summary>模组设置：测试模式，游戏不会正常结束（默认关）</summary>
     public static ConfigEntry<bool> TestMode { get; private set; } = null!;
 
@@ -115,6 +128,16 @@ public static class ModConfig
             "击杀多少人后可以使用变形转变为船员阵营");
         RepenterSuicideTime = config.Bind("忏悔者 Repenter", "转换阵营后多少秒自杀 SuicideTime", 60,
             "转变为船员阵营后多少秒自裁（秒）");
+
+        MinisterCustomTaskCount = config.Bind("内阁 Minister", "是否单独设置任务数量 CustomTaskCount", false,
+            "开启后内阁的任务按下方长/中/短任务数分配；关闭则使用原版任务");
+        MinisterLongTasks = config.Bind("内阁 Minister", "长任务数 LongTasks", 1, "单独设置时的长任务数量");
+        MinisterMidTasks = config.Bind("内阁 Minister", "中任务数 MidTasks", 2, "单独设置时的中（普通）任务数量");
+        MinisterShortTasks = config.Bind("内阁 Minister", "短任务数 ShortTasks", 2, "单独设置时的短任务数量");
+        MinisterStealCount = config.Bind("内阁 Minister", "完成任务时夺取的任务数量 StealCount", 2,
+            "内阁完成全部任务时从随机船员处夺取的任务数量");
+        CopKillMinisterRange = config.Bind("内阁 Minister", "美警击杀内阁距离 KillMinisterRange", 20,
+            "美警贴近内阁直接击杀的距离（×0.1 游戏单位，默认 20 = 2.0）");
 
         TestMode = config.Bind("模组设置 Mod", "测试模式 TestMode", false,
             "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");

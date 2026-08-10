@@ -29,6 +29,21 @@ public static class RpcSync
     /// <summary>忏悔者变形请求（非主机模组端 -> 主机）。</summary>
     public const byte ConvertRequestCallId = 222;
 
+    /// <summary>向指定客户端显示聊天栏消息（主机 -> 指定模组端）。</summary>
+    public const byte ShowMessageCallId = 223;
+
+    /// <summary>主机：向指定客户端发送聊天栏消息（仅对方本机可见）。</summary>
+    public static void SendShowMessage(int targetClientId, string text)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, ShowMessageCallId, SendOption.Reliable, targetClientId);
+        writer.Write(text);
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>非主机模组端：向主机发送变形请求（忏悔者按 F）。</summary>
     public static void SendConvertRequest()
     {
@@ -206,6 +221,12 @@ public static class RpcSync
             if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return true;
             if (CustomRoleManager.GetRole(sender) is Roles.Impostor.Repenter repenter)
                 repenter.ServerConvert();
+            return true;
+        }
+
+        if (callId == ShowMessageCallId)
+        {
+            ChatHelper.Show(reader.ReadString());
             return true;
         }
 

@@ -22,6 +22,7 @@ public static class CustomRoleManager
         (5, () => new Coward()),  // 中立阵营（敌对）：懦弱者
         (6, () => new Cop()),     // 船员阵营：美警
         (7, () => new Repenter()), // 内鬼阵营：忏悔者
+        (8, () => new Minister()), // 船员阵营：内阁
     };
 
     /// <summary>
@@ -173,6 +174,15 @@ public static class CustomRoleManager
     {
         foreach (var (id, factory) in AddonRegistry)
             yield return (id, factory().Name);
+    }
+
+    /// <summary>把玩家转变为指定职业实例（替换原有职业，如凶手变内阁）</summary>
+    public static void TransformToRole(PlayerControl player, RoleBase newRole)
+    {
+        // ID 取新职业在注册表中的 ID（猜测/判定依赖职业 ID）
+        newRole.Id = RoleRegistry.FirstOrDefault(r => r.Factory().GetType() == newRole.GetType()).Id;
+        newRole.OnAssign(player);
+        PlayerRoles[player.PlayerId] = newRole;
     }
 
     /// <summary>获取玩家职业，无职业返回 null</summary>

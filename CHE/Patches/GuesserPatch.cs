@@ -229,6 +229,17 @@ public static class GuesserPatch
         if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
         if (!CanGuess(guesser)) return;
 
+        // 内阁无法被赌：给猜测者反馈，无人死亡
+        if (CustomRoleManager.GetRole(target) is Roles.Crewmate.Minister)
+        {
+            if (guesser.AmOwner)
+                ChatHelper.Show("你高雅的灵魂不允许你赌他");
+            else
+                RpcSync.SendShowMessage(guesser.OwnerId, "你高雅的灵魂不允许你赌他");
+            CHEPlugin.Log.LogInfo($"[CHE] {guesser.Data.PlayerName} 试图赌内阁，被拦截");
+            return;
+        }
+
         var correct = entry.IsAddon
             ? CustomRoleManager.GetAddons(target).Any(a => a.Id == entry.Id)
             : CustomRoleManager.GetRole(target)?.Id == entry.Id;

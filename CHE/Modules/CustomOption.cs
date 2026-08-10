@@ -95,6 +95,12 @@ public static class CustomOptions
     public static CustomOption CopKillCrewmateAlsoDies { get; private set; } = null!;
     public static CustomOption RepenterKillsToConvert { get; private set; } = null!;
     public static CustomOption RepenterSuicideTime { get; private set; } = null!;
+    public static CustomOption MinisterCustomTaskCount { get; private set; } = null!;
+    public static CustomOption MinisterLongTasks { get; private set; } = null!;
+    public static CustomOption MinisterMidTasks { get; private set; } = null!;
+    public static CustomOption MinisterShortTasks { get; private set; } = null!;
+    public static CustomOption MinisterStealCount { get; private set; } = null!;
+    public static CustomOption CopKillMinisterRange { get; private set; } = null!;
     public static CustomOption GuesserCanGuessAddons { get; private set; } = null!;
     public static CustomOption FarmerStealChance { get; private set; } = null!;
     public static CustomOption FarmerStealsForKill { get; private set; } = null!;
@@ -146,6 +152,20 @@ public static class CustomOptions
             ModConfig.RepenterKillsToConvert.Value, 1, 10, 1, 1f);
         RepenterSuicideTime = CustomOption.Register(121, 7, "转换阵营后多少秒自杀",
             ModConfig.RepenterSuicideTime.Value, 10, 300, 10, 1f);
+
+        // 内阁参数（RoleId 8 = Minister）
+        MinisterCustomTaskCount = CustomOption.Register(122, 8, "是否单独设置任务数量",
+            ModConfig.MinisterCustomTaskCount.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        MinisterLongTasks = CustomOption.Register(123, 8, "长任务数",
+            ModConfig.MinisterLongTasks.Value, 0, 10, 1, 1f, parentId: 122);
+        MinisterMidTasks = CustomOption.Register(124, 8, "中任务数",
+            ModConfig.MinisterMidTasks.Value, 0, 10, 1, 1f, parentId: 122);
+        MinisterShortTasks = CustomOption.Register(125, 8, "短任务数",
+            ModConfig.MinisterShortTasks.Value, 0, 10, 1, 1f, parentId: 122);
+        MinisterStealCount = CustomOption.Register(126, 8, "完成任务时夺取的任务数量",
+            ModConfig.MinisterStealCount.Value, 1, 10, 1, 1f);
+        CopKillMinisterRange = CustomOption.Register(127, 8, "美警击杀内阁距离×0.1",
+            ModConfig.CopKillMinisterRange.Value, 5, 50, 5, 0.1f);
 
         // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())

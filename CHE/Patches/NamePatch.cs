@@ -1,5 +1,6 @@
 using CHE.Modules;
 using CHE.Roles;
+using CHE.Roles.Crewmate;
 using HarmonyLib;
 
 namespace CHE.Patches;
@@ -23,6 +24,11 @@ public static class NamePatch
         var id = PlayerIdManager.GetId(__instance);
         var prefix = id.HasValue ? $"<color=#4FC3F7>[{id.Value}]</color>" : string.Empty;
 
+        // 击杀内阁的凶手提示（名字下方）
+        var killerHint = __instance.AmOwner && Minister.PendingKillers.Contains(__instance.PlayerId)
+            ? "\n<color=#FF5555><size=60%>你击杀了内阁</size></color>"
+            : string.Empty;
+
         // 本机玩家：职业名 + 状态行
         if (__instance.AmOwner && CustomRoleManager.GetRole(__instance) is { } role)
         {
@@ -34,10 +40,10 @@ public static class NamePatch
             nameText.text =
                 $"{prefix}{name}\n" +
                 $"{role.ColorTag}<size=75%>{role.Name} / {role.NameEn}</size></color>" +
-                statusLine;
+                statusLine + killerHint;
             return;
         }
 
-        nameText.text = prefix + name;
+        nameText.text = prefix + name + killerHint;
     }
 }

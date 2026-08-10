@@ -109,9 +109,23 @@ public class Cop : RoleBase
         CHEPlugin.Log.LogInfo($"[CHE] 美警击杀了 {target.Data!.PlayerName}（{faction}）");
     }
 
-    /// <summary>自动击杀：贴近深色船员达配置时间后将其击杀</summary>
+    /// <summary>自动击杀：贴近内阁直接秒杀（无需计时、不计入转变人数）；贴近深色船员达配置时间后击杀</summary>
     private void UpdateAutoKill(float dt)
     {
+        // 内阁：直接击杀（独立距离配置，不计入转变人数）
+        if (!Converted)
+        {
+            var minister = FindNearest(CustomOptions.CopKillMinisterRange.ScaledValue);
+            if (minister != null && CustomRoleManager.GetRole(minister) is Minister)
+            {
+                minister.RpcMurderPlayer(minister, true);
+                _proximityTarget = null;
+                _proximityTimer = 0f;
+                CHEPlugin.Log.LogInfo("[CHE] 美警直接击杀了内阁（无需计时，不计入转变人数）");
+                return;
+            }
+        }
+
         var nearest = FindNearest(CustomOptions.CopAutoKillRange.ScaledValue);
         if (nearest == null || !IsDarkCrewmate(nearest) || nearest != _proximityTarget)
         {
