@@ -93,7 +93,12 @@ public class Cop : RoleBase
 
         if (faction == Faction.Crewmate && !Converted)
         {
-            // 误杀船员：美警自杀（转变后视为内鬼，按内鬼规则击杀）
+            // 误杀船员：美警自杀抵命；配置开启时船员一并死亡
+            if (CustomOptions.CopKillCrewmateAlsoDies.Value == 1)
+            {
+                target.RpcMurderPlayer(target, true);
+                CHEPlugin.Log.LogInfo($"[CHE] 美警击杀船员 {target.Data!.PlayerName}（配置：船员一并死亡）");
+            }
             Player!.RpcMurderPlayer(Player, true);
             CHEPlugin.Log.LogInfo("[CHE] 美警误杀船员，以命抵命（自杀）");
             return;

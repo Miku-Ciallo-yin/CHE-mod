@@ -52,6 +52,8 @@ public static class ModConfig
     public static ConfigEntry<int> CopAutoKillTime { get; private set; } = null!;
     /// <summary>美警：转内鬼所需自动击杀人数（默认 3）</summary>
     public static ConfigEntry<int> CopAutoKillsToConvert { get; private set; } = null!;
+    /// <summary>美警：手动击杀船员时船员是否也死亡（默认关，美警始终自杀抵命）</summary>
+    public static ConfigEntry<bool> CopKillCrewmateAlsoDies { get; private set; } = null!;
 
     /// <summary>模组设置：测试模式，游戏不会正常结束（默认关）</summary>
     public static ConfigEntry<bool> TestMode { get; private set; } = null!;
@@ -101,6 +103,8 @@ public static class ModConfig
             "贴近深色船员多少秒后自动击杀（秒）");
         CopAutoKillsToConvert = config.Bind("美警 Cop", "转内鬼所需自动击杀人数 AutoKillsToConvert", 3,
             "自动击杀多少名深色船员后转变为内鬼阵营");
+        CopKillCrewmateAlsoDies = config.Bind("美警 Cop", "手动击杀船员时船员是否死亡 KillCrewmateAlsoDies", false,
+            "开启后美警手动击杀船员时船员也死亡（美警仍会自杀抵命）；关闭则只有美警死亡");
 
         TestMode = config.Bind("模组设置 Mod", "测试模式 TestMode", false,
             "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");
