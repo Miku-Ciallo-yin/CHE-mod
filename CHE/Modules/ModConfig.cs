@@ -72,6 +72,8 @@ public static class ModConfig
     public static ConfigEntry<int> MinisterStealCount { get; private set; } = null!;
     /// <summary>内阁：美警击杀内阁距离 ×0.1（默认 20 = 2.0）</summary>
     public static ConfigEntry<int> CopKillMinisterRange { get; private set; } = null!;
+    /// <summary>内阁：任务限时秒（默认 60，超时自杀）</summary>
+    public static ConfigEntry<int> MinisterTaskDeadline { get; private set; } = null!;
 
     /// <summary>模组设置：测试模式，游戏不会正常结束（默认关）</summary>
     public static ConfigEntry<bool> TestMode { get; private set; } = null!;
@@ -138,6 +140,8 @@ public static class ModConfig
             "内阁完成全部任务时从随机船员处夺取的任务数量");
         CopKillMinisterRange = config.Bind("内阁 Minister", "美警击杀内阁距离 KillMinisterRange", 20,
             "美警贴近内阁直接击杀的距离（×0.1 游戏单位，默认 20 = 2.0）");
+        MinisterTaskDeadline = config.Bind("内阁 Minister", "任务限时 TaskDeadline", 60,
+            "内阁完成全部任务的限时（秒），超时自杀");
 
         TestMode = config.Bind("模组设置 Mod", "测试模式 TestMode", false,
             "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");

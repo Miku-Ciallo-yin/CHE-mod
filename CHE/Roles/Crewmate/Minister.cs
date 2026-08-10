@@ -13,8 +13,8 @@ namespace CHE.Roles.Crewmate;
 /// </summary>
 public class Minister : RoleBase
 {
-    /// <summary>任务限时（秒）：超时未完成则自杀</summary>
-    private const float TaskDeadline = 60f;
+    /// <summary>任务限时（秒，职业设置中可调）：超时未完成则自杀</summary>
+    private static float TaskDeadline => CustomOptions.MinisterTaskDeadline.Value;
 
     /// <summary>击杀内阁后等待转变的凶手（PlayerId），一轮会议前未再次击杀则变内阁</summary>
     public static readonly HashSet<byte> PendingKillers = new();

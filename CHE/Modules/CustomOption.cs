@@ -101,6 +101,7 @@ public static class CustomOptions
     public static CustomOption MinisterShortTasks { get; private set; } = null!;
     public static CustomOption MinisterStealCount { get; private set; } = null!;
     public static CustomOption CopKillMinisterRange { get; private set; } = null!;
+    public static CustomOption MinisterTaskDeadline { get; private set; } = null!;
     public static CustomOption GuesserCanGuessAddons { get; private set; } = null!;
     public static CustomOption FarmerStealChance { get; private set; } = null!;
     public static CustomOption FarmerStealsForKill { get; private set; } = null!;
@@ -166,6 +167,8 @@ public static class CustomOptions
             ModConfig.MinisterStealCount.Value, 1, 10, 1, 1f);
         CopKillMinisterRange = CustomOption.Register(127, 8, "美警击杀内阁距离×0.1",
             ModConfig.CopKillMinisterRange.Value, 5, 50, 5, 0.1f);
+        MinisterTaskDeadline = CustomOption.Register(128, 8, "任务限时(秒)",
+            ModConfig.MinisterTaskDeadline.Value, 10, 300, 10, 1f);
 
         // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())
