@@ -78,6 +78,15 @@ public static class MainMenuPatch
         foreach (var sr in _frameSprites)
             if (sr != null && sr.color.a > 0f)
                 sr.color = new Color(1f, 1f, 1f, 0f);
+
+        // 左侧按钮：游戏会重置精灵颜色，每帧把 alpha 压到目标值（幂等）
+        foreach (var sr in _leftPanelSprites)
+            if (sr != null && sr.color.a > LeftPanelAlpha)
+            {
+                var c = sr.color;
+                c.a = LeftPanelAlpha;
+                sr.color = c;
+            }
     }
 
     private static Transform? _particles;
@@ -111,27 +120,26 @@ public static class MainMenuPatch
         if (vanilla != null) vanilla.SetActive(false);
     }
 
-    /// <summary>左侧菜单：黑色底图精灵设为全透明（游戏会恢复 enabled，故不用隐藏），按钮透明度调至 80%</summary>
+    /// <summary>左侧菜单：收集所有精灵做每帧透明压制（按钮状态逻辑会重置颜色），底图全透明</summary>
     private static void MakeLeftPanelTransparent(MainMenuManager menu)
     {
-        var panel = menu.playButton.transform.parent;
-        if (panel == null) return;
+        var leftPanel = FindDirectChild(menu.transform, "MainUI/AspectScaler", "LeftPanel");
+        if (leftPanel == null) return;
 
-        // 其余（按钮背景等）透明度 95%
-        foreach (var sr in panel.GetComponentsInChildren<SpriteRenderer>(true))
+        _leftPanelSprites.Clear();
+        foreach (var sr in leftPanel.GetComponentsInChildren<SpriteRenderer>(true))
         {
             if (sr == null) continue;
-            var c = sr.color;
-            c.a *= 0.95f;
-            sr.color = c;
+            _leftPanelSprites.Add(sr);
         }
 
-        // LeftPanel 自身的黑色底图（含边框）设为全透明
-        var leftPanel = FindDirectChild(menu.transform, "MainUI/AspectScaler", "LeftPanel");
-        if (leftPanel != null)
-            foreach (var sr in leftPanel.GetComponents<SpriteRenderer>())
-                if (sr != null) sr.color = new Color(1f, 1f, 1f, 0f);
+        // LeftPanel 自身的黑色底图（含边框）加入每帧全透明压制
+        foreach (var sr in leftPanel.GetComponents<SpriteRenderer>())
+            if (sr != null && !_frameSprites.Contains(sr)) _frameSprites.Add(sr);
     }
+
+    private static readonly List<SpriteRenderer> _leftPanelSprites = new();
+    private const float LeftPanelAlpha = 0.95f;
 
     /// <summary>
     /// 收集需要每帧压制的对象：漂浮小人（Ambience/PlayerParticles）、
