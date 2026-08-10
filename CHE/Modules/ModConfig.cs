@@ -86,6 +86,8 @@ public static class ModConfig
     public static ConfigEntry<bool> ModAllowS { get; private set; } = null!;
     /// <summary>协管权限：/end 与 ALT+F4（默认开）</summary>
     public static ConfigEntry<bool> ModAllowEnd { get; private set; } = null!;
+    /// <summary>作弊处理方式（0=警告 1=踢出 2=封禁 3=加入黑名单，默认踢出）</summary>
+    public static ConfigEntry<int> CheatAction { get; private set; } = null!;
 
     /// <summary>主菜单：GitHub 按钮链接</summary>
     public static ConfigEntry<string> GithubUrl { get; private set; } = null!;
@@ -160,6 +162,8 @@ public static class ModConfig
         ModAllowStart = config.Bind("模组设置 Mod", "协管权限允许start ModAllowStart", true, "协管可使用 /start");
         ModAllowS = config.Bind("模组设置 Mod", "协管权限允许s ModAllowS", true, "协管可使用 /s 发布公告");
         ModAllowEnd = config.Bind("模组设置 Mod", "协管权限允许end ModAllowEnd", true, "协管可使用 /end 与 ALT+F4 结束对局");
+        CheatAction = config.Bind("模组设置 Mod", "作弊处理方式 CheatAction", 1,
+            "反作弊发现作弊的处理方式：0=警告 1=踢出 2=封禁 3=加入黑名单");
 
         GithubUrl = config.Bind("主菜单 MainMenu", "GitHub 地址 GithubUrl", "https://github.com/",
             "主菜单 GitHub 按钮打开的链接");

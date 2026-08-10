@@ -34,15 +34,26 @@ public class CustomOption
     /// <summary>父选项 ID：父选项未开启（=0）时本选项在设置界面隐藏</summary>
     public byte? ParentId { get; }
 
+    /// <summary>枚举选项的显示文本表（设置后按 Value 显示文本而不是数字）</summary>
+    public string[]? FormatNames { get; }
+
     /// <summary>当前值（原始整数）</summary>
     public int Value;
 
     public float ScaledValue => Value * Scale;
 
     /// <summary>界面显示用的值文本</summary>
-    public string DisplayValue => IsBool ? (Value == 1 ? "开" : "关") : Value.ToString();
+    public string DisplayValue
+    {
+        get
+        {
+            if (FormatNames != null && Value >= 0 && Value < FormatNames.Length)
+                return FormatNames[Value];
+            return IsBool ? (Value == 1 ? "开" : "关") : Value.ToString();
+        }
+    }
 
-    private CustomOption(byte id, byte roleId, string name, int defaultValue, int min, int max, int step, float scale, bool isBool = false, byte? parentId = null)
+    private CustomOption(byte id, byte roleId, string name, int defaultValue, int min, int max, int step, float scale, bool isBool = false, byte? parentId = null, string[]? formatNames = null)
     {
         Id = id;
         RoleId = roleId;
@@ -54,11 +65,12 @@ public class CustomOption
         Scale = scale;
         IsBool = isBool;
         ParentId = parentId;
+        FormatNames = formatNames;
     }
 
-    public static CustomOption Register(byte id, byte roleId, string name, int defaultValue, int min, int max, int step, float scale, bool isBool = false, byte? parentId = null)
+    public static CustomOption Register(byte id, byte roleId, string name, int defaultValue, int min, int max, int step, float scale, bool isBool = false, byte? parentId = null, string[]? formatNames = null)
     {
-        var opt = new CustomOption(id, roleId, name, defaultValue, min, max, step, scale, isBool, parentId);
+        var opt = new CustomOption(id, roleId, name, defaultValue, min, max, step, scale, isBool, parentId, formatNames);
         All.Add(opt);
         return opt;
     }
@@ -84,6 +96,7 @@ public static class CustomOptions
     public static CustomOption ModAllowStart { get; private set; } = null!;
     public static CustomOption ModAllowS { get; private set; } = null!;
     public static CustomOption ModAllowEnd { get; private set; } = null!;
+    public static CustomOption CheatAction { get; private set; } = null!;
     public static CustomOption GuessMode { get; private set; } = null!;
     public static CustomOption GuessCrewmate { get; private set; } = null!;
     public static CustomOption GuessImpostor { get; private set; } = null!;
@@ -129,6 +142,9 @@ public static class CustomOptions
             ModConfig.ModAllowS.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 129);
         ModAllowEnd = CustomOption.Register(132, ModGroupId, "协管权限：/end与ALT+F4",
             ModConfig.ModAllowEnd.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 129);
+        CheatAction = CustomOption.Register(133, ModGroupId, "作弊处理方式",
+            ModConfig.CheatAction.Value, 0, 3, 1, 1f,
+            formatNames: new[] { "警告", "踢出", "封禁", "加入黑名单" });
         GuessMode = CustomOption.Register(107, ModGroupId, "猜测模式",
             ModConfig.GuessMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         GuessCrewmate = CustomOption.Register(108, ModGroupId, "猜测模式：船员可猜测",
