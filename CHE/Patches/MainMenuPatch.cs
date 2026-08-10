@@ -41,6 +41,7 @@ public static class MainMenuPatch
             RemoveFloatersAndFrame(__instance);
             MakeLeftPanelTransparent(__instance);
             CreateVersionBadge(__instance, tmpTemplate);
+            CreateModNameLabel(__instance, tmpTemplate);
             CreateButtons(__instance);
 
             CHEPlugin.Log.LogInfo("[CHE] 主菜单定制已创建");
@@ -234,6 +235,21 @@ public static class MainMenuPatch
         tex.Apply();
 
         return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
+    }
+
+    /// <summary>顶栏"好友"下方的模组名标签（参考 TONE 顶部模组标识）</summary>
+    private static void CreateModNameLabel(MainMenuManager menu, TextMeshPro tmpTemplate)
+    {
+        var label = Object.Instantiate(tmpTemplate, menu.playButton.transform.parent);
+        label.DestroyTranslator();
+        label.text = "<color=#4FC3F7><b>CHE</b></color>";
+        label.fontSize = 4f;
+        label.fontStyle = FontStyles.Normal;
+
+        var aspect = label.GetComponent<AspectPosition>();
+        if (aspect == null) aspect = label.gameObject.AddComponent<AspectPosition>();
+        aspect.anchorPoint = new Vector2(0.88f, 0.85f);
+        aspect.updateAlways = true;
     }
 
     /// <summary>Logo 区下方的版本徽章</summary>
