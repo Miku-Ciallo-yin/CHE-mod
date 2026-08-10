@@ -76,6 +76,11 @@ public static class CustomOptions
 
     public static CustomOption ImpostorKnowEachOther { get; private set; } = null!;
     public static CustomOption TestMode { get; private set; } = null!;
+    public static CustomOption GuessMode { get; private set; } = null!;
+    public static CustomOption GuessCrewmate { get; private set; } = null!;
+    public static CustomOption GuessImpostor { get; private set; } = null!;
+    public static CustomOption GuessFriendlyNeutral { get; private set; } = null!;
+    public static CustomOption GuessHostileNeutral { get; private set; } = null!;
     public static CustomOption GuesserCanGuessAddons { get; private set; } = null!;
     public static CustomOption FarmerStealChance { get; private set; } = null!;
     public static CustomOption FarmerStealsForKill { get; private set; } = null!;
@@ -91,6 +96,16 @@ public static class CustomOptions
             ModConfig.ImpostorKnowEachOther.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         TestMode = CustomOption.Register(106, ModGroupId, "测试模式",
             ModConfig.TestMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        GuessMode = CustomOption.Register(107, ModGroupId, "猜测模式",
+            ModConfig.GuessMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        GuessCrewmate = CustomOption.Register(108, ModGroupId, "猜测模式：船员可猜测",
+            ModConfig.GuessCrewmate.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        GuessImpostor = CustomOption.Register(109, ModGroupId, "猜测模式：内鬼可猜测",
+            ModConfig.GuessImpostor.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        GuessFriendlyNeutral = CustomOption.Register(110, ModGroupId, "猜测模式：友好中立可猜测",
+            ModConfig.GuessFriendlyNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        GuessHostileNeutral = CustomOption.Register(111, ModGroupId, "猜测模式：敌对中立可猜测",
+            ModConfig.GuessHostileNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
 
         // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())

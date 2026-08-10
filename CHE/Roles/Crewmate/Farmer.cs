@@ -22,6 +22,7 @@ public class Farmer : RoleBase
     public override string Name => "佃农";
     public override string NameEn => "Farmer";
     public override Faction Faction => _faction;
+    public override bool IsHostileNeutral => true; // 带刀职业，转化后为敌对中立
     public override Color Color => new(0.55f, 0.35f, 0.17f); // 土棕色
     public override string Description => "抢夺船员的任务，积蓄力量后反戈一击。小心别杀错人。";
 

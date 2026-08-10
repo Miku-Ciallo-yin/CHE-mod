@@ -33,15 +33,41 @@ public static class GuesserPatch
     private static Sprite? _crosshairSprite;
     private static Sprite? _solidSprite;
 
+    /// <summary>
+    /// 玩家是否可以使用猜测功能（赌怪与猜测模式互不干扰）：
+    /// - 拥有赌怪附加职业：始终可猜（与猜测模式开关无关）
+    /// - 猜测模式开启：按阵营勾选放行（无需赌怪附加）
+    /// </summary>
+    private static bool CanGuess(PlayerControl player)
+    {
+        if (CustomRoleManager.HasAddon(player, Guesser.AddonId)) return true;
+        if (CustomOptions.GuessMode.Value != 1) return false;
+
+        var faction = CustomRoleManager.GetFaction(player);
+        return faction switch
+        {
+            Faction.Crewmate => CustomOptions.GuessCrewmate.Value == 1,
+            Faction.Impostor => CustomOptions.GuessImpostor.Value == 1,
+            Faction.Neutral => IsHostileNeutral(player)
+                ? CustomOptions.GuessHostileNeutral.Value == 1
+                : CustomOptions.GuessFriendlyNeutral.Value == 1,
+            _ => false,
+        };
+    }
+
+    private static bool IsHostileNeutral(PlayerControl player)
+    {
+        return CustomRoleManager.GetRole(player)?.IsHostileNeutral ?? false;
+    }
+
     [HarmonyPatch(nameof(MeetingHud.Start)), HarmonyPostfix]
     public static void StartPostfix(MeetingHud __instance)
-    {
-        Cleanup();
+    {        Cleanup();
         try
         {
             var local = PlayerControl.LocalPlayer;
             if (local == null || local.Data == null || local.Data.IsDead) return;
-            if (!CustomRoleManager.HasAddon(local, Guesser.AddonId)) return;
+            if (!CanGuess(local)) return;
 
             foreach (var pva in __instance.playerStates)
             {

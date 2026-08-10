@@ -26,6 +26,17 @@ public static class ModConfig
     /// <summary>赌怪：是否可以猜测附加职业（默认关）</summary>
     public static ConfigEntry<bool> GuesserCanGuessAddons { get; private set; } = null!;
 
+    /// <summary>猜测模式：总开关</summary>
+    public static ConfigEntry<bool> GuessMode { get; private set; } = null!;
+    /// <summary>猜测模式：船员可猜测</summary>
+    public static ConfigEntry<bool> GuessCrewmate { get; private set; } = null!;
+    /// <summary>猜测模式：内鬼可猜测</summary>
+    public static ConfigEntry<bool> GuessImpostor { get; private set; } = null!;
+    /// <summary>猜测模式：友好中立可猜测</summary>
+    public static ConfigEntry<bool> GuessFriendlyNeutral { get; private set; } = null!;
+    /// <summary>猜测模式：敌对中立可猜测</summary>
+    public static ConfigEntry<bool> GuessHostileNeutral { get; private set; } = null!;
+
     /// <summary>模组设置：测试模式，游戏不会正常结束（默认关）</summary>
     public static ConfigEntry<bool> TestMode { get; private set; } = null!;
 
@@ -51,6 +62,13 @@ public static class ModConfig
 
         GuesserCanGuessAddons = config.Bind("赌怪 Guesser", "可猜测附加职业 CanGuessAddons", false,
             "开启后赌怪的猜测列表包含附加职业");
+
+        GuessMode = config.Bind("猜测模式 GuessMode", "开启 Enable", false,
+            "开启后按阵营勾选决定谁可以猜测（无需赌怪附加职业）");
+        GuessCrewmate = config.Bind("猜测模式 GuessMode", "船员可猜测 Crewmate", false, "船员阵营可使用猜测");
+        GuessImpostor = config.Bind("猜测模式 GuessMode", "内鬼可猜测 Impostor", false, "内鬼阵营可使用猜测");
+        GuessFriendlyNeutral = config.Bind("猜测模式 GuessMode", "友好中立可猜测 FriendlyNeutral", false, "友好中立可使用猜测");
+        GuessHostileNeutral = config.Bind("猜测模式 GuessMode", "敌对中立可猜测 HostileNeutral", false, "敌对中立可使用猜测");
 
         TestMode = config.Bind("模组设置 Mod", "测试模式 TestMode", false,
             "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");

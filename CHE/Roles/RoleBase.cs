@@ -20,6 +20,9 @@ public abstract class RoleBase
     /// <summary>所属阵营</summary>
     public abstract Faction Faction { get; }
 
+    /// <summary>敌对中立（如带刀中立）。猜测模式的"友好中立/敌对中立"开关据此区分，默认为友好</summary>
+    public virtual bool IsHostileNeutral => false;
+
     /// <summary>职业主题色</summary>
     public abstract Color Color { get; }
 
