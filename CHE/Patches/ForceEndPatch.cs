@@ -69,6 +69,11 @@ public static class ForceEndPatch
             }
             if (text.StartsWith("/bt", System.StringComparison.OrdinalIgnoreCase))
                 return HandleBet(text);
+            if (text.Equals("/id", System.StringComparison.OrdinalIgnoreCase))
+            {
+                ShowPlayerIds();
+                return false;
+            }
 
             // 其余以 / 开头的输入一律隐藏（不广播给其他玩家，防指令泄露）
             if (text.StartsWith('/'))
@@ -131,6 +136,21 @@ public static class ForceEndPatch
             return AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
         }
 
+        /// <summary>/id：输出所有玩家的名字及对应 ID（仅本机可见）</summary>
+        private static void ShowPlayerIds()
+        {
+            var lines = new List<string> { "<color=#4FC3F7>===== 玩家 ID 列表 =====</color>" };
+            foreach (var player in PlayerControl.AllPlayerControls)
+            {
+                if (player == null || player.Data == null) continue;
+                var id = Modules.PlayerIdManager.GetId(player);
+                var idText = id.HasValue ? id.Value.ToString() : "?";
+                var self = player.AmOwner ? "（你）" : string.Empty;
+                lines.Add($"[{idText}] {player.Data.PlayerName}{self}");
+            }
+            Modules.ChatHelper.ShowMany(lines);
+        }
+
         /// <summary>/help：输出全部指令及功能（合并为一条气泡，超长自动拆分）</summary>
         private static void ShowHelp()
         {
@@ -138,6 +158,7 @@ public static class ForceEndPatch
             {
                 "<color=#4FC3F7>===== CHE 指令帮助 =====</color>",
                 "/help — 显示本帮助",
+                "/id — 显示所有玩家的名字及其对应 ID",
                 "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
                 "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主）",
                 "/end — 强制结束对局返回大厅（仅房主/对局中）",
