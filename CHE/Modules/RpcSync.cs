@@ -32,6 +32,22 @@ public static class RpcSync
     /// <summary>向指定客户端显示聊天栏消息（主机 -> 指定模组端）。</summary>
     public const byte ShowMessageCallId = 223;
 
+    /// <summary>协管指令请求（模组端 -> 主机）：kind 1=/start(value 秒) 2=/end。</summary>
+    public const byte ModCommandCallId = 224;
+
+    /// <summary>非主机协管端：向主机发送指令请求。</summary>
+    public static void SendModCommand(byte kind, int value)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.AmHost || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, ModCommandCallId, SendOption.Reliable, client.HostId);
+        writer.Write(kind);
+        writer.Write(value);
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>主机：向指定客户端发送聊天栏消息（仅对方本机可见）。</summary>
     public static void SendShowMessage(int targetClientId, string text)
     {
@@ -227,6 +243,31 @@ public static class RpcSync
         if (callId == ShowMessageCallId)
         {
             ChatHelper.Show(reader.ReadString());
+            return true;
+        }
+
+        if (callId == ModCommandCallId)
+        {
+            // 只有主机处理，且需协管名单开启 + 发送者在名单内
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return true;
+            if (!ModeratorManager.IsEnabled || !ModeratorManager.IsModerator(sender)) return true;
+
+            var kind = reader.ReadByte();
+            var value = reader.ReadInt32();
+            if (kind == 1)
+            {
+                var manager = GameStartManager.Instance;
+                if (manager != null)
+                {
+                    CHEPlugin.Log.LogInfo($"[CHE] 协管 {sender.Data?.PlayerName} 请求 /start {value}");
+                    Patches.StartAnyCountPatch.StartCountdown(manager, value);
+                }
+            }
+            else if (kind == 2)
+            {
+                CHEPlugin.Log.LogInfo($"[CHE] 协管 {sender.Data?.PlayerName} 请求 /end");
+                Patches.ForceEndPatch.ForceEnd();
+            }
             return true;
         }
 

@@ -31,7 +31,8 @@ public static class ForceEndPatch
         return true;
     }
 
-    private static void ForceEnd()
+    /// <summary>强制结束本局（/end、ALT+F4、协管请求共用）</summary>
+    public static void ForceEnd()
     {
         if (GameManager.Instance == null) return;
         CHEPlugin.Log.LogInfo("[CHE] 强制结束游戏（/end 或 ALT+F4）");
@@ -74,12 +75,69 @@ public static class ForceEndPatch
                 ShowPlayerIds();
                 return false;
             }
+            if (text.StartsWith("/addmod", System.StringComparison.OrdinalIgnoreCase))
+                return HandleAddMod(text);
 
             // 其余以 / 开头的输入一律隐藏（不广播给其他玩家，防指令泄露）
             if (text.StartsWith('/'))
                 return false;
 
             return true;
+        }
+
+        /// <summary>是否房主</summary>
+        private static bool IsHost()
+        {
+            return AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
+        }
+
+        /// <summary>是否可使用房主指令：房主，或协管名单开启且在名单内</summary>
+        private static bool CanUseHostCommands()
+        {
+            if (IsHost()) return true;
+            var local = PlayerControl.LocalPlayer;
+            return local != null
+                   && Modules.ModeratorManager.IsEnabled
+                   && Modules.ModeratorManager.IsModerator(local);
+        }
+
+        /// <summary>/addmod id：把该 ID 玩家加入协管名单（仅房主）</summary>
+        private static bool HandleAddMod(string text)
+        {
+            var show = Modules.ChatHelper.Show;
+
+            if (!IsHost())
+            {
+                show("[CHE] /addmod 仅房主可用");
+                return false;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
+            {
+                show("[CHE] 用法：/addmod <玩家ID>，先用 /id 查看");
+                return false;
+            }
+
+            var target = Modules.PlayerIdManager.GetPlayerById(id);
+            if (target == null || target.Data == null)
+            {
+                show($"[CHE] 未找到 ID 为 {id} 的玩家");
+                return false;
+            }
+
+            var code = target.Data.FriendCode;
+            if (string.IsNullOrEmpty(code))
+            {
+                show($"[CHE] 无法获取 {target.Data.PlayerName} 的好友代码");
+                return false;
+            }
+
+            if (Modules.ModeratorManager.Add(code))
+                show($"[CHE] 已将 {target.Data.PlayerName}（{code}）加入协管名单");
+            else
+                show($"[CHE] {target.Data.PlayerName}（{code}）已在协管名单中");
+            return false;
         }
 
         /// <summary>/bt id 职业：猜测某玩家的职业（参考 TONE），需有猜测权限</summary>
@@ -130,12 +188,6 @@ public static class ForceEndPatch
             return false; // 拦截命令，不发送到聊天
         }
 
-        /// <summary>是否房主</summary>
-        private static bool IsHost()
-        {
-            return AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
-        }
-
         /// <summary>/id：输出所有玩家的名字及对应 ID（仅本机可见）</summary>
         private static void ShowPlayerIds()
         {
@@ -160,34 +212,40 @@ public static class ForceEndPatch
                 "/help — 显示本帮助",
                 "/id — 显示所有玩家的名字及其对应 ID",
                 "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
-                "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主）",
-                "/end — 强制结束对局返回大厅（仅房主/对局中）",
+                "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主/协管）",
+                "/end — 强制结束对局返回大厅（仅房主/协管，对局中）",
                 "/dump — 导出日志到桌面并显示最近日志（仅房主）",
+                "/addmod <玩家ID> — 将该玩家加入协管名单（仅房主）",
                 "快捷键：ALT+F4 — 强制结束对局（仅房主/对局中）",
             });
         }
 
-        /// <summary>/end：强制结束对局（仅主机、对局中）</summary>
+        /// <summary>/end：强制结束对局（房主直接执行；协管经 RPC 由主机执行）</summary>
         private static bool HandleEnd()
         {
             if (AmongUsClient.Instance == null
-                || !AmongUsClient.Instance.AmHost
                 || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
             {
-                CHEPlugin.Log.LogWarning("[CHE] /end 仅主机在对局中可用");
-                return false; // 拦截命令，不发送到聊天
+                Modules.ChatHelper.Show("[CHE] /end 仅对局中可用");
+                return false;
+            }
+            if (!CanUseHostCommands())
+            {
+                Modules.ChatHelper.Show("[CHE] /end 仅房主或协管可用");
+                return false;
             }
 
-            ForceEnd();
+            if (IsHost()) ForceEnd();
+            else Modules.RpcSync.SendModCommand(2, 0); // 协管：请求主机结束
             return false;
         }
 
-        /// <summary>/start [秒数]：以指定倒计时开始游戏（仅主机、大厅中）</summary>
+        /// <summary>/start [秒数]：以指定倒计时开始游戏（房主直接执行；协管经 RPC 由主机执行）</summary>
         private static bool HandleStart(string text)
         {
-            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost)
+            if (!CanUseHostCommands())
             {
-                CHEPlugin.Log.LogWarning("[CHE] /start 仅主机可用");
+                Modules.ChatHelper.Show("[CHE] /start 仅房主或协管可用");
                 return false;
             }
 
@@ -197,16 +255,24 @@ public static class ForceEndPatch
                 int.TryParse(parts[1], out sec);
             sec = UnityEngine.Mathf.Clamp(sec, 0, 99);
 
-            var manager = GameStartManager.Instance;
-            if (manager == null)
+            if (IsHost())
             {
-                CHEPlugin.Log.LogWarning("[CHE] /start 仅在大厅中可用");
-                return false;
+                var manager = GameStartManager.Instance;
+                if (manager == null)
+                {
+                    CHEPlugin.Log.LogWarning("[CHE] /start 仅在大厅中可用");
+                    return false;
+                }
+                CHEPlugin.Log.LogInfo($"[CHE] /start：{sec} 秒倒计时开始游戏");
+                StartAnyCountPatch.StartCountdown(manager, sec);
             }
-
-            CHEPlugin.Log.LogInfo($"[CHE] /start：{sec} 秒倒计时开始游戏");
-            StartAnyCountPatch.StartCountdown(manager, sec);
-            return false; // 拦截命令，不发送到聊天
+            else
+            {
+                // 协管：请求主机开始倒计时
+                Modules.RpcSync.SendModCommand(1, sec);
+                Modules.ChatHelper.Show($"[CHE] 已请求主机开始游戏（{sec} 秒倒计时）");
+            }
+            return false;
         }
     }
 }

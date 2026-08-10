@@ -78,6 +78,9 @@ public static class ModConfig
     /// <summary>模组设置：测试模式，游戏不会正常结束（默认关）</summary>
     public static ConfigEntry<bool> TestMode { get; private set; } = null!;
 
+    /// <summary>模组设置：协管名单（默认关），名单文件 CHE-DATA/Moderators.txt</summary>
+    public static ConfigEntry<bool> ModeratorList { get; private set; } = null!;
+
     /// <summary>主菜单：GitHub 按钮链接</summary>
     public static ConfigEntry<string> GithubUrl { get; private set; } = null!;
 
@@ -145,6 +148,9 @@ public static class ModConfig
 
         TestMode = config.Bind("模组设置 Mod", "测试模式 TestMode", false,
             "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");
+
+        ModeratorList = config.Bind("模组设置 Mod", "协管名单 ModeratorList", false,
+            "开启后协管名单（CHE-DATA/Moderators.txt）内的玩家可使用 /start、/end 等房主指令");
 
         GithubUrl = config.Bind("主菜单 MainMenu", "GitHub 地址 GithubUrl", "https://github.com/",
             "主菜单 GitHub 按钮打开的链接");

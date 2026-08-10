@@ -80,6 +80,7 @@ public static class CustomOptions
 
     public static CustomOption ImpostorKnowEachOther { get; private set; } = null!;
     public static CustomOption TestMode { get; private set; } = null!;
+    public static CustomOption ModeratorList { get; private set; } = null!;
     public static CustomOption GuessMode { get; private set; } = null!;
     public static CustomOption GuessCrewmate { get; private set; } = null!;
     public static CustomOption GuessImpostor { get; private set; } = null!;
@@ -117,6 +118,8 @@ public static class CustomOptions
             ModConfig.ImpostorKnowEachOther.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         TestMode = CustomOption.Register(106, ModGroupId, "测试模式",
             ModConfig.TestMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        ModeratorList = CustomOption.Register(129, ModGroupId, "协管名单",
+            ModConfig.ModeratorList.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         GuessMode = CustomOption.Register(107, ModGroupId, "猜测模式",
             ModConfig.GuessMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         GuessCrewmate = CustomOption.Register(108, ModGroupId, "猜测模式：船员可猜测",
