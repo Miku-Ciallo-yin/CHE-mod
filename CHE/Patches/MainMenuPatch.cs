@@ -117,12 +117,12 @@ public static class MainMenuPatch
         var panel = menu.playButton.transform.parent;
         if (panel == null) return;
 
-        // 其余（按钮背景等）透明度 80%
+        // 其余（按钮背景等）透明度 95%
         foreach (var sr in panel.GetComponentsInChildren<SpriteRenderer>(true))
         {
             if (sr == null) continue;
             var c = sr.color;
-            c.a *= 0.8f;
+            c.a *= 0.95f;
             sr.color = c;
         }
 
