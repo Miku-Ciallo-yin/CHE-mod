@@ -20,14 +20,28 @@ public static class ForceEndPatch
 
     private static bool OnWantsToQuit()
     {
-        // 对局中且是主机：取消退出，强制结束本局
-        if (AmongUsClient.Instance != null
-            && AmongUsClient.Instance.AmHost
-            && AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started)
+        var client = AmongUsClient.Instance;
+        if (client == null || client.GameState != InnerNetClient.GameStates.Started)
+            return true;
+
+        // 主机：取消退出，强制结束本局
+        if (client.AmHost)
         {
             ForceEnd();
             return false;
         }
+
+        // 协管（权限开启时）：请求主机结束，本机不退出
+        var local = PlayerControl.LocalPlayer;
+        if (local != null
+            && Modules.ModeratorManager.IsEnabled
+            && Modules.ModeratorManager.IsModerator(local)
+            && Modules.CustomOptions.ModAllowEnd.Value == 1)
+        {
+            Modules.RpcSync.SendModCommand(2, 0);
+            return false;
+        }
+
         return true;
     }
 
@@ -77,6 +91,9 @@ public static class ForceEndPatch
             }
             if (text.StartsWith("/addmod", System.StringComparison.OrdinalIgnoreCase))
                 return HandleAddMod(text);
+            if (text.Equals("/s", System.StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("/s ", System.StringComparison.OrdinalIgnoreCase))
+                return HandleAnnounce(text);
 
             // 其余以 / 开头的输入一律隐藏（不广播给其他玩家，防指令泄露）
             if (text.StartsWith('/'))
@@ -85,20 +102,44 @@ public static class ForceEndPatch
             return true;
         }
 
+        /// <summary>/s 内容：发布醒目公告（房主/协管，参考 TONE 的主机消息）</summary>
+        private static bool HandleAnnounce(string text)
+        {
+            var show = Modules.ChatHelper.Show;
+            var content = text.Length > 2 ? text.Substring(2).Trim() : string.Empty;
+            if (content.Length == 0)
+            {
+                show("[CHE] 用法：/s <内容>");
+                return false;
+            }
+            if (!CanUseHostCommands(Modules.CustomOptions.ModAllowS))
+            {
+                show("[CHE] /s 仅房主或协管可用");
+                return false;
+            }
+
+            if (IsHost())
+                Modules.Announcement.Broadcast(true, content);
+            else
+                Modules.RpcSync.SendModCommandText(3, content); // 协管：请求主机广播
+            return false;
+        }
+
         /// <summary>是否房主</summary>
         private static bool IsHost()
         {
             return AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
         }
 
-        /// <summary>是否可使用房主指令：房主，或协管名单开启且在名单内</summary>
-        private static bool CanUseHostCommands()
+        /// <summary>是否可使用指定房主指令：房主，或协管名单开启且在名单内且对应子权限开启</summary>
+        private static bool CanUseHostCommands(Modules.CustomOption permission)
         {
             if (IsHost()) return true;
             var local = PlayerControl.LocalPlayer;
             return local != null
                    && Modules.ModeratorManager.IsEnabled
-                   && Modules.ModeratorManager.IsModerator(local);
+                   && Modules.ModeratorManager.IsModerator(local)
+                   && permission.Value == 1;
         }
 
         /// <summary>/addmod id：把该 ID 玩家加入协管名单（仅房主）</summary>
@@ -216,7 +257,8 @@ public static class ForceEndPatch
                 "/end — 强制结束对局返回大厅（仅房主/协管，对局中）",
                 "/dump — 导出日志到桌面并显示最近日志（仅房主）",
                 "/addmod <玩家ID> — 将该玩家加入协管名单（仅房主）",
-                "快捷键：ALT+F4 — 强制结束对局（仅房主/对局中）",
+                "/s <内容> — 发布醒目公告（仅房主/协管，全员可见）",
+                "快捷键：ALT+F4 — 强制结束对局（仅房主/协管，对局中）",
             });
         }
 
@@ -229,7 +271,7 @@ public static class ForceEndPatch
                 Modules.ChatHelper.Show("[CHE] /end 仅对局中可用");
                 return false;
             }
-            if (!CanUseHostCommands())
+            if (!CanUseHostCommands(Modules.CustomOptions.ModAllowEnd))
             {
                 Modules.ChatHelper.Show("[CHE] /end 仅房主或协管可用");
                 return false;
@@ -243,7 +285,7 @@ public static class ForceEndPatch
         /// <summary>/start [秒数]：以指定倒计时开始游戏（房主直接执行；协管经 RPC 由主机执行）</summary>
         private static bool HandleStart(string text)
         {
-            if (!CanUseHostCommands())
+            if (!CanUseHostCommands(Modules.CustomOptions.ModAllowStart))
             {
                 Modules.ChatHelper.Show("[CHE] /start 仅房主或协管可用");
                 return false;

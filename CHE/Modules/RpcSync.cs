@@ -35,6 +35,35 @@ public static class RpcSync
     /// <summary>协管指令请求（模组端 -> 主机）：kind 1=/start(value 秒) 2=/end。</summary>
     public const byte ModCommandCallId = 224;
 
+    /// <summary>公告广播（主机 -> 全模组端）：/s 醒目消息。</summary>
+    public const byte AnnouncementCallId = 225;
+
+    /// <summary>主机：向全模组端广播公告（label + 内容）。</summary>
+    public static void SendAnnouncement(string label, string content)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, AnnouncementCallId, SendOption.Reliable, -1);
+        writer.Write(label);
+        writer.Write(content);
+        client.FinishRpcImmediately(writer);
+    }
+
+    /// <summary>非主机协管端：向主机发送带文本的指令请求（kind 3 = /s）。</summary>
+    public static void SendModCommandText(byte kind, string text)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.AmHost || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, ModCommandCallId, SendOption.Reliable, client.HostId);
+        writer.Write(kind);
+        writer.Write(text);
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>非主机协管端：向主机发送指令请求。</summary>
     public static void SendModCommand(byte kind, int value)
     {
@@ -253,21 +282,38 @@ public static class RpcSync
             if (!ModeratorManager.IsEnabled || !ModeratorManager.IsModerator(sender)) return true;
 
             var kind = reader.ReadByte();
-            var value = reader.ReadInt32();
             if (kind == 1)
             {
+                var sec = reader.ReadInt32();
+                if (CustomOptions.ModAllowStart.Value != 1) return true;
                 var manager = GameStartManager.Instance;
                 if (manager != null)
                 {
-                    CHEPlugin.Log.LogInfo($"[CHE] 协管 {sender.Data?.PlayerName} 请求 /start {value}");
-                    Patches.StartAnyCountPatch.StartCountdown(manager, value);
+                    CHEPlugin.Log.LogInfo($"[CHE] 协管 {sender.Data?.PlayerName} 请求 /start {sec}");
+                    Patches.StartAnyCountPatch.StartCountdown(manager, sec);
                 }
             }
             else if (kind == 2)
             {
+                if (CustomOptions.ModAllowEnd.Value != 1) return true;
                 CHEPlugin.Log.LogInfo($"[CHE] 协管 {sender.Data?.PlayerName} 请求 /end");
                 Patches.ForceEndPatch.ForceEnd();
             }
+            else if (kind == 3)
+            {
+                if (CustomOptions.ModAllowS.Value != 1) return true;
+                var content = reader.ReadString();
+                CHEPlugin.Log.LogInfo($"[CHE] 协管 {sender.Data?.PlayerName} 请求 /s：{content}");
+                Announcement.Broadcast(false, content);
+            }
+            return true;
+        }
+
+        if (callId == AnnouncementCallId)
+        {
+            var label = reader.ReadString();
+            var content = reader.ReadString();
+            Announcement.Show(label, content);
             return true;
         }
 

@@ -80,6 +80,12 @@ public static class ModConfig
 
     /// <summary>模组设置：协管名单（默认关），名单文件 CHE-DATA/Moderators.txt</summary>
     public static ConfigEntry<bool> ModeratorList { get; private set; } = null!;
+    /// <summary>协管权限：/start（默认开）</summary>
+    public static ConfigEntry<bool> ModAllowStart { get; private set; } = null!;
+    /// <summary>协管权限：/s（默认开）</summary>
+    public static ConfigEntry<bool> ModAllowS { get; private set; } = null!;
+    /// <summary>协管权限：/end 与 ALT+F4（默认开）</summary>
+    public static ConfigEntry<bool> ModAllowEnd { get; private set; } = null!;
 
     /// <summary>主菜单：GitHub 按钮链接</summary>
     public static ConfigEntry<string> GithubUrl { get; private set; } = null!;
@@ -151,6 +157,9 @@ public static class ModConfig
 
         ModeratorList = config.Bind("模组设置 Mod", "协管名单 ModeratorList", false,
             "开启后协管名单（CHE-DATA/Moderators.txt）内的玩家可使用 /start、/end 等房主指令");
+        ModAllowStart = config.Bind("模组设置 Mod", "协管权限允许start ModAllowStart", true, "协管可使用 /start");
+        ModAllowS = config.Bind("模组设置 Mod", "协管权限允许s ModAllowS", true, "协管可使用 /s 发布公告");
+        ModAllowEnd = config.Bind("模组设置 Mod", "协管权限允许end ModAllowEnd", true, "协管可使用 /end 与 ALT+F4 结束对局");
 
         GithubUrl = config.Bind("主菜单 MainMenu", "GitHub 地址 GithubUrl", "https://github.com/",
             "主菜单 GitHub 按钮打开的链接");

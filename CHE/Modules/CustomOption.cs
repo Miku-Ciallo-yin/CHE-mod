@@ -81,6 +81,9 @@ public static class CustomOptions
     public static CustomOption ImpostorKnowEachOther { get; private set; } = null!;
     public static CustomOption TestMode { get; private set; } = null!;
     public static CustomOption ModeratorList { get; private set; } = null!;
+    public static CustomOption ModAllowStart { get; private set; } = null!;
+    public static CustomOption ModAllowS { get; private set; } = null!;
+    public static CustomOption ModAllowEnd { get; private set; } = null!;
     public static CustomOption GuessMode { get; private set; } = null!;
     public static CustomOption GuessCrewmate { get; private set; } = null!;
     public static CustomOption GuessImpostor { get; private set; } = null!;
@@ -120,6 +123,12 @@ public static class CustomOptions
             ModConfig.TestMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         ModeratorList = CustomOption.Register(129, ModGroupId, "协管名单",
             ModConfig.ModeratorList.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        ModAllowStart = CustomOption.Register(130, ModGroupId, "协管权限：/start",
+            ModConfig.ModAllowStart.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 129);
+        ModAllowS = CustomOption.Register(131, ModGroupId, "协管权限：/s",
+            ModConfig.ModAllowS.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 129);
+        ModAllowEnd = CustomOption.Register(132, ModGroupId, "协管权限：/end与ALT+F4",
+            ModConfig.ModAllowEnd.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 129);
         GuessMode = CustomOption.Register(107, ModGroupId, "猜测模式",
             ModConfig.GuessMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         GuessCrewmate = CustomOption.Register(108, ModGroupId, "猜测模式：船员可猜测",
