@@ -267,6 +267,7 @@ public static class MainMenuPatch
         badge.fontStyle = FontStyles.Bold;
         badge.outlineWidth = 0.2f;
         badge.outlineColor = Color.black;
+        badge.enableWordWrapping = false; // 版本号保持单行不换行
 
         var aspect = badge.GetComponent<AspectPosition>();
         if (aspect == null) aspect = badge.gameObject.AddComponent<AspectPosition>();
