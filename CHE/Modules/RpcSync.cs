@@ -23,6 +23,23 @@ public static class RpcSync
     /// <summary>玩家 ID 映射广播（主机 -> 全员）。</summary>
     public const byte SyncPlayerIdsCallId = 220;
 
+    /// <summary>猜测请求（非主机模组端 -> 主机）。</summary>
+    public const byte GuessRequestCallId = 221;
+
+    /// <summary>非主机模组端：向主机发送猜测请求。</summary>
+    public static void SendGuessRequest(byte targetId, bool isAddon, byte guessId)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.AmHost || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, GuessRequestCallId, SendOption.Reliable, client.HostId);
+        writer.Write(targetId);
+        writer.Write(isAddon);
+        writer.Write(guessId);
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>主机：广播玩家 ID 映射表。</summary>
     public static void BroadcastPlayerIds(IReadOnlyDictionary<int, int> ids)
     {
@@ -134,6 +151,22 @@ public static class RpcSync
             var count = reader.ReadByte();
             for (var i = 0; i < count; i++)
                 PlayerIdManager.Set(reader.ReadInt32(), reader.ReadInt32());
+            return true;
+        }
+
+        if (callId == GuessRequestCallId)
+        {
+            // 只有主机处理猜测请求，ExecuteGuess 内含权限与状态校验
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return true;
+
+            var targetId = reader.ReadByte();
+            var isAddon = reader.ReadBoolean();
+            var guessId = reader.ReadByte();
+            var target = PlayerControl.AllPlayerControls.ToArray()
+                .FirstOrDefault(p => p != null && p.PlayerId == targetId);
+
+            Patches.GuesserPatch.ExecuteGuess(sender, target,
+                new Patches.GuesserPatch.GuessEntry { IsAddon = isAddon, Id = guessId });
             return true;
         }
 

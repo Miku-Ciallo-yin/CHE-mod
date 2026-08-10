@@ -18,7 +18,8 @@ namespace CHE.Patches;
 [HarmonyPatch(typeof(MeetingHud))]
 public static class GuesserPatch
 {
-    private class GuessEntry
+    /// <summary>猜测条目（职业或附加职业）</summary>
+    public class GuessEntry
     {
         public bool IsAddon;
         public byte Id;
@@ -38,7 +39,7 @@ public static class GuesserPatch
     /// - 拥有赌怪附加职业：始终可猜（与猜测模式开关无关）
     /// - 猜测模式开启：按阵营勾选放行（无需赌怪附加）
     /// </summary>
-    private static bool CanGuess(PlayerControl player)
+    public static bool CanGuess(PlayerControl player)
     {
         if (CustomRoleManager.HasAddon(player, Guesser.AddonId)) return true;
         if (CustomOptions.GuessMode.Value != 1) return false;
@@ -115,7 +116,7 @@ public static class GuesserPatch
                 if (col == null || _panelTarget == null) continue;
                 if (col.bounds.Contains(pos))
                 {
-                    MakeGuess(PlayerControl.LocalPlayer, _panelTarget, entry);
+                    RequestGuess(PlayerControl.LocalPlayer, _panelTarget, entry);
                     break;
                 }
             }
@@ -140,13 +141,9 @@ public static class GuesserPatch
     [HarmonyPatch(nameof(MeetingHud.OnDestroy)), HarmonyPostfix]
     public static void OnDestroyPostfix() => Cleanup();
 
-    /// <summary>打开猜测面板：当前已启用的全部职业（可选包含附加职业）</summary>
-    private static void OpenPanel(MeetingHud meeting, PlayerControl target)
+    /// <summary>当前已启用（生成概率 > 0）的猜测条目（含配置开启时的附加职业）</summary>
+    public static List<GuessEntry> GetEnabledEntries()
     {
-        ClosePanel();
-        _panelTarget = target;
-
-        // 收集猜测条目：已启用职业 + （配置开启时）已启用附加职业
         var entries = new List<GuessEntry>();
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())
             if (CustomOptions.GetRoleChance(id) > 0)
@@ -155,6 +152,16 @@ public static class GuesserPatch
             foreach (var (id, name) in CustomRoleManager.GetRegisteredAddons())
                 if (CustomOptions.GetRoleChance(id) > 0)
                     entries.Add(new GuessEntry { IsAddon = true, Id = id, Name = $"{name}(附加)" });
+        return entries;
+    }
+
+    /// <summary>打开猜测面板：当前已启用的全部职业（可选包含附加职业）</summary>
+    private static void OpenPanel(MeetingHud meeting, PlayerControl target)
+    {
+        ClosePanel();
+        _panelTarget = target;
+
+        var entries = GetEnabledEntries();
 
         var template = meeting.playerStates[0].NameText;
 
@@ -200,10 +207,27 @@ public static class GuesserPatch
         _panelItems.Clear();
     }
 
-    /// <summary>猜测判定：猜对目标死，猜错赌怪死</summary>
-    private static void MakeGuess(PlayerControl? guesser, PlayerControl target, GuessEntry entry)
+    /// <summary>
+    /// 发起一次猜测（模组端入口：准星面板 / /bt 命令）：
+    /// 主机本地直接执行；非主机模组端经 RPC（CallId 221）由主机验证后执行（Host Only 原则）。
+    /// </summary>
+    public static void RequestGuess(PlayerControl guesser, PlayerControl target, GuessEntry entry)
     {
-        if (guesser == null || guesser.Data == null || target.Data == null) return;
+        if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+        {
+            ExecuteGuess(guesser, target, entry);
+            return;
+        }
+        RpcSync.SendGuessRequest(target.PlayerId, entry.IsAddon, entry.Id);
+    }
+
+    /// <summary>主机：验证并执行猜测（猜对目标死，猜错猜测者死）</summary>
+    public static void ExecuteGuess(PlayerControl? guesser, PlayerControl? target, GuessEntry entry)
+    {
+        if (guesser == null || guesser.Data == null || guesser.Data.IsDead) return;
+        if (target == null || target.Data == null || target.Data.IsDead) return;
+        if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
+        if (!CanGuess(guesser)) return;
 
         var correct = entry.IsAddon
             ? CustomRoleManager.GetAddons(target).Any(a => a.Id == entry.Id)
@@ -211,7 +235,7 @@ public static class GuesserPatch
 
         var victim = correct ? target : guesser;
         CHEPlugin.Log.LogInfo(
-            $"[CHE] 赌怪 {guesser.Data.PlayerName} 猜测 {target.Data.PlayerName} 是 {entry.Name}" +
+            $"[CHE] {guesser.Data.PlayerName} 猜测 {target.Data.PlayerName} 是 {entry.Name}" +
             $"：{(correct ? "正确" : "错误")}，{victim.Data!.PlayerName} 死亡");
 
         // 自杀式击杀走游戏 RPC，各端一致；会议中死亡由原版流程处理

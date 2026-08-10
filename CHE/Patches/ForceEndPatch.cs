@@ -67,8 +67,58 @@ public static class ForceEndPatch
                 ShowHelp();
                 return false;
             }
+            if (text.StartsWith("/bt", System.StringComparison.OrdinalIgnoreCase))
+                return HandleBet(text);
 
             return true;
+        }
+
+        /// <summary>/bt id 职业：猜测某玩家的职业（参考 TONE），需有猜测权限</summary>
+        private static bool HandleBet(string text)
+        {
+            var show = Modules.ChatHelper.Show;
+
+            if (AmongUsClient.Instance == null
+                || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
+            {
+                show("[CHE] /bt 仅对局中可用");
+                return false;
+            }
+
+            var local = PlayerControl.LocalPlayer;
+            if (local == null || !Patches.GuesserPatch.CanGuess(local))
+            {
+                show("[CHE] 你没有猜测权限（需要赌怪附加职业或猜测模式放行你的阵营）");
+                return false;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 3 || !int.TryParse(parts[1], out var id))
+            {
+                show("[CHE] 用法：/bt <玩家ID> <职业名>，如 /bt 2 佃农");
+                return false;
+            }
+
+            var roleName = string.Join(' ', parts.Skip(2));
+            var entry = Patches.GuesserPatch.GetEnabledEntries()
+                .FirstOrDefault(e => e.Name.Equals(roleName, System.StringComparison.OrdinalIgnoreCase));
+            if (entry == null)
+            {
+                var valid = string.Join("、", Patches.GuesserPatch.GetEnabledEntries().Select(e => e.Name));
+                show($"[CHE] 未知职业：{roleName}。可猜测：{valid}");
+                return false;
+            }
+
+            var target = Modules.PlayerIdManager.GetPlayerById(id);
+            if (target == null)
+            {
+                show($"[CHE] 未找到 ID 为 {id} 的玩家");
+                return false;
+            }
+
+            show($"[CHE] 你猜测 [{id}] {target.Data?.PlayerName} 是 {entry.Name}，结果即将揭晓…");
+            Patches.GuesserPatch.RequestGuess(local, target, entry);
+            return false; // 拦截命令，不发送到聊天
         }
 
         /// <summary>是否房主</summary>
@@ -84,6 +134,7 @@ public static class ForceEndPatch
             {
                 "<color=#4FC3F7>===== CHE 指令帮助 =====</color>",
                 "/help — 显示本帮助",
+                "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
                 "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主）",
                 "/end — 强制结束对局返回大厅（仅房主/对局中）",
                 "/dump — 导出日志到桌面并显示最近日志（仅房主）",

@@ -47,6 +47,17 @@ public static class PlayerIdManager
         return _ids.TryGetValue(player.OwnerId, out var id) ? id : null;
     }
 
+    /// <summary>按 ID 查找玩家（用于 /bt 等指令），未找到返回 null</summary>
+    public static PlayerControl? GetPlayerById(int id)
+    {
+        foreach (var player in PlayerControl.AllPlayerControls)
+        {
+            if (player == null) continue;
+            if (GetId(player) == id) return player;
+        }
+        return null;
+    }
+
     /// <summary>清空（返回主菜单时调用，下一局重新分配）</summary>
     public static void Clear() => _ids.Clear();
 }
