@@ -242,10 +242,13 @@ public static class MainMenuPatch
     {
         var label = Object.Instantiate(tmpTemplate, menu.transform);
         label.DestroyTranslator();
-        label.text = "<color=#4FC3F7><b>CHE</b></color>";
+        label.text = "<color=#4FC3F7>CHE</color>";
         label.fontSize = 4f;
-        label.fontStyle = FontStyles.Normal;
-        label.characterSpacing = 25f; // 增大字符间距，避免字母挤在一起
+        // 加粗 + 黑色描边：在复杂背景上保持清晰可读
+        label.fontStyle = FontStyles.Bold;
+        label.outlineWidth = 0.2f;
+        label.outlineColor = Color.black;
+        label.characterSpacing = 20f; // 字符间距，避免字母挤在一起
 
         var aspect = label.GetComponent<AspectPosition>();
         if (aspect == null) aspect = label.gameObject.AddComponent<AspectPosition>();
@@ -258,9 +261,12 @@ public static class MainMenuPatch
     {
         var badge = Object.Instantiate(tmpTemplate, menu.transform);
         badge.DestroyTranslator();
-        badge.text = $"<color=#4FC3F7>CHE v{CHEPlugin.Version} by 米裤恰油</color>";
-        badge.fontSize = 3.2f;
-        badge.fontStyle = FontStyles.Normal;
+        badge.text = $"<color=#4FC3F7>CHE</color> <b>v{CHEPlugin.Version}</b> by 米裤恰油";
+        badge.fontSize = 3.8f;
+        // 加粗 + 黑色描边：小字号在背景上也清晰
+        badge.fontStyle = FontStyles.Bold;
+        badge.outlineWidth = 0.2f;
+        badge.outlineColor = Color.black;
 
         var aspect = badge.GetComponent<AspectPosition>();
         if (aspect == null) aspect = badge.gameObject.AddComponent<AspectPosition>();
