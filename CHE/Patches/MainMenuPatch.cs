@@ -43,6 +43,20 @@ public static class MainMenuPatch
             CreateVersionBadge(__instance, tmpTemplate);
             CreateButtons(__instance);
 
+            // 诊断：默认视图下激活的大尺寸精灵（含坐标，定位右侧边框）
+            foreach (var sr in __instance.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                if (sr == null || !sr.gameObject.activeInHierarchy) continue;
+                var s = sr.bounds.size;
+                if (s.x < 3f) continue;
+                var path = sr.name;
+                var t = sr.transform.parent;
+                while (t != null && t.name != "MainMenuManager") { path = t.name + "/" + path; t = t.parent; }
+                var p = sr.bounds.center;
+                CHEPlugin.Log.LogInfo(
+                    $"[CHE-DUMP] {path} | size=({s.x:0.0},{s.y:0.0}) | pos=({p.x:0.0},{p.y:0.0},{p.z:0.0}) | color={sr.color}");
+            }
+
             CHEPlugin.Log.LogInfo("[CHE] 主菜单定制已创建");
         }
         catch (System.Exception e)
@@ -143,6 +157,12 @@ public static class MainMenuPatch
                     if (sr != null) _frameSprites.Add(sr);
             }
         }
+        // RightPanel/MaskedBlackScreen：带遮罩的黑色圆角板，镂空四周的黑环就是边框
+        var rightPanel = FindDirectChild(menu.transform, "MainUI/AspectScaler", "RightPanel");
+        var masked = rightPanel?.Find("MaskedBlackScreen");
+        if (masked != null)
+            foreach (var sr in masked.GetComponents<SpriteRenderer>())
+                if (sr != null) _frameSprites.Add(sr);
         // MainUI 直接子级 FullScreen（14x14）也一并处理
         var mainUI = menu.transform.Find("MainUI");
         if (mainUI != null)
