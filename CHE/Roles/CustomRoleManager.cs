@@ -16,7 +16,6 @@ public static class CustomRoleManager
     /// </summary>
     private static readonly (byte Id, Func<RoleBase> Factory)[] RoleRegistry =
     {
-        (1, () => new Sheriff()), // 船员阵营示例
         (2, () => new Farmer()),  // 船员阵营：佃农
         (3, () => new Jester()),  // 中立阵营：小丑
         (5, () => new Coward()),  // 中立阵营（敌对）：懦弱者
