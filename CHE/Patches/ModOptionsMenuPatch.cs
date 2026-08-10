@@ -100,6 +100,11 @@ public static class ModOptionsMenuPatch
             {
                 foreach (var opt in CustomOption.OfRole(CustomOptions.ModGroupId))
                 {
+                    // 有父选项且父选项未开启时收缩不显示（如猜测模式的下级开关）
+                    if (opt.ParentId is { } parentId
+                        && (CustomOption.Get(parentId)?.Value ?? 0) == 0)
+                        continue;
+
                     AddOptionRow(menu, opt, y);
                     y -= RowHeight;
                 }
@@ -423,6 +428,11 @@ public static class ModOptionRowPatches
             info.Opt.Value = info.Opt.Value == 1 ? 0 : 1;
             __instance.CheckMark.enabled = info.Opt.Value == 1;
             RpcSync.BroadcastOptions();
+
+            // 切换父选项后重建页签：下级选项随之显示/收缩
+            var menu = __instance.GetComponentInParent<GameOptionsMenu>();
+            if (menu != null)
+                ModOptionsMenuPatch.BuildContent(menu);
             return false;
         }
     }

@@ -31,6 +31,9 @@ public class CustomOption
     /// <summary>布尔选项（0=关，1=开）</summary>
     public bool IsBool { get; }
 
+    /// <summary>父选项 ID：父选项未开启（=0）时本选项在设置界面隐藏</summary>
+    public byte? ParentId { get; }
+
     /// <summary>当前值（原始整数）</summary>
     public int Value;
 
@@ -39,7 +42,7 @@ public class CustomOption
     /// <summary>界面显示用的值文本</summary>
     public string DisplayValue => IsBool ? (Value == 1 ? "开" : "关") : Value.ToString();
 
-    private CustomOption(byte id, byte roleId, string name, int defaultValue, int min, int max, int step, float scale, bool isBool = false)
+    private CustomOption(byte id, byte roleId, string name, int defaultValue, int min, int max, int step, float scale, bool isBool = false, byte? parentId = null)
     {
         Id = id;
         RoleId = roleId;
@@ -50,11 +53,12 @@ public class CustomOption
         Step = step;
         Scale = scale;
         IsBool = isBool;
+        ParentId = parentId;
     }
 
-    public static CustomOption Register(byte id, byte roleId, string name, int defaultValue, int min, int max, int step, float scale, bool isBool = false)
+    public static CustomOption Register(byte id, byte roleId, string name, int defaultValue, int min, int max, int step, float scale, bool isBool = false, byte? parentId = null)
     {
-        var opt = new CustomOption(id, roleId, name, defaultValue, min, max, step, scale, isBool);
+        var opt = new CustomOption(id, roleId, name, defaultValue, min, max, step, scale, isBool, parentId);
         All.Add(opt);
         return opt;
     }
@@ -99,13 +103,13 @@ public static class CustomOptions
         GuessMode = CustomOption.Register(107, ModGroupId, "猜测模式",
             ModConfig.GuessMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         GuessCrewmate = CustomOption.Register(108, ModGroupId, "猜测模式：船员可猜测",
-            ModConfig.GuessCrewmate.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+            ModConfig.GuessCrewmate.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 107);
         GuessImpostor = CustomOption.Register(109, ModGroupId, "猜测模式：内鬼可猜测",
-            ModConfig.GuessImpostor.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+            ModConfig.GuessImpostor.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 107);
         GuessFriendlyNeutral = CustomOption.Register(110, ModGroupId, "猜测模式：友好中立可猜测",
-            ModConfig.GuessFriendlyNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+            ModConfig.GuessFriendlyNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 107);
         GuessHostileNeutral = CustomOption.Register(111, ModGroupId, "猜测模式：敌对中立可猜测",
-            ModConfig.GuessHostileNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+            ModConfig.GuessHostileNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 107);
 
         // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())
