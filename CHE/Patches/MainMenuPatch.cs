@@ -245,6 +245,7 @@ public static class MainMenuPatch
         label.text = "<color=#4FC3F7><b>CHE</b></color>";
         label.fontSize = 4f;
         label.fontStyle = FontStyles.Normal;
+        label.characterSpacing = 25f; // 增大字符间距，避免字母挤在一起
 
         var aspect = label.GetComponent<AspectPosition>();
         if (aspect == null) aspect = label.gameObject.AddComponent<AspectPosition>();
