@@ -190,6 +190,11 @@ public static class ModOptionsMenuPatch
 
             foreach (var opt in CustomOption.OfRole(detailRoleId))
             {
+                // 有父选项且父选项未开启时收缩不显示（如内阁的长/中/短任务数）
+                if (opt.ParentId is { } parentId
+                    && (CustomOption.Get(parentId)?.Value ?? 0) == 0)
+                    continue;
+
                 AddOptionRow(menu, opt, y);
                 y -= RowHeight;
             }
