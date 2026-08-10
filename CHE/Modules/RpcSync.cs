@@ -114,7 +114,7 @@ public static class RpcSync
         client.FinishRpcImmediately(writer);
     }
 
-    /// <summary>主机：广播玩家 ID 映射表。</summary>
+    /// <summary>主机：广播玩家 ID 映射表（含协管标记）。</summary>
     public static void BroadcastPlayerIds(IReadOnlyDictionary<int, int> ids)
     {
         var client = AmongUsClient.Instance;
@@ -127,6 +127,9 @@ public static class RpcSync
         {
             writer.Write(clientId);
             writer.Write(id);
+            var player = PlayerControl.AllPlayerControls.ToArray()
+                .FirstOrDefault(p => p != null && p.OwnerId == clientId);
+            writer.Write(player != null && ModeratorManager.IsModerator(player));
         }
         client.FinishRpcImmediately(writer);
     }
@@ -240,7 +243,12 @@ public static class RpcSync
         {
             var count = reader.ReadByte();
             for (var i = 0; i < count; i++)
-                PlayerIdManager.Set(reader.ReadInt32(), reader.ReadInt32());
+            {
+                var clientId = reader.ReadInt32();
+                var id = reader.ReadInt32();
+                PlayerIdManager.Set(clientId, id);
+                PlayerIdManager.SetModerator(clientId, reader.ReadBoolean());
+            }
             return true;
         }
 

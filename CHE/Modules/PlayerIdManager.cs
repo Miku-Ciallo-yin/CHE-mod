@@ -10,6 +10,9 @@ public static class PlayerIdManager
     /// <summary>ClientId -> 玩家 ID</summary>
     private static readonly Dictionary<int, int> _ids = new();
 
+    /// <summary>协管 ClientId 集合（主机随 ID 映射广播）</summary>
+    private static readonly HashSet<int> _mods = new();
+
     /// <summary>主机：有玩家进房时调用（含房主自己的兜底分配）</summary>
     public static void OnPlayerJoined(int clientId)
     {
@@ -58,6 +61,26 @@ public static class PlayerIdManager
         return null;
     }
 
+    /// <summary>客户端：标记协管身份（主机广播）</summary>
+    public static void SetModerator(int clientId, bool isMod)
+    {
+        if (isMod) _mods.Add(clientId);
+        else _mods.Remove(clientId);
+    }
+
+    /// <summary>玩家是否是协管（主机查名单 / 模组端查广播标记）</summary>
+    public static bool IsModerator(PlayerControl player)
+    {
+        if (player == null) return false;
+        if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+            return ModeratorManager.IsModerator(player);
+        return _mods.Contains(player.OwnerId);
+    }
+
     /// <summary>清空（返回主菜单时调用，下一局重新分配）</summary>
-    public static void Clear() => _ids.Clear();
+    public static void Clear()
+    {
+        _ids.Clear();
+        _mods.Clear();
+    }
 }

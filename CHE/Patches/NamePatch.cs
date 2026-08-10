@@ -23,6 +23,9 @@ public static class NamePatch
         var name = __instance.Data.PlayerName;
         var id = PlayerIdManager.GetId(__instance);
         var prefix = id.HasValue ? $"<color=#4FC3F7>[{id.Value}]</color>" : string.Empty;
+        // 协管蓝色前缀
+        if (PlayerIdManager.IsModerator(__instance))
+            prefix = "<color=#4169E1>[协管]</color>" + prefix;
 
         // 击杀内阁的凶手提示（名字下方）
         var killerHint = __instance.AmOwner && Minister.PendingKillers.Contains(__instance.PlayerId)
