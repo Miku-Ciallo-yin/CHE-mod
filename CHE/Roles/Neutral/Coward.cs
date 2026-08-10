@@ -17,12 +17,14 @@ public class Coward : RoleBase
     /// <summary>击杀范围</summary>
     private const float KillRange = 2.5f;
 
-    /// <summary>转化所需贴近时间（秒）与贴近范围</summary>
-    private const float ConvertTime = 5f;
-    private const float ConvertRange = 1.5f;
+    /// <summary>转变阵营需要的击杀数（职业设置中可调）</summary>
+    private static int KillsToConvert => CustomOptions.CowardKillsToConvert.Value;
 
-    /// <summary>转变阵营需要的击杀数</summary>
-    private const int KillsToConvert = 3;
+    /// <summary>转变阵营所需贴近时间（秒，职业设置中可调）</summary>
+    private static float ConvertTime => CustomOptions.CowardConvertTime.Value;
+
+    /// <summary>转变阵营所需贴近距离（职业设置中可调）</summary>
+    private static float ConvertRange => CustomOptions.CowardConvertRange.ScaledValue;
 
     public override string Name => "懦弱者";
     public override string NameEn => "Coward";

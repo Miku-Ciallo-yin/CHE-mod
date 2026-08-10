@@ -37,6 +37,13 @@ public static class ModConfig
     /// <summary>猜测模式：敌对中立可猜测</summary>
     public static ConfigEntry<bool> GuessHostileNeutral { get; private set; } = null!;
 
+    /// <summary>懦弱者：转变阵营所需击杀数（默认 3）</summary>
+    public static ConfigEntry<int> CowardKillsToConvert { get; private set; } = null!;
+    /// <summary>懦弱者：转变阵营所需贴近时间秒（默认 5）</summary>
+    public static ConfigEntry<int> CowardConvertTime { get; private set; } = null!;
+    /// <summary>懦弱者：转变阵营所需贴近距离 ×0.1（默认 15 = 1.5）</summary>
+    public static ConfigEntry<int> CowardConvertRange { get; private set; } = null!;
+
     /// <summary>模组设置：测试模式，游戏不会正常结束（默认关）</summary>
     public static ConfigEntry<bool> TestMode { get; private set; } = null!;
 
@@ -69,6 +76,13 @@ public static class ModConfig
         GuessImpostor = config.Bind("猜测模式 GuessMode", "内鬼可猜测 Impostor", false, "内鬼阵营可使用猜测");
         GuessFriendlyNeutral = config.Bind("猜测模式 GuessMode", "友好中立可猜测 FriendlyNeutral", false, "友好中立可使用猜测");
         GuessHostileNeutral = config.Bind("猜测模式 GuessMode", "敌对中立可猜测 HostileNeutral", false, "敌对中立可使用猜测");
+
+        CowardKillsToConvert = config.Bind("懦弱者 Coward", "转变阵营所需击杀数 KillsToConvert", 3,
+            "击杀多少人后进入贴近转化阶段");
+        CowardConvertTime = config.Bind("懦弱者 Coward", "转变阵营所需贴近时间 ConvertTime", 5,
+            "贴近同一名玩家多少秒后转变阵营（秒）");
+        CowardConvertRange = config.Bind("懦弱者 Coward", "转变阵营所需贴近距离 ConvertRange", 15,
+            "判定贴近的距离（×0.1 游戏单位，默认 15 = 1.5）");
 
         TestMode = config.Bind("模组设置 Mod", "测试模式 TestMode", false,
             "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");

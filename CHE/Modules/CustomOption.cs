@@ -85,6 +85,9 @@ public static class CustomOptions
     public static CustomOption GuessImpostor { get; private set; } = null!;
     public static CustomOption GuessFriendlyNeutral { get; private set; } = null!;
     public static CustomOption GuessHostileNeutral { get; private set; } = null!;
+    public static CustomOption CowardKillsToConvert { get; private set; } = null!;
+    public static CustomOption CowardConvertTime { get; private set; } = null!;
+    public static CustomOption CowardConvertRange { get; private set; } = null!;
     public static CustomOption GuesserCanGuessAddons { get; private set; } = null!;
     public static CustomOption FarmerStealChance { get; private set; } = null!;
     public static CustomOption FarmerStealsForKill { get; private set; } = null!;
@@ -110,6 +113,14 @@ public static class CustomOptions
             ModConfig.GuessFriendlyNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 107);
         GuessHostileNeutral = CustomOption.Register(111, ModGroupId, "猜测模式：敌对中立可猜测",
             ModConfig.GuessHostileNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 107);
+
+        // 懦弱者参数（RoleId 5 = Coward）
+        CowardKillsToConvert = CustomOption.Register(112, 5, "转变阵营所需击杀数",
+            ModConfig.CowardKillsToConvert.Value, 1, 10, 1, 1f);
+        CowardConvertTime = CustomOption.Register(113, 5, "转变阵营所需贴近时间(秒)",
+            ModConfig.CowardConvertTime.Value, 1, 30, 1, 1f);
+        CowardConvertRange = CustomOption.Register(114, 5, "转变阵营所需贴近距离×0.1",
+            ModConfig.CowardConvertRange.Value, 5, 30, 5, 0.1f);
 
         // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())
