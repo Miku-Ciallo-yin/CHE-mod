@@ -88,6 +88,10 @@ public static class CustomOptions
     public static CustomOption CowardKillsToConvert { get; private set; } = null!;
     public static CustomOption CowardConvertTime { get; private set; } = null!;
     public static CustomOption CowardConvertRange { get; private set; } = null!;
+    public static CustomOption CopKillCooldown { get; private set; } = null!;
+    public static CustomOption CopAutoKillRange { get; private set; } = null!;
+    public static CustomOption CopAutoKillTime { get; private set; } = null!;
+    public static CustomOption CopAutoKillsToConvert { get; private set; } = null!;
     public static CustomOption GuesserCanGuessAddons { get; private set; } = null!;
     public static CustomOption FarmerStealChance { get; private set; } = null!;
     public static CustomOption FarmerStealsForKill { get; private set; } = null!;
@@ -121,6 +125,16 @@ public static class CustomOptions
             ModConfig.CowardConvertTime.Value, 1, 30, 1, 1f);
         CowardConvertRange = CustomOption.Register(114, 5, "转变阵营所需贴近距离×0.1",
             ModConfig.CowardConvertRange.Value, 5, 30, 5, 0.1f);
+
+        // 美警参数（RoleId 6 = Cop）
+        CopKillCooldown = CustomOption.Register(115, 6, "击杀时间(秒)",
+            ModConfig.CopKillCooldown.Value, 5, 120, 5, 1f);
+        CopAutoKillRange = CustomOption.Register(116, 6, "自动击杀距离×0.1",
+            ModConfig.CopAutoKillRange.Value, 5, 30, 5, 0.1f);
+        CopAutoKillTime = CustomOption.Register(117, 6, "自动击杀所需时间(秒)",
+            ModConfig.CopAutoKillTime.Value, 1, 30, 1, 1f);
+        CopAutoKillsToConvert = CustomOption.Register(118, 6, "转内鬼所需自动击杀人数",
+            ModConfig.CopAutoKillsToConvert.Value, 1, 10, 1, 1f);
 
         // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())

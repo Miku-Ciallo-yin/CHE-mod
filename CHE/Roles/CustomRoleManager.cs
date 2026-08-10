@@ -19,6 +19,7 @@ public static class CustomRoleManager
         (2, () => new Farmer()),  // 船员阵营：佃农
         (3, () => new Jester()),  // 中立阵营：小丑
         (5, () => new Coward()),  // 中立阵营（敌对）：懦弱者
+        (6, () => new Cop()),     // 船员阵营：美警
     };
 
     /// <summary>

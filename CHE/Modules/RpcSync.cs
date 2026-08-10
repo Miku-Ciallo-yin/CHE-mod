@@ -143,7 +143,7 @@ public static class RpcSync
                 .FirstOrDefault(p => p != null && p.PlayerId == targetId);
             if (target == null) return true;
 
-            // 按请求者职业路由击杀请求（佃农 / 懦弱者）
+            // 按请求者职业路由击杀请求（佃农 / 懦弱者 / 美警）
             switch (CustomRoleManager.GetRole(sender))
             {
                 case Roles.Crewmate.Farmer farmer:
@@ -151,6 +151,9 @@ public static class RpcSync
                     break;
                 case Roles.Neutral.Coward coward:
                     coward.ServerKillRequest(target);
+                    break;
+                case Roles.Crewmate.Cop cop:
+                    cop.ServerKillRequest(target);
                     break;
             }
             return true;
