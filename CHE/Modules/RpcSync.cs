@@ -141,8 +141,18 @@ public static class RpcSync
             var targetId = reader.ReadByte();
             var target = PlayerControl.AllPlayerControls.ToArray()
                 .FirstOrDefault(p => p != null && p.PlayerId == targetId);
-            if (CustomRoleManager.GetRole(sender) is Roles.Crewmate.Farmer farmer && target != null)
-                farmer.ServerKillRequest(target);
+            if (target == null) return true;
+
+            // 按请求者职业路由击杀请求（佃农 / 懦弱者）
+            switch (CustomRoleManager.GetRole(sender))
+            {
+                case Roles.Crewmate.Farmer farmer:
+                    farmer.ServerKillRequest(target);
+                    break;
+                case Roles.Neutral.Coward coward:
+                    coward.ServerKillRequest(target);
+                    break;
+            }
             return true;
         }
 

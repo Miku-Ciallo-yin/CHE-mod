@@ -19,6 +19,7 @@ public static class CustomRoleManager
         (1, () => new Sheriff()), // 船员阵营示例
         (2, () => new Farmer()),  // 船员阵营：佃农
         (3, () => new Jester()),  // 中立阵营：小丑
+        (5, () => new Coward()),  // 中立阵营（敌对）：懦弱者
     };
 
     /// <summary>
@@ -42,9 +43,29 @@ public static class CustomRoleManager
     public static bool Assigned { get; private set; }
 
     /// <summary>
-    /// 通过自定义条件获胜的玩家（如小丑被投出）。非 null 时结算画面只显示该玩家。
+    /// 通过自定义条件获胜的玩家列表（如小丑被投出、懦弱者链接共同胜利）。
+    /// 非空时结算画面只显示这些玩家。
     /// </summary>
-    public static PlayerControl? CustomWinner { get; set; }
+    public static readonly List<PlayerControl> CustomWinners = new();
+
+    /// <summary>设置自定义胜利者（含懦弱者链接的共同胜利伙伴）</summary>
+    public static void SetCustomWinner(PlayerControl? winner)
+    {
+        CustomWinners.Clear();
+        if (winner == null) return;
+
+        CustomWinners.Add(winner);
+
+        // 懦弱者链接：链接有效且伙伴是胜利者时共同胜利
+        foreach (var role in PlayerRoles.Values)
+        {
+            if (role is Coward { LinkActive: true } coward
+                && coward.LinkedPlayer == winner
+                && coward.Player != null
+                && coward.Player != winner)
+                CustomWinners.Add(coward.Player);
+        }
+    }
 
     /// <summary>
     /// 主机随机分配职业和附加职业（每种最多一名玩家），并广播给所有客户端。
@@ -194,6 +215,6 @@ public static class CustomRoleManager
         PlayerRoles.Clear();
         PlayerAddons.Clear();
         Assigned = false;
-        CustomWinner = null;
+        CustomWinners.Clear();
     }
 }
