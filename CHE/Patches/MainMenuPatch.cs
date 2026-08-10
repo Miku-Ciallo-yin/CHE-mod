@@ -38,24 +38,10 @@ public static class MainMenuPatch
 
             CustomPopup.Setup(__instance.quitButton, tmpTemplate);
             SetupBackground(__instance);
-            MakeLeftPanelTransparent(__instance);
             RemoveFloatersAndFrame(__instance);
+            MakeLeftPanelTransparent(__instance);
             CreateVersionBadge(__instance, tmpTemplate);
             CreateButtons(__instance);
-
-            // 诊断：默认视图下激活的大尺寸精灵（含坐标，定位右侧边框）
-            foreach (var sr in __instance.GetComponentsInChildren<SpriteRenderer>(true))
-            {
-                if (sr == null || !sr.gameObject.activeInHierarchy) continue;
-                var s = sr.bounds.size;
-                if (s.x < 3f) continue;
-                var path = sr.name;
-                var t = sr.transform.parent;
-                while (t != null && t.name != "MainMenuManager") { path = t.name + "/" + path; t = t.parent; }
-                var p = sr.bounds.center;
-                CHEPlugin.Log.LogInfo(
-                    $"[CHE-DUMP] {path} | size=({s.x:0.0},{s.y:0.0}) | pos=({p.x:0.0},{p.y:0.0},{p.z:0.0}) | color={sr.color}");
-            }
 
             CHEPlugin.Log.LogInfo("[CHE] 主菜单定制已创建");
         }
