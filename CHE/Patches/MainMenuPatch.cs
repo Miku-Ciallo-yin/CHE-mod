@@ -39,22 +39,9 @@ public static class MainMenuPatch
             CustomPopup.Setup(__instance.quitButton, tmpTemplate);
             SetupBackground(__instance);
             MakeLeftPanelTransparent(__instance);
+            RemoveFloatersAndFrame(__instance);
             CreateVersionBadge(__instance, tmpTemplate);
             CreateButtons(__instance);
-
-            // 诊断：输出 AspectScaler 下精灵的路径/尺寸/颜色（定位黑色边框与黑色底图）
-            var scaler = __instance.transform.Find("MainUI/AspectScaler");
-            if (scaler != null)
-                foreach (var sr in scaler.GetComponentsInChildren<SpriteRenderer>(true))
-                {
-                    if (sr == null) continue;
-                    var path = sr.name;
-                    var t = sr.transform.parent;
-                    while (t != null && t.name != "AspectScaler") { path = t.name + "/" + path; t = t.parent; }
-                    var s = sr.bounds.size;
-                    CHEPlugin.Log.LogInfo(
-                        $"[CHE-DUMP] {path} | size=({s.x:0.0},{s.y:0.0}) | color={sr.color}");
-                }
 
             CHEPlugin.Log.LogInfo("[CHE] 主菜单定制已创建");
         }
@@ -65,7 +52,23 @@ public static class MainMenuPatch
     }
 
     [HarmonyPatch(nameof(MainMenuManager.LateUpdate)), HarmonyPostfix]
-    public static void LateUpdatePostfix() => CustomPopup.Update();
+    public static void LateUpdatePostfix(MainMenuManager __instance)
+    {
+        CustomPopup.Update();
+
+        // 游戏初始化后会重新启用/恢复这些对象，每帧强制压掉（边框、漂浮小人）
+        if (_particles != null && _particles.gameObject.activeSelf)
+            _particles.gameObject.SetActive(false);
+        if (_square != null && _square.gameObject.activeSelf)
+            _square.gameObject.SetActive(false);
+        foreach (var sr in _frameSprites)
+            if (sr != null && sr.color.a > 0f)
+                sr.color = new Color(1f, 1f, 1f, 0f);
+    }
+
+    private static Transform? _particles;
+    private static Transform? _square;
+    private static readonly List<SpriteRenderer> _frameSprites = new();
 
     /// <summary>
     /// 主菜单背景：优先加载游戏目录 CHE-DATA/background.png（放一张二次元人物图即可），
@@ -117,24 +120,39 @@ public static class MainMenuPatch
     }
 
     /// <summary>
-    /// 去掉漂浮小人和右侧边框（对象来自场景诊断）：
-    /// - 漂浮小人：场景对象 Ambience/PlayerParticles
-    /// - 右侧边框：AspectScaler 下的 RightPanel 自身精灵（8x5.1 黑色边框），设为全透明
+    /// 收集需要每帧压制的对象：漂浮小人（Ambience/PlayerParticles）、
+    /// 右侧边框候选（Square / RightPanel / FullScreen 的精灵）。
+    /// 游戏初始化后会恢复这些对象，真正的压制在 LateUpdate 每帧执行。
     /// </summary>
     private static void RemoveFloatersAndFrame(MainMenuManager menu)
     {
-        var particles = GameObject.Find("Ambience")?.transform.Find("PlayerParticles");
-        if (particles != null) particles.gameObject.SetActive(false);
+        _particles = GameObject.Find("Ambience")?.transform.Find("PlayerParticles");
+        _square = menu.transform.Find("Square");
 
-        var rightPanel = FindDirectChild(menu.transform, "MainUI/AspectScaler", "RightPanel");
-        if (rightPanel == null)
+        _frameSprites.Clear();
+        var scaler = menu.transform.Find("MainUI/AspectScaler");
+        if (scaler == null) return;
+
+        foreach (var name in new[] { "RightPanel", "FullScreen" })
         {
-            CHEPlugin.Log.LogWarning("[CHE] 未找到 RightPanel，边框隐藏跳过");
-            return;
+            for (var i = 0; i < scaler.childCount; i++)
+            {
+                var child = scaler.GetChild(i);
+                if (child.name != name) continue;
+                foreach (var sr in child.GetComponents<SpriteRenderer>())
+                    if (sr != null) _frameSprites.Add(sr);
+            }
         }
-
-        foreach (var sr in rightPanel.GetComponents<SpriteRenderer>())
-            if (sr != null) sr.color = new Color(1f, 1f, 1f, 0f);
+        // MainUI 直接子级 FullScreen（14x14）也一并处理
+        var mainUI = menu.transform.Find("MainUI");
+        if (mainUI != null)
+            for (var i = 0; i < mainUI.childCount; i++)
+            {
+                var child = mainUI.GetChild(i);
+                if (child.name is "FullScreen" or "Tint")
+                    foreach (var sr in child.GetComponents<SpriteRenderer>())
+                        if (sr != null) _frameSprites.Add(sr);
+            }
     }
 
     /// <summary>先按斜杠路径找到父级，再在直接子级里按名字查找（避免多级 Find 失效）</summary>
