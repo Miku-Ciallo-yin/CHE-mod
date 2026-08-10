@@ -52,6 +52,11 @@ public static class ForceEndPatch
                 return HandleEnd();
             if (text.StartsWith("/start", System.StringComparison.OrdinalIgnoreCase))
                 return HandleStart(text);
+            if (text.Equals("/dump", System.StringComparison.OrdinalIgnoreCase))
+            {
+                Modules.LogDumper.Dump();
+                return false; // 拦截命令，不发送到聊天
+            }
 
             return true;
         }
