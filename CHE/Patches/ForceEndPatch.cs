@@ -70,6 +70,10 @@ public static class ForceEndPatch
             if (text.StartsWith("/bt", System.StringComparison.OrdinalIgnoreCase))
                 return HandleBet(text);
 
+            // 其余以 / 开头的输入一律隐藏（不广播给其他玩家，防指令泄露）
+            if (text.StartsWith('/'))
+                return false;
+
             return true;
         }
 
