@@ -240,7 +240,7 @@ public static class MainMenuPatch
     /// <summary>顶栏"好友"下方的模组名标签（参考 TONE 顶部模组标识）</summary>
     private static void CreateModNameLabel(MainMenuManager menu, TextMeshPro tmpTemplate)
     {
-        var label = Object.Instantiate(tmpTemplate, menu.playButton.transform.parent);
+        var label = Object.Instantiate(tmpTemplate, menu.transform);
         label.DestroyTranslator();
         label.text = "<color=#4FC3F7><b>CHE</b></color>";
         label.fontSize = 4f;
@@ -255,7 +255,7 @@ public static class MainMenuPatch
     /// <summary>Logo 区下方的版本徽章</summary>
     private static void CreateVersionBadge(MainMenuManager menu, TextMeshPro tmpTemplate)
     {
-        var badge = Object.Instantiate(tmpTemplate, menu.playButton.transform.parent);
+        var badge = Object.Instantiate(tmpTemplate, menu.transform);
         badge.DestroyTranslator();
         badge.text = $"<color=#4FC3F7>CHE v{CHEPlugin.Version} by 米裤恰油</color>";
         badge.fontSize = 3.2f;
