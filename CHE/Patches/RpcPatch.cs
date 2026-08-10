@@ -10,9 +10,9 @@ namespace CHE.Patches;
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.HandleRpc))]
 public static class RpcPatch
 {
-    public static bool Prefix(byte callId, MessageReader reader)
+    public static bool Prefix(PlayerControl __instance, byte callId, MessageReader reader)
     {
         // 已处理的自定义 RPC 不再进入游戏原始处理
-        return !RpcSync.Handle(callId, reader);
+        return !RpcSync.Handle(callId, reader, __instance);
     }
 }

@@ -53,8 +53,13 @@ public abstract class RoleBase
     {
     }
 
-    /// <summary>本机玩家持有该职业时，每个 FixedUpdate 调用（驱动技能逻辑）</summary>
+    /// <summary>本机玩家持有该职业时，每个 FixedUpdate 调用（驱动技能逻辑）。仅在主机上对所有玩家调用（Host Only 架构）</summary>
     public virtual void OnUpdate()
+    {
+    }
+
+    /// <summary>非主机模组端的自身输入处理（如佃农按 Q 请求击杀），主机验证后执行</summary>
+    public virtual void OnClientUpdate()
     {
     }
 

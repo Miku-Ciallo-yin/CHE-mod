@@ -45,9 +45,9 @@ public class Farmer : RoleBase
 
         if (HasKillAbility)
         {
-            // 已解锁击杀：不再抢夺，只处理冷却和击杀按键
+            // 已解锁击杀：不再抢夺，只处理冷却和击杀按键（仅主机本地佃农直接按 Q）
             if (KillTimer > 0f) KillTimer -= dt;
-            if (KillTimer <= 0f && Input.GetKeyDown(KeyCode.Q))
+            if (KillTimer <= 0f && Player!.AmOwner && Input.GetKeyDown(KeyCode.Q))
                 TryKill();
             return;
         }
@@ -60,6 +60,30 @@ public class Farmer : RoleBase
         }
 
         CheckKillUnlock();
+    }
+
+    /// <summary>非主机模组端：按 Q 向主机请求击杀（主机用 ServerKillRequest 验证执行）</summary>
+    public override void OnClientUpdate()
+    {
+        if (Player == null || Player.Data == null || Player.Data.IsDead) return;
+        if (!Input.GetKeyDown(KeyCode.Q)) return;
+
+        var target = FindNearestTarget();
+        if (target != null)
+            RpcSync.SendKillRequest(target.PlayerId);
+    }
+
+    /// <summary>主机：处理模组端的击杀请求，验证解锁状态/冷却/距离后执行</summary>
+    public void ServerKillRequest(PlayerControl target)
+    {
+        if (!HasKillAbility || KillTimer > 0f || Player == null || target == null) return;
+        if (Vector2.Distance(Player.GetTruePosition(), target.GetTruePosition()) > KillRange) return;
+
+        // 用自杀式 RPC 保证各端一致（与赌怪同一模式），转化判定手动触发
+        target.RpcMurderPlayer(target, true);
+        OnMurder(target);
+        KillTimer = CustomOptions.FarmerKillCooldown.ScaledValue;
+        CHEPlugin.Log.LogInfo($"[CHE] 佃农（远程请求）击杀了 {target.Data!.PlayerName}");
     }
 
     /// <summary>对范围内的每个船员按概率抢夺一个任务</summary>
@@ -121,18 +145,23 @@ public class Farmer : RoleBase
     }
 
     /// <summary>击杀范围内最近的存活玩家</summary>
-    private void TryKill()
+    private PlayerControl? FindNearestTarget()
     {
         var pos = Player!.GetTruePosition();
-        var target = PlayerControl.AllPlayerControls.ToArray()
+        return PlayerControl.AllPlayerControls.ToArray()
             .Where(p => p != null && p != Player && p.Data != null && !p.Data.IsDead)
             .Where(p => Vector2.Distance(pos, p.GetTruePosition()) <= KillRange)
             .OrderBy(p => Vector2.Distance(pos, p.GetTruePosition()))
             .FirstOrDefault();
+    }
 
+    /// <summary>主机本地佃农击杀（Q 键）</summary>
+    private void TryKill()
+    {
+        var target = FindNearestTarget();
         if (target == null) return;
 
-        Player.RpcMurderPlayer(target, true);
+        Player!.RpcMurderPlayer(target, true);
         KillTimer = CustomOptions.FarmerKillCooldown.ScaledValue;
         CHEPlugin.Log.LogInfo($"[CHE] 佃农击杀了 {target.Data!.PlayerName}");
     }

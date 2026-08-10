@@ -1,21 +1,32 @@
 using CHE.Roles;
 using HarmonyLib;
+using InnerNet;
 
 namespace CHE.Patches;
 
 /// <summary>
-/// 职业技能驱动：本机玩家的职业每帧收到 OnUpdate。
-/// （佃农的接近抢夺、击杀按键等逻辑在 Farmer.OnUpdate 中）
+/// 职业技能驱动（Host Only 架构）：
+/// - 主机：对局中驱动所有玩家的职业逻辑（佃农抢夺等），无模组客户端也能生效
+/// - 非主机模组端：仅驱动自身输入（如佃农按 Q 请求击杀，主机验证后执行）
 /// </summary>
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
 public static class RoleUpdatePatch
 {
     public static void Postfix(PlayerControl __instance)
     {
-        if (!__instance.AmOwner) return;
-        if (AmongUsClient.Instance == null ||
-            AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started) return;
+        var client = AmongUsClient.Instance;
+        if (client == null || client.GameState != InnerNetClient.GameStates.Started) return;
 
-        CustomRoleManager.GetRole(__instance)?.OnUpdate();
+        var role = CustomRoleManager.GetRole(__instance);
+        if (role == null) return;
+
+        if (client.AmHost)
+        {
+            role.OnUpdate();
+            return;
+        }
+
+        if (__instance.AmOwner)
+            role.OnClientUpdate();
     }
 }

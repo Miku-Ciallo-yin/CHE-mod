@@ -17,6 +17,21 @@ public static class RpcSync
     /// <summary>选项值广播（主机 -> 全员）。</summary>
     public const byte SyncOptionsCallId = 218;
 
+    /// <summary>击杀请求（非主机模组端 -> 主机，佃农按 Q）。</summary>
+    public const byte KillRequestCallId = 219;
+
+    /// <summary>非主机模组端：向主机发送击杀请求（仅发给主机）。</summary>
+    public static void SendKillRequest(byte targetId)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.AmHost || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, KillRequestCallId, SendOption.Reliable, client.HostId);
+        writer.Write(targetId);
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>主机：把全部选项值广播给所有客户端。</summary>
     public static void BroadcastOptions()
     {
@@ -61,8 +76,9 @@ public static class RpcSync
 
     /// <summary>
     /// 处理收到的自定义 RPC。返回 true 表示已处理（应跳过游戏原始处理逻辑）。
+    /// sender 为携带该 RPC 的 PlayerControl（用于识别请求者职业）。
     /// </summary>
-    public static bool Handle(byte callId, MessageReader reader)
+    public static bool Handle(byte callId, MessageReader reader, PlayerControl sender)
     {
         if (callId == SyncRolesCallId)
         {
@@ -77,6 +93,19 @@ public static class RpcSync
                 addonAssignments.Add((reader.ReadByte(), reader.ReadByte()));
 
             CustomRoleManager.ApplyRoleAssignments(assignments, addonAssignments);
+            return true;
+        }
+
+        if (callId == KillRequestCallId)
+        {
+            // 只有主机处理击杀请求，验证请求者职业后执行
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return true;
+
+            var targetId = reader.ReadByte();
+            var target = PlayerControl.AllPlayerControls.ToArray()
+                .FirstOrDefault(p => p != null && p.PlayerId == targetId);
+            if (CustomRoleManager.GetRole(sender) is Roles.Crewmate.Farmer farmer && target != null)
+                farmer.ServerKillRequest(target);
             return true;
         }
 
