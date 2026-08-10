@@ -20,6 +20,26 @@ public static class RpcSync
     /// <summary>击杀请求（非主机模组端 -> 主机，佃农按 Q）。</summary>
     public const byte KillRequestCallId = 219;
 
+    /// <summary>玩家 ID 映射广播（主机 -> 全员）。</summary>
+    public const byte SyncPlayerIdsCallId = 220;
+
+    /// <summary>主机：广播玩家 ID 映射表。</summary>
+    public static void BroadcastPlayerIds(IReadOnlyDictionary<int, int> ids)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || !client.AmHost || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, SyncPlayerIdsCallId, SendOption.Reliable, -1);
+        writer.Write((byte)ids.Count);
+        foreach (var (clientId, id) in ids)
+        {
+            writer.Write(clientId);
+            writer.Write(id);
+        }
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>非主机模组端：向主机发送击杀请求（仅发给主机）。</summary>
     public static void SendKillRequest(byte targetId)
     {
@@ -106,6 +126,14 @@ public static class RpcSync
                 .FirstOrDefault(p => p != null && p.PlayerId == targetId);
             if (CustomRoleManager.GetRole(sender) is Roles.Crewmate.Farmer farmer && target != null)
                 farmer.ServerKillRequest(target);
+            return true;
+        }
+
+        if (callId == SyncPlayerIdsCallId)
+        {
+            var count = reader.ReadByte();
+            for (var i = 0; i < count; i++)
+                PlayerIdManager.Set(reader.ReadInt32(), reader.ReadInt32());
             return true;
         }
 
