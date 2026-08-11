@@ -123,12 +123,56 @@ public static class ForceEndPatch
                 return HandleVote(text);
             if (text.Equals("/ph", System.StringComparison.OrdinalIgnoreCase))
                 return HandleBalance();
+            if (text.StartsWith("/kill", System.StringComparison.OrdinalIgnoreCase))
+                return HandleKill(text);
 
             // 其余以 / 开头的输入一律隐藏（不广播给其他玩家，防指令泄露）
             if (text.StartsWith('/'))
                 return false;
 
             return true;
+        }
+
+        /// <summary>/kill id：直接击杀对应玩家（仅房主，对局中）</summary>
+        private static bool HandleKill(string text)
+        {
+            var show = Modules.ChatHelper.Show;
+
+            if (!IsHost())
+            {
+                show("[TAHS] /kill 仅房主可用");
+                return false;
+            }
+            if (AmongUsClient.Instance == null
+                || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
+            {
+                show("[TAHS] /kill 仅对局中可用");
+                return false;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
+            {
+                show("[TAHS] 用法：/kill <玩家ID>，先用 /id 查看");
+                return false;
+            }
+
+            var target = Modules.PlayerIdManager.GetPlayerById(id);
+            if (target == null || target.Data == null)
+            {
+                show($"[TAHS] 未找到 ID 为 {id} 的玩家");
+                return false;
+            }
+            if (target.Data.IsDead)
+            {
+                show($"[TAHS] [{id}] {target.Data.PlayerName} 已经死亡");
+                return false;
+            }
+
+            target.RpcMurderPlayer(target, true);
+            TAHSPlugin.Log.LogInfo($"[TAHS] 房主 /kill 击杀了 [{id}] {target.Data.PlayerName}");
+            show($"[TAHS] 已击杀 [{id}] {target.Data.PlayerName}");
+            return false;
         }
 
         /// <summary>/ph：平衡主义者处决超编阵营玩家（仅平衡主义者，对局中）</summary>
@@ -446,6 +490,7 @@ public static class ForceEndPatch
                 "<color=#4FC3F7>===== TAHS 指令帮助 =====</color>",
                 "/help — 显示本帮助",
                 "/id — 显示所有玩家的名字及其对应 ID",
+                "/kill <玩家ID> — 直接击杀对应玩家（仅房主/对局中）",
                 "/m — 查看自己本局职业介绍",
                 "/r — 查看本局已开启的全部职业",
                 "/d — 死亡后查看击杀自己的玩家",
