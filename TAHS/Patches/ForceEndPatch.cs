@@ -121,12 +121,39 @@ public static class ForceEndPatch
                 return HandleAnnounce(text);
             if (text.StartsWith("/vote", System.StringComparison.OrdinalIgnoreCase))
                 return HandleVote(text);
+            if (text.Equals("/ph", System.StringComparison.OrdinalIgnoreCase))
+                return HandleBalance();
 
             // 其余以 / 开头的输入一律隐藏（不广播给其他玩家，防指令泄露）
             if (text.StartsWith('/'))
                 return false;
 
             return true;
+        }
+
+        /// <summary>/ph：平衡主义者处决超编阵营玩家（仅平衡主义者，对局中）</summary>
+        private static bool HandleBalance()
+        {
+            var show = Modules.ChatHelper.Show;
+
+            if (AmongUsClient.Instance == null
+                || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
+            {
+                show("[TAHS] /ph 仅对局中可用");
+                return false;
+            }
+
+            var local = PlayerControl.LocalPlayer;
+            if (local == null) return false;
+            if (Roles.CustomRoleManager.GetRole(local) is not Roles.Crewmate.Balancer)
+            {
+                show("[TAHS] /ph 仅平衡主义者可用");
+                return false;
+            }
+
+            if (IsHost()) Roles.Crewmate.Balancer.UseSkill(local);
+            else Modules.RpcSync.SendModCommand(5, 0); // 请求主机执行
+            return false;
         }
 
         /// <summary>/vote id：投票给对应 ID 的玩家（所有人可用，转换者正常投票通道）</summary>

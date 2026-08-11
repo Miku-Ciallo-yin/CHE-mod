@@ -115,6 +115,8 @@ public static class ModConfig
     public static ConfigEntry<int> MoonHuntSuicideTime { get; private set; } = null!;
     /// <summary>转换者：技能可使用次数（默认 2）</summary>
     public static ConfigEntry<int> ConverterSkillUses { get; private set; } = null!;
+    /// <summary>平衡主义者：技能可使用次数（默认 2）</summary>
+    public static ConfigEntry<int> BalancerSkillUses { get; private set; } = null!;
 
     public static ConfigEntry<int> PilotSkillCd { get; private set; } = null!;
     public static ConfigEntry<bool> PilotCanNormalKill { get; private set; } = null!;
@@ -214,6 +216,7 @@ public static class ModConfig
 
         MoonSkillCd = config.Bind("月跑入机 MoonRunner", "技能CD SkillCd", 15, "技能冷却（秒）");
         ConverterSkillUses = config.Bind("转换者 Converter", "技能可使用次数 SkillUses", 2, "转换者技能可使用次数");
+        BalancerSkillUses = config.Bind("平衡主义者 Balancer", "技能可使用次数 SkillUses", 2, "平衡主义者技能可使用次数");
         MoonBuffDuration = config.Bind("月跑入机 MoonRunner", "增益持续时间 BuffDuration", 30, "速度增益持续（秒）");
         MoonBuffInitial = config.Bind("月跑入机 MoonRunner", "初始增益速度 BuffInitial", 110, "初始增益速度（%，默认 110 = 1.1 倍）");
         MoonBuffRate = config.Bind("月跑入机 MoonRunner", "每次叠加增益倍率 BuffRate", 125, "对同一人每次叠加倍率（%，默认 125 = ×1.25）");

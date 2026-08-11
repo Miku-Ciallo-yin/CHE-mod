@@ -109,6 +109,7 @@ public static class CustomOptions
     public static CustomOption MoonHuntCd { get; private set; } = null!;
     public static CustomOption MoonHuntSuicideTime { get; private set; } = null!;
     public static CustomOption ConverterSkillUses { get; private set; } = null!;
+    public static CustomOption BalancerSkillUses { get; private set; } = null!;
     public static CustomOption PilotSkillCd { get; private set; } = null!;
     public static CustomOption PilotCanNormalKill { get; private set; } = null!;
     public static CustomOption PilotKillCd { get; private set; } = null!;
@@ -184,6 +185,10 @@ public static class CustomOptions
         // 转换者参数（RoleId 12 = Converter）
         ConverterSkillUses = CustomOption.Register(158, 12, "技能可使用次数",
             ModConfig.ConverterSkillUses.Value, 1, 10, 1, 1f);
+
+        // 平衡主义者参数（RoleId 13 = Balancer）
+        BalancerSkillUses = CustomOption.Register(159, 13, "技能可使用次数",
+            ModConfig.BalancerSkillUses.Value, 1, 10, 1, 1f);
 
         // 月跑入机参数（RoleId 10 = MoonRunner）
         MoonSkillCd = CustomOption.Register(134, 10, "技能CD(秒)",

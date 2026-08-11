@@ -14,6 +14,27 @@ public static class ChatHelper
     }
 
     /// <summary>
+    /// 只给指定玩家显示消息（主机调用）：
+    /// 模组端走本地警告通道（RPC 223），无模组端用定向 SendChat（仅对方客户端收到）
+    /// </summary>
+    public static void ShowPrivate(PlayerControl player, string message)
+    {
+        if (player == null) return;
+
+        if (PlayerIdManager.IsModdedClient(player))
+        {
+            RpcSync.SendShowMessage(player.OwnerId, message);
+            return;
+        }
+
+        // 定向 SendChat：只有该玩家的客户端收到这条聊天（无模组端原生可见）
+        var writer = AmongUsClient.Instance.StartRpcImmediately(
+            player.NetId, (byte)RpcCalls.SendChat, Hazel.SendOption.Reliable, player.OwnerId);
+        writer.Write(message);
+        AmongUsClient.Instance.FinishRpcImmediately(writer);
+    }
+
+    /// <summary>
     /// 多行合并为一条气泡显示；总长度超过聊天字数限制时按行拆分为多条。
     /// </summary>
     public static void ShowMany(IEnumerable<string> lines)

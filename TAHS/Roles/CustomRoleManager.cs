@@ -27,6 +27,7 @@ public static class CustomRoleManager
         (10, () => new MoonRunner()), // 中立阵营（友好）：月跑入机
         (11, () => new Pilot()),   // 内鬼阵营：中东机长
         (12, () => new Converter()), // 船员阵营：转换者
+        (13, () => new Balancer()),  // 船员阵营：平衡主义者
     };
 
     /// <summary>
@@ -170,6 +171,7 @@ public static class CustomRoleManager
         }
 
         ApplyRoleAssignments(assignments, addonAssignments);
+        Balancer.RecordInitialCounts(); // 平衡主义者：记录开局阵营人数基线
         RpcSync.BroadcastOptions();
         RpcSync.BroadcastRoleAssignments(assignments, addonAssignments);
 
@@ -416,6 +418,7 @@ public static class CustomRoleManager
         DeathTracker.Clear();
         GameArchive.ArchiveAndReset();
         MoonRunner.ResetStatics();
+        Balancer.ResetStatics();
         PrivateTag.ClearAll();
     }
 }

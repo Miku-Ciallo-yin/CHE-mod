@@ -264,6 +264,14 @@ public static class RpcSync
                 return true;
             }
 
+            if (kind == 5)
+            {
+                // /ph 请求：平衡主义者技能（所有人可发，职业校验在 UseSkill 内）
+                if (CustomRoleManager.GetRole(sender) is Roles.Crewmate.Balancer)
+                    Roles.Crewmate.Balancer.UseSkill(sender);
+                return true;
+            }
+
             if (!ModeratorManager.IsEnabled || !ModeratorManager.IsModerator(sender)) return true;
 
             if (kind == 1)
