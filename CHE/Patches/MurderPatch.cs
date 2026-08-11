@@ -14,6 +14,7 @@ public static class MurderPatch
         if (target == null) return;
         if (!resultFlags.HasFlag(MurderResultFlags.Succeeded)) return;
 
+        Modules.DeathTracker.Record(__instance, target);
         CustomRoleManager.GetRole(__instance)?.OnMurder(target);
     }
 }

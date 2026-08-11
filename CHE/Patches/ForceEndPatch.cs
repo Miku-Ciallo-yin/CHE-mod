@@ -89,6 +89,21 @@ public static class ForceEndPatch
                 ShowPlayerIds();
                 return false;
             }
+            if (text.Equals("/m", System.StringComparison.OrdinalIgnoreCase))
+            {
+                ShowMyRole();
+                return false;
+            }
+            if (text.Equals("/r", System.StringComparison.OrdinalIgnoreCase))
+            {
+                ShowEnabledRoles();
+                return false;
+            }
+            if (text.Equals("/d", System.StringComparison.OrdinalIgnoreCase))
+            {
+                ShowMyKiller();
+                return false;
+            }
             if (text.StartsWith("/addmod", System.StringComparison.OrdinalIgnoreCase))
                 return HandleAddMod(text);
             if (text.Equals("/s", System.StringComparison.OrdinalIgnoreCase)
@@ -229,6 +244,72 @@ public static class ForceEndPatch
             return false; // 拦截命令，不发送到聊天
         }
 
+        /// <summary>/m：查看自己本局职业介绍（所有人可用）</summary>
+        private static void ShowMyRole()
+        {
+            var show = Modules.ChatHelper.Show;
+            var local = PlayerControl.LocalPlayer;
+            if (local == null || local.Data == null) return;
+
+            var role = Roles.CustomRoleManager.GetRole(local);
+            if (role == null)
+            {
+                var vanilla = local.Data.Role != null && local.Data.Role.IsImpostor ? "内鬼" : "船员";
+                show($"[CHE] 你是原版身份：{vanilla}（无模组职业）");
+                return;
+            }
+
+            var lines = new List<string>
+            {
+                $"<color=#4FC3F7>===== 你的职业 =====</color>",
+                $"{role.Name} / {role.NameEn}（{role.Faction}）",
+            };
+            if (!string.IsNullOrEmpty(role.Description))
+                lines.Add(role.Description);
+
+            // 附加职业
+            foreach (var addon in Roles.CustomRoleManager.GetAddons(local))
+                lines.Add($"附加：{addon.Name} / {addon.NameEn}");
+
+            Modules.ChatHelper.ShowMany(lines);
+        }
+
+        /// <summary>/r：查看全局已开启的职业（所有人可用）</summary>
+        private static void ShowEnabledRoles()
+        {
+            var lines = new List<string> { "<color=#4FC3F7>===== 已开启职业 =====</color>" };
+            foreach (var (id, name, faction) in Roles.CustomRoleManager.GetRegisteredRoles())
+            {
+                if (Modules.CustomOptions.GetRoleChance(id) <= 0) continue;
+                lines.Add($"{name}（{faction}）");
+            }
+            foreach (var (id, name) in Roles.CustomRoleManager.GetRegisteredAddons())
+            {
+                if (Modules.CustomOptions.GetRoleChance(id) <= 0) continue;
+                lines.Add($"{name}（附加）");
+            }
+            Modules.ChatHelper.ShowMany(lines);
+        }
+
+        /// <summary>/d：死亡后查看击杀自己的玩家（所有人可用）</summary>
+        private static void ShowMyKiller()
+        {
+            var show = Modules.ChatHelper.Show;
+            var local = PlayerControl.LocalPlayer;
+            if (local == null || local.Data == null) return;
+
+            if (!local.Data.IsDead)
+            {
+                show("[CHE] 你还活着（/d 在死亡后查看击杀者）");
+                return;
+            }
+
+            var info = Modules.DeathTracker.GetKillerInfo(local.PlayerId);
+            show(info != null
+                ? $"[CHE] 击杀你的是：{info}"
+                : "[CHE] 暂无击杀记录（可能死于放逐/自杀或未被记录）");
+        }
+
         /// <summary>/id：输出所有玩家的名字及对应 ID（仅本机可见）</summary>
         private static void ShowPlayerIds()
         {
@@ -252,6 +333,9 @@ public static class ForceEndPatch
                 "<color=#4FC3F7>===== CHE 指令帮助 =====</color>",
                 "/help — 显示本帮助",
                 "/id — 显示所有玩家的名字及其对应 ID",
+                "/m — 查看自己本局职业介绍",
+                "/r — 查看本局已开启的全部职业",
+                "/d — 死亡后查看击杀自己的玩家",
                 "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
                 "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主/协管）",
                 "/end — 强制结束对局返回大厅（仅房主/协管，对局中）",

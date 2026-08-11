@@ -228,5 +228,6 @@ public static class CustomRoleManager
         PlayerAddons.Clear();
         Assigned = false;
         CustomWinners.Clear();
+        DeathTracker.Clear();
     }
 }
