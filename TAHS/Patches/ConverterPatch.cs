@@ -1,3 +1,4 @@
+using TAHS.Modules;
 using TAHS.Roles;
 using TAHS.Roles.Crewmate;
 using HarmonyLib;
@@ -50,6 +51,43 @@ public static class ConverterPatch
             foreach (var role in CustomRoleManager.ActiveRoles)
                 if (role is Converter converter)
                     converter.OnMeetingStart();
+        }
+    }
+
+    /// <summary>使徒私有标签：死者名牌下显示阵营·死因（定向改名，无模组端使徒也可见）</summary>
+    public static class ApostleTags
+    {
+        [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Start)), HarmonyPostfix]
+        public static void OnMeetingStart()
+        {
+            foreach (var p in PlayerControl.AllPlayerControls)
+                if (p != null && p.Data != null && p.Data.IsDead)
+                    TagForApostles(p);
+        }
+
+        /// <summary>主机：给所有使徒的客户端打上该死者的阵营标签</summary>
+        public static void TagForApostles(PlayerControl dead)
+        {
+            if (dead == null || dead.Data == null) return;
+
+            var tag = FactionCauseText(dead);
+            foreach (var p in PlayerControl.AllPlayerControls)
+                if (p != null && CustomRoleManager.GetRole(p) is Apostle)
+                    PrivateTag.SetTag(p.OwnerId, dead, tag);
+        }
+
+        /// <summary>阵营·死因富文本（红内鬼/灰中立/青船员）</summary>
+        public static string FactionCauseText(PlayerControl player)
+        {
+            var faction = CustomRoleManager.GetFaction(player);
+            var (color, name) = faction switch
+            {
+                Faction.Impostor => ("#FF5555", "内鬼"),
+                Faction.Neutral => ("#999999", "中立"),
+                _ => ("#66E6FF", "船员"),
+            };
+            var cause = DeathTracker.GetCause(player.PlayerId) ?? "击杀";
+            return $"<color={color}>{name}·{cause}</color>";
         }
     }
 }

@@ -416,5 +416,6 @@ public static class CustomRoleManager
         DeathTracker.Clear();
         GameArchive.ArchiveAndReset();
         MoonRunner.ResetStatics();
+        PrivateTag.ClearAll();
     }
 }

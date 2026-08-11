@@ -16,6 +16,7 @@ public static class ExilePatch
         if (voteTie || player == null || player.Object == null) return;
 
         Modules.DeathTracker.RecordExile(player.Object);
+        ConverterPatch.ApostleTags.TagForApostles(player.Object); // 使徒私有标签
 
         var role = CustomRoleManager.GetRole(player.Object);
         if (role == null) return;
