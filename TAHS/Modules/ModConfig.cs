@@ -44,6 +44,8 @@ public static class ModConfig
     public static ConfigEntry<bool> GuessFriendlyNeutral { get; private set; } = null!;
     /// <summary>猜测模式：敌对中立可猜测</summary>
     public static ConfigEntry<bool> GuessHostileNeutral { get; private set; } = null!;
+    /// <summary>猜测模式：可赌附加职业（默认关）</summary>
+    public static ConfigEntry<bool> GuessModeCanGuessAddons { get; private set; } = null!;
 
     /// <summary>懦弱者：转变阵营所需击杀数（默认 3）</summary>
     public static ConfigEntry<int> CowardKillsToConvert { get; private set; } = null!;
@@ -154,6 +156,7 @@ public static class ModConfig
         GuessImpostor = config.Bind("猜测模式 GuessMode", "内鬼可猜测 Impostor", false, "内鬼阵营可使用猜测");
         GuessFriendlyNeutral = config.Bind("猜测模式 GuessMode", "友好中立可猜测 FriendlyNeutral", false, "友好中立可使用猜测");
         GuessHostileNeutral = config.Bind("猜测模式 GuessMode", "敌对中立可猜测 HostileNeutral", false, "敌对中立可使用猜测");
+        GuessModeCanGuessAddons = config.Bind("猜测模式 GuessMode", "可赌附加职业 CanGuessAddons", false, "猜测模式下猜测列表包含附加职业");
 
         CowardKillsToConvert = config.Bind("懦弱者 Coward", "转变阵营所需击杀数 KillsToConvert", 3,
             "击杀多少人后进入贴近转化阶段");

@@ -233,11 +233,11 @@ public static class ForceEndPatch
             }
 
             var roleName = string.Join(' ', parts.Skip(2));
-            var entry = Patches.GuesserPatch.GetEnabledEntries()
+            var entry = Patches.GuesserPatch.GetEnabledEntries(local)
                 .FirstOrDefault(e => e.Name.Equals(roleName, System.StringComparison.OrdinalIgnoreCase));
             if (entry == null)
             {
-                var valid = string.Join("、", Patches.GuesserPatch.GetEnabledEntries().Select(e => e.Name));
+                var valid = string.Join("、", Patches.GuesserPatch.GetEnabledEntries(local).Select(e => e.Name));
                 show($"[TAHS] 未知职业：{roleName}。可猜测：{valid}");
                 return false;
             }

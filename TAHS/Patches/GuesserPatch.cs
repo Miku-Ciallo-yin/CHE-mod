@@ -141,14 +141,19 @@ public static class GuesserPatch
     [HarmonyPatch(nameof(MeetingHud.OnDestroy)), HarmonyPostfix]
     public static void OnDestroyPostfix() => Cleanup();
 
-    /// <summary>当前已启用（生成概率 > 0）的猜测条目（含配置开启时的附加职业）</summary>
-    public static List<GuessEntry> GetEnabledEntries()
+    /// <summary>当前已启用（生成概率 > 0）的猜测条目；是否包含附加职业按猜测者权限来源的对应开关</summary>
+    public static List<GuessEntry> GetEnabledEntries(PlayerControl guesser)
     {
+        // 有赌怪附加 → 看赌怪开关；无附加走猜测模式 → 看猜测模式开关
+        var includeAddons = CustomRoleManager.HasAddon(guesser, Guesser.AddonId)
+            ? CustomOptions.GuesserCanGuessAddons.Value == 1
+            : CustomOptions.GuessModeCanGuessAddons.Value == 1;
+
         var entries = new List<GuessEntry>();
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())
             if (CustomOptions.GetRoleChance(id) > 0)
                 entries.Add(new GuessEntry { Id = id, Name = name });
-        if (CustomOptions.GuesserCanGuessAddons.Value == 1)
+        if (includeAddons)
             foreach (var (id, name) in CustomRoleManager.GetRegisteredAddons())
                 if (CustomOptions.GetRoleChance(id) > 0)
                     entries.Add(new GuessEntry { IsAddon = true, Id = id, Name = $"{name}(附加)" });
@@ -161,7 +166,7 @@ public static class GuesserPatch
         ClosePanel();
         _panelTarget = target;
 
-        var entries = GetEnabledEntries();
+        var entries = GetEnabledEntries(PlayerControl.LocalPlayer);
 
         var template = meeting.playerStates[0].NameText;
 

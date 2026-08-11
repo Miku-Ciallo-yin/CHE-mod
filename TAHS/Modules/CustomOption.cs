@@ -121,6 +121,7 @@ public static class CustomOptions
     public static CustomOption GuessImpostor { get; private set; } = null!;
     public static CustomOption GuessFriendlyNeutral { get; private set; } = null!;
     public static CustomOption GuessHostileNeutral { get; private set; } = null!;
+    public static CustomOption GuessModeCanGuessAddons { get; private set; } = null!;
     public static CustomOption CowardKillsToConvert { get; private set; } = null!;
     public static CustomOption CowardConvertTime { get; private set; } = null!;
     public static CustomOption CowardConvertRange { get; private set; } = null!;
@@ -224,6 +225,8 @@ public static class CustomOptions
             ModConfig.GuessFriendlyNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 107);
         GuessHostileNeutral = CustomOption.Register(111, ModGroupId, "猜测模式：敌对中立可猜测",
             ModConfig.GuessHostileNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 107);
+        GuessModeCanGuessAddons = CustomOption.Register(157, ModGroupId, "猜测模式：可赌附加职业",
+            ModConfig.GuessModeCanGuessAddons.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 107);
 
         // 懦弱者参数（RoleId 5 = Coward）
         CowardKillsToConvert = CustomOption.Register(112, 5, "转变阵营所需击杀数",
