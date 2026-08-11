@@ -98,11 +98,10 @@ public class Converter : RoleBase
         Feedback(voter, $"[TAHS] 转换完成！{first.Data?.PlayerName} 的原职业是：{originalName}");
     }
 
-    /// <summary>反馈给转换者（模组端聊天栏，主机直达/远程经 RPC）</summary>
+    /// <summary>反馈给转换者：官方聊天广播，无模组客户端也能看到（发送者显示为主机）</summary>
     private static void Feedback(PlayerControl voter, string text)
     {
-        if (voter.AmOwner) ChatHelper.Show(text);
-        else RpcSync.SendShowMessage(voter.OwnerId, text);
+        ChatHelper.Broadcast(text);
     }
 
     public override string GetStatusText()
