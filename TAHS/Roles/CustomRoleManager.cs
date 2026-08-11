@@ -23,6 +23,7 @@ public static class CustomRoleManager
         (6, () => new Cop()),     // 船员阵营：美警
         (7, () => new Repenter()), // 内鬼阵营：忏悔者
         (8, () => new Minister()), // 船员阵营：内阁
+        (9, () => new Apostle()),  // 船员阵营：使徒
     };
 
     /// <summary>
@@ -185,6 +186,43 @@ public static class CustomRoleManager
         newRole.Id = RoleRegistry.FirstOrDefault(r => r.Factory().GetType() == newRole.GetType()).Id;
         newRole.OnAssign(player);
         PlayerRoles[player.PlayerId] = newRole;
+    }
+
+    /// <summary>赐予玩家一个附加职业（使徒完成任务时，主机调用并广播）</summary>
+    public static void GrantAddon(PlayerControl player, byte addonId)
+    {
+        var factory = AddonRegistry.FirstOrDefault(a => a.Id == addonId).Factory;
+        if (factory == null || player == null || player.Data == null) return;
+
+        var addon = factory();
+        addon.Id = addonId;
+        addon.OnAssign(player);
+        if (!PlayerAddons.TryGetValue(player.PlayerId, out var list))
+            PlayerAddons[player.PlayerId] = list = new List<AddonBase>();
+        list.Add(addon);
+
+        TAHSPlugin.Log.LogInfo($"[TAHS] {player.Data.PlayerName} 获得附加职业「{addon.Name}」");
+        GameArchive.RecordTransition($"{player.Data.PlayerName} 获得良性附加职业「{addon.Name}」（使徒赐予）");
+    }
+
+    /// <summary>使徒完成任务：随机赐予一名船员阵营玩家一个良性附加职业（仅主机调用）</summary>
+    public static void GrantRandomBenignAddon()
+    {
+        var rng = new Random();
+        var benign = AddonRegistry.Where(a => a.Factory().IsBenign).ToList();
+        if (benign.Count == 0) return;
+
+        var (addonId, _) = benign[rng.Next(benign.Count)];
+        var candidates = PlayerControl.AllPlayerControls.ToArray()
+            .Where(p => p != null && p.Data != null && !p.Data.IsDead)
+            .Where(p => GetFaction(p) == Faction.Crewmate)
+            .Where(p => !GetAddons(p).Any(a => a.Id == addonId))
+            .ToList();
+        if (candidates.Count == 0) return;
+
+        var pick = candidates[rng.Next(candidates.Count)];
+        GrantAddon(pick, addonId);
+        RpcSync.BroadcastAddonGrant(pick.PlayerId, addonId);
     }
 
     /// <summary>获取玩家职业，无职业返回 null</summary>

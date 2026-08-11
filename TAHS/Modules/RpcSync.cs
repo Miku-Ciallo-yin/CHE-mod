@@ -38,6 +38,22 @@ public static class RpcSync
     /// <summary>公告广播（主机 -> 全模组端）：/s 醒目消息。</summary>
     public const byte AnnouncementCallId = 225;
 
+    /// <summary>附加职业赐予（主机 -> 全员）：使徒完成任务时。</summary>
+    public const byte AddonGrantCallId = 226;
+
+    /// <summary>主机：广播附加职业赐予。</summary>
+    public static void BroadcastAddonGrant(byte playerId, byte addonId)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, AddonGrantCallId, SendOption.Reliable, -1);
+        writer.Write(playerId);
+        writer.Write(addonId);
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>主机：向全模组端广播公告（label + 内容）。</summary>
     public static void SendAnnouncement(string label, string content)
     {
@@ -322,6 +338,17 @@ public static class RpcSync
             var label = reader.ReadString();
             var content = reader.ReadString();
             Announcement.Show(label, content);
+            return true;
+        }
+
+        if (callId == AddonGrantCallId)
+        {
+            var playerId = reader.ReadByte();
+            var addonId = reader.ReadByte();
+            var player = PlayerControl.AllPlayerControls.ToArray()
+                .FirstOrDefault(p => p != null && p.PlayerId == playerId);
+            if (player != null)
+                CustomRoleManager.GrantAddon(player, addonId);
             return true;
         }
 

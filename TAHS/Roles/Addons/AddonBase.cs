@@ -20,6 +20,9 @@ public abstract class AddonBase
     /// <summary>主题色</summary>
     public abstract Color Color { get; }
 
+    /// <summary>良性附加职业（使徒完成任务时只会赐予良性附加）</summary>
+    public virtual bool IsBenign => true;
+
     /// <summary>拥有该附加职业的玩家</summary>
     public PlayerControl? Player { get; private set; }
 

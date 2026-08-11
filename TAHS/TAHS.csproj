@@ -17,7 +17,7 @@
       直接引用该目录下 BepInEx\interop 中已生成的互操作程序集，
       保证编译环境与运行环境完全一致（游戏版本 2026.6.5）。
     -->
-    <AmongUsDir>D:\st\steamapps\common\Among Us\CNE</AmongUsDir>
+    <AmongUsDir>D:\st\steamapps\common\Among Us\tahs</AmongUsDir>
     <BepInExVersion>6.0.0-be.735</BepInExVersion>
     <HarmonyVersion>2.10.2</HarmonyVersion>
   </PropertyGroup>

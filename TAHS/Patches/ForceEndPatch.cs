@@ -109,6 +109,11 @@ public static class ForceEndPatch
                 Modules.GameArchive.ShowLast();
                 return false;
             }
+            if (text.Equals("/kc", System.StringComparison.OrdinalIgnoreCase))
+            {
+                ShowAliveCounts();
+                return false;
+            }
             if (text.StartsWith("/addmod", System.StringComparison.OrdinalIgnoreCase))
                 return HandleAddMod(text);
             if (text.Equals("/s", System.StringComparison.OrdinalIgnoreCase)
@@ -315,6 +320,43 @@ public static class ForceEndPatch
                 : "[TAHS] 暂无击杀记录（可能死于放逐/自杀或未被记录）");
         }
 
+        /// <summary>/kc：使徒在场（存活）时全员可查存活内鬼与中立人数</summary>
+        private static void ShowAliveCounts()
+        {
+            var show = Modules.ChatHelper.Show;
+
+            if (AmongUsClient.Instance == null
+                || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
+            {
+                show("[TAHS] /kc 仅对局中可用");
+                return;
+            }
+            if (!Roles.Crewmate.Apostle.AliveApostleExists())
+            {
+                show("[TAHS] 场上没有存活的使徒，/kc 不可用");
+                return;
+            }
+
+            var impostors = 0;
+            var neutrals = 0;
+            foreach (var p in PlayerControl.AllPlayerControls)
+            {
+                if (p == null || p.Data == null || p.Data.IsDead) continue;
+                switch (Roles.CustomRoleManager.GetFaction(p))
+                {
+                    case Roles.Faction.Impostor: impostors++; break;
+                    case Roles.Faction.Neutral: neutrals++; break;
+                }
+            }
+
+            Modules.ChatHelper.ShowMany(new[]
+            {
+                "<color=#4FC3F7>===== 场上存活统计 =====</color>",
+                $"<color=#FF5555>存活内鬼：{impostors} 人</color>",
+                $"<color=#999999>存活中立：{neutrals} 人</color>",
+            });
+        }
+
         /// <summary>/id：输出所有玩家的名字及对应 ID（仅本机可见）</summary>
         private static void ShowPlayerIds()
         {
@@ -342,6 +384,7 @@ public static class ForceEndPatch
                 "/r — 查看本局已开启的全部职业",
                 "/d — 死亡后查看击杀自己的玩家",
                 "/l — 查看上一局身份转换详情及击杀记录",
+                "/kc — 查看存活内鬼与中立人数（需场上有存活使徒）",
                 "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
                 "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主/协管）",
                 "/end — 强制结束对局返回大厅（仅房主/协管，对局中）",

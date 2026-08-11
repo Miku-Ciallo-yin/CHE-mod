@@ -9,6 +9,7 @@ namespace TAHS.Modules;
 public static class DeathTracker
 {
     private static readonly Dictionary<byte, string> _killerInfoByVictim = new();
+    private static readonly Dictionary<byte, string> _causeByVictim = new();
 
     /// <summary>记录一次击杀（MurderPlayer 补丁调用）</summary>
     public static void Record(PlayerControl killer, PlayerControl victim)
@@ -21,6 +22,14 @@ public static class DeathTracker
             : (killer.Data.Role != null && killer.Data.Role.IsImpostor ? "内鬼" : "船员");
 
         _killerInfoByVictim[victim.PlayerId] = $"{killer.Data.PlayerName}（{roleName}）";
+        _causeByVictim[victim.PlayerId] = killer == victim ? "自杀" : "击杀";
+    }
+
+    /// <summary>记录放逐（ExileController 补丁调用）</summary>
+    public static void RecordExile(PlayerControl exiled)
+    {
+        if (exiled == null) return;
+        _causeByVictim[exiled.PlayerId] = "放逐";
     }
 
     /// <summary>查询被害者的击杀者信息，无记录返回 null</summary>
@@ -29,5 +38,15 @@ public static class DeathTracker
         return _killerInfoByVictim.TryGetValue(victimId, out var info) ? info : null;
     }
 
-    public static void Clear() => _killerInfoByVictim.Clear();
+    /// <summary>查询死因（击杀/自杀/放逐），无记录返回 null</summary>
+    public static string? GetCause(byte victimId)
+    {
+        return _causeByVictim.TryGetValue(victimId, out var cause) ? cause : null;
+    }
+
+    public static void Clear()
+    {
+        _killerInfoByVictim.Clear();
+        _causeByVictim.Clear();
+    }
 }

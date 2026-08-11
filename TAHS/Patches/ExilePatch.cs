@@ -15,6 +15,8 @@ public static class ExilePatch
         // 平票时 player 为 null，无人被放逐
         if (voteTie || player == null || player.Object == null) return;
 
+        Modules.DeathTracker.RecordExile(player.Object);
+
         var role = CustomRoleManager.GetRole(player.Object);
         if (role == null) return;
 
