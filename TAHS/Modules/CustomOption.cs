@@ -139,6 +139,10 @@ public static class CustomOptions
     public static CustomOption CopKillMinisterRange { get; private set; } = null!;
     public static CustomOption MinisterTaskDeadline { get; private set; } = null!;
     public static CustomOption GuesserCanGuessAddons { get; private set; } = null!;
+    public static CustomOption GuesserCrewmate { get; private set; } = null!;
+    public static CustomOption GuesserImpostor { get; private set; } = null!;
+    public static CustomOption GuesserKnifeNeutral { get; private set; } = null!;
+    public static CustomOption GuesserNoKnifeNeutral { get; private set; } = null!;
     public static CustomOption FarmerStealChance { get; private set; } = null!;
     public static CustomOption FarmerStealsForKill { get; private set; } = null!;
     public static CustomOption FarmerKillCooldown { get; private set; } = null!;
@@ -277,9 +281,17 @@ public static class CustomOptions
             CustomOption.Register((byte)(id + 50), id, "人数", 1, 1, 15, 1, 1f);
         }
 
-        // 赌怪参数（RoleId 4 = Guesser.AddonId）
+        // 赌怪参数（RoleId 4 = Guesser.AddonId，均挂在其生成概率下作下级选项）
         GuesserCanGuessAddons = CustomOption.Register(105, Guesser.AddonId, "可猜测附加职业",
-            ModConfig.GuesserCanGuessAddons.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+            ModConfig.GuesserCanGuessAddons.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: Guesser.AddonId);
+        GuesserCrewmate = CustomOption.Register(153, Guesser.AddonId, "船员可成为赌怪",
+            ModConfig.GuesserCrewmate.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: Guesser.AddonId);
+        GuesserImpostor = CustomOption.Register(154, Guesser.AddonId, "内鬼可成为赌怪",
+            ModConfig.GuesserImpostor.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: Guesser.AddonId);
+        GuesserKnifeNeutral = CustomOption.Register(155, Guesser.AddonId, "带刀中立可成为赌怪",
+            ModConfig.GuesserKnifeNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: Guesser.AddonId);
+        GuesserNoKnifeNeutral = CustomOption.Register(156, Guesser.AddonId, "无刀中立可成为赌怪",
+            ModConfig.GuesserNoKnifeNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: Guesser.AddonId);
 
         // 佃农职业参数（ID 从 101 起；RoleId 2 对应 RoleRegistry 中的 Farmer）
         const byte farmerRoleId = 2;

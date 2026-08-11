@@ -25,6 +25,14 @@ public static class ModConfig
 
     /// <summary>赌怪：是否可以猜测附加职业（默认关）</summary>
     public static ConfigEntry<bool> GuesserCanGuessAddons { get; private set; } = null!;
+    /// <summary>赌怪：船员可成为赌怪（默认开）</summary>
+    public static ConfigEntry<bool> GuesserCrewmate { get; private set; } = null!;
+    /// <summary>赌怪：内鬼可成为赌怪（默认关）</summary>
+    public static ConfigEntry<bool> GuesserImpostor { get; private set; } = null!;
+    /// <summary>赌怪：带刀中立可成为赌怪（默认关）</summary>
+    public static ConfigEntry<bool> GuesserKnifeNeutral { get; private set; } = null!;
+    /// <summary>赌怪：无刀中立可成为赌怪（默认开）</summary>
+    public static ConfigEntry<bool> GuesserNoKnifeNeutral { get; private set; } = null!;
 
     /// <summary>猜测模式：总开关</summary>
     public static ConfigEntry<bool> GuessMode { get; private set; } = null!;
@@ -135,6 +143,10 @@ public static class ModConfig
 
         GuesserCanGuessAddons = config.Bind("赌怪 Guesser", "可猜测附加职业 CanGuessAddons", false,
             "开启后赌怪的猜测列表包含附加职业");
+        GuesserCrewmate = config.Bind("赌怪 Guesser", "船员可成为赌怪 Crewmate", true, "船员阵营可被分配赌怪");
+        GuesserImpostor = config.Bind("赌怪 Guesser", "内鬼可成为赌怪 Impostor", false, "内鬼阵营可被分配赌怪");
+        GuesserKnifeNeutral = config.Bind("赌怪 Guesser", "带刀中立可成为赌怪 KnifeNeutral", false, "敌对（带刀）中立可被分配赌怪");
+        GuesserNoKnifeNeutral = config.Bind("赌怪 Guesser", "无刀中立可成为赌怪 NoKnifeNeutral", true, "友好（无刀）中立可被分配赌怪");
 
         GuessMode = config.Bind("猜测模式 GuessMode", "开启 Enable", false,
             "开启后按阵营勾选决定谁可以猜测（无需赌怪附加职业）");

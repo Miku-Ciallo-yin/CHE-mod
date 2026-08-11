@@ -156,6 +156,9 @@ public static class CustomRoleManager
                 var maxAddons = CustomOptions.MaxAddonsPerPlayer.Value;
                 var available = players
                     .Where(p => addonAssignments.Count(a => a.PlayerId == p.PlayerId) < maxAddons)
+                    // 赌怪按阵营资格过滤（用待分配的职业 ID 判定，此时职业尚未应用）
+                    .Where(p => addonId != Guesser.AddonId || GuesserEligibleFor(
+                        assignments.FirstOrDefault(a => a.PlayerId == p.PlayerId).RoleId, p))
                     .ToList();
                 if (available.Count == 0) break;
 
@@ -294,12 +297,56 @@ public static class CustomRoleManager
             .Where(p => GetFaction(p) == Faction.Crewmate)
             .Where(p => GetAddons(p).Count < CustomOptions.MaxAddonsPerPlayer.Value) // 附加职业数量上限
             .Where(p => !GetAddons(p).Any(a => a.Id == addonId))
+            .Where(p => addonId != Guesser.AddonId || GuesserEligible(p)) // 赌怪按阵营资格过滤
             .ToList();
         if (candidates.Count == 0) return;
 
         var pick = candidates[rng.Next(candidates.Count)];
         GrantAddon(pick, addonId);
         RpcSync.BroadcastAddonGrant(pick.PlayerId, addonId);
+    }
+
+    /// <summary>玩家是否符合赌怪分配资格（按阵营勾选）</summary>
+    public static bool GuesserEligible(PlayerControl player)
+    {
+        var role = GetRole(player);
+        var faction = GetFaction(player);
+        return GuesserEligibleFor(faction, role?.IsHostileNeutral ?? false);
+    }
+
+    /// <summary>按阵营信息判定赌怪资格（分配阶段职业未应用时用重载）</summary>
+    public static bool GuesserEligibleFor(byte roleId, PlayerControl player)
+    {
+        Faction faction;
+        var hostile = false;
+
+        var sample = RoleRegistry.FirstOrDefault(r => r.Id == roleId).Factory?.Invoke();
+        if (sample != null)
+        {
+            faction = sample.Faction;
+            hostile = sample.IsHostileNeutral;
+        }
+        else
+        {
+            faction = player.Data != null && player.Data.Role != null && player.Data.Role.IsImpostor
+                ? Faction.Impostor
+                : Faction.Crewmate;
+        }
+
+        return GuesserEligibleFor(faction, hostile);
+    }
+
+    private static bool GuesserEligibleFor(Faction faction, bool hostileNeutral)
+    {
+        return faction switch
+        {
+            Faction.Crewmate => CustomOptions.GuesserCrewmate.Value == 1,
+            Faction.Impostor => CustomOptions.GuesserImpostor.Value == 1,
+            Faction.Neutral => hostileNeutral
+                ? CustomOptions.GuesserKnifeNeutral.Value == 1
+                : CustomOptions.GuesserNoKnifeNeutral.Value == 1,
+            _ => false,
+        };
     }
 
     /// <summary>获取玩家职业，无职业返回 null</summary>
