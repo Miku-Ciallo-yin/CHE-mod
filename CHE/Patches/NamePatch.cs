@@ -32,19 +32,38 @@ public static class NamePatch
             ? "\n<color=#FF5555><size=60%>你击杀了内阁</size></color>"
             : string.Empty;
 
-        // 本机玩家：职业名 + 状态行
-        if (__instance.AmOwner && CustomRoleManager.GetRole(__instance) is { } role)
+        // 本机玩家：附加职业（括号括住，位于主职业前）+ 职业名 + 状态行
+        if (__instance.AmOwner)
         {
-            var status = role.GetStatusText();
-            var statusLine = string.IsNullOrEmpty(status)
-                ? string.Empty
-                : $"\n<color=#FFFFFF><size=60%>{status}</size></color>";
+            var role = CustomRoleManager.GetRole(__instance);
+            var addons = CustomRoleManager.GetAddons(__instance);
+            var addonPrefix = addons.Count > 0
+                ? string.Concat(addons.Select(a => $"（{a.Name}）"))
+                : string.Empty;
 
-            nameText.text =
-                $"{prefix}{name}\n" +
-                $"{role.ColorTag}<size=75%>{role.Name} / {role.NameEn}</size></color>" +
-                statusLine + killerHint;
-            return;
+            if (role != null)
+            {
+                var status = role.GetStatusText();
+                var statusLine = string.IsNullOrEmpty(status)
+                    ? string.Empty
+                    : $"\n<color=#FFFFFF><size=60%>{status}</size></color>";
+
+                nameText.text =
+                    $"{prefix}{name}\n" +
+                    $"{role.ColorTag}<size=75%>{addonPrefix}{role.Name} / {role.NameEn}</size></color>" +
+                    statusLine + killerHint;
+                return;
+            }
+
+            // 无主职业但有附加职业：单独显示附加职业行
+            if (addons.Count > 0)
+            {
+                var addonColor = $"<color=#{UnityEngine.ColorUtility.ToHtmlStringRGB(addons[0].Color)}>";
+                nameText.text =
+                    $"{prefix}{name}\n" +
+                    $"{addonColor}<size=75%>{addonPrefix}</size></color>" + killerHint;
+                return;
+            }
         }
 
         nameText.text = prefix + name + killerHint;
