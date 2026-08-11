@@ -29,6 +29,9 @@ public static class PilotPatch
                 case Pilot pilot:
                     if (host) pilot.TryStartDash();
                     return false;
+                case Miner miner:
+                    if (host) miner.PlaceMine();
+                    return false;
                 case Repenter repenter:
                     if (host && repenter.CanConvert) repenter.ServerConvert();
                     return false;

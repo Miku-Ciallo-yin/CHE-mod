@@ -28,6 +28,7 @@ public static class CustomRoleManager
         (11, () => new Pilot()),   // 内鬼阵营：中东机长
         (12, () => new Converter()), // 船员阵营：转换者
         (13, () => new Balancer()),  // 船员阵营：平衡主义者
+        (14, () => new Miner()),   // 内鬼阵营：埋雷兵
     };
 
     /// <summary>
@@ -420,5 +421,6 @@ public static class CustomRoleManager
         MoonRunner.ResetStatics();
         Balancer.ResetStatics();
         PrivateTag.ClearAll();
+        MineVisuals.Clear();
     }
 }

@@ -11,5 +11,6 @@ public static class AnnouncementPatch
     {
         Announcement.Tick();
         PrivateTag.Tick();
+        MineVisuals.Tick();
     }
 }

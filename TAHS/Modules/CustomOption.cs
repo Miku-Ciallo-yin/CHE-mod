@@ -110,6 +110,11 @@ public static class CustomOptions
     public static CustomOption MoonHuntSuicideTime { get; private set; } = null!;
     public static CustomOption ConverterSkillUses { get; private set; } = null!;
     public static CustomOption BalancerSkillUses { get; private set; } = null!;
+    public static CustomOption MinerCd { get; private set; } = null!;
+    public static CustomOption MinerVisibleTime { get; private set; } = null!;
+    public static CustomOption MinerRange { get; private set; } = null!;
+    public static CustomOption MinerMaxCount { get; private set; } = null!;
+    public static CustomOption MinerKillImpostor { get; private set; } = null!;
     public static CustomOption PilotSkillCd { get; private set; } = null!;
     public static CustomOption PilotCanNormalKill { get; private set; } = null!;
     public static CustomOption PilotKillCd { get; private set; } = null!;
@@ -189,6 +194,18 @@ public static class CustomOptions
         // 平衡主义者参数（RoleId 13 = Balancer）
         BalancerSkillUses = CustomOption.Register(159, 13, "技能可使用次数",
             ModConfig.BalancerSkillUses.Value, 1, 10, 1, 1f);
+
+        // 埋雷兵参数（RoleId 14 = Miner）
+        MinerCd = CustomOption.Register(160, 14, "埋雷CD(秒)",
+            ModConfig.MinerCd.Value, 5, 120, 5, 1f);
+        MinerVisibleTime = CustomOption.Register(161, 14, "地雷显示时间(秒)",
+            ModConfig.MinerVisibleTime.Value, 1, 60, 1, 1f);
+        MinerRange = CustomOption.Register(162, 14, "地雷判定范围×0.1",
+            ModConfig.MinerRange.Value, 5, 30, 5, 0.1f);
+        MinerMaxCount = CustomOption.Register(163, 14, "地雷数量上限",
+            ModConfig.MinerMaxCount.Value, 1, 10, 1, 1f);
+        MinerKillImpostor = CustomOption.Register(164, 14, "地雷是否击杀内鬼",
+            ModConfig.MinerKillImpostor.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
 
         // 月跑入机参数（RoleId 10 = MoonRunner）
         MoonSkillCd = CustomOption.Register(134, 10, "技能CD(秒)",

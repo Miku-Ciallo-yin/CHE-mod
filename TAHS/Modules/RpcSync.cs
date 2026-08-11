@@ -1,6 +1,7 @@
 using TAHS.Roles;
 using Hazel;
 using InnerNet;
+using UnityEngine;
 
 namespace TAHS.Modules;
 
@@ -37,6 +38,26 @@ public static class RpcSync
 
     /// <summary>模组握手（模组端 -> 主机）：进房时告知主机自己装有模组。</summary>
     public const byte HandshakeCallId = 227;
+
+    /// <summary>地雷同步（主机 -> 全模组端）：kind 1=放置 2=移除。</summary>
+    public const byte MineSyncCallId = 228;
+
+    /// <summary>主机：广播地雷放置/移除。</summary>
+    public static void SendMineSync(byte kind, int index, Vector2 pos, float range, float visibleSeconds)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, MineSyncCallId, SendOption.Reliable, -1);
+        writer.Write(kind);
+        writer.Write(index);
+        writer.Write(pos.x);
+        writer.Write(pos.y);
+        writer.Write(range);
+        writer.Write(visibleSeconds);
+        client.FinishRpcImmediately(writer);
+    }
 
     /// <summary>模组端进房时向主机发送握手。</summary>
     public static void SendHandshake()
@@ -324,6 +345,20 @@ public static class RpcSync
         {
             if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
                 PlayerIdManager.MarkModded(sender.OwnerId);
+            return true;
+        }
+
+        if (callId == MineSyncCallId)
+        {
+            var kind = reader.ReadByte();
+            var index = reader.ReadInt32();
+            var x = reader.ReadSingle();
+            var y = reader.ReadSingle();
+            var range = reader.ReadSingle();
+            var visible = reader.ReadSingle();
+
+            if (kind == 1) MineVisuals.OnPlace(index, new Vector2(x, y), range, visible);
+            else MineVisuals.Remove(index);
             return true;
         }
 
