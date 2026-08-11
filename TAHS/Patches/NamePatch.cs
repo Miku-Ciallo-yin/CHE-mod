@@ -51,7 +51,7 @@ public static class NamePatch
                 nameText.text =
                     $"{prefix}{name}\n" +
                     $"{role.ColorTag}<size=75%>{addonPrefix}{role.Name} / {role.NameEn}</size></color>" +
-                    statusLine + killerHint;
+                    statusLine + killerHint + ExtraTags(__instance);
                 return;
             }
 
@@ -66,6 +66,20 @@ public static class NamePatch
             }
         }
 
-        nameText.text = prefix + name + killerHint;
+        nameText.text = prefix + name + killerHint + ExtraTags(__instance);
+    }
+
+    /// <summary>月跑入机相关标记：身份透露（所有模组端可见）与追杀标记</summary>
+    private static string ExtraTags(PlayerControl player)
+    {
+        var sb = new System.Text.StringBuilder();
+
+        if (TAHS.Roles.Neutral.MoonRunner.Revealed.TryGetValue(player.PlayerId, out var revealed))
+            sb.Append($"\n<color=#FFD700><size=60%>【{revealed}】</size></color>");
+
+        if (TAHS.Roles.Neutral.MoonRunner.IsPrey(player))
+            sb.Append("\n<color=#FF3333><size=60%>！你已被追杀</size></color>");
+
+        return sb.ToString();
     }
 }

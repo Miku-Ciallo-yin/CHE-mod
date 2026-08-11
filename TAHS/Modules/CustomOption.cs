@@ -97,6 +97,14 @@ public static class CustomOptions
     public static CustomOption ModAllowS { get; private set; } = null!;
     public static CustomOption ModAllowEnd { get; private set; } = null!;
     public static CustomOption CheatAction { get; private set; } = null!;
+    public static CustomOption MoonSkillCd { get; private set; } = null!;
+    public static CustomOption MoonBuffDuration { get; private set; } = null!;
+    public static CustomOption MoonBuffInitial { get; private set; } = null!;
+    public static CustomOption MoonBuffRate { get; private set; } = null!;
+    public static CustomOption MoonBuffMaxStacks { get; private set; } = null!;
+    public static CustomOption MoonReveal { get; private set; } = null!;
+    public static CustomOption MoonHuntCd { get; private set; } = null!;
+    public static CustomOption MoonHuntSuicideTime { get; private set; } = null!;
     public static CustomOption GuessMode { get; private set; } = null!;
     public static CustomOption GuessCrewmate { get; private set; } = null!;
     public static CustomOption GuessImpostor { get; private set; } = null!;
@@ -145,6 +153,24 @@ public static class CustomOptions
         CheatAction = CustomOption.Register(133, ModGroupId, "作弊处理方式",
             ModConfig.CheatAction.Value, 0, 3, 1, 1f,
             formatNames: new[] { "警告", "踢出", "封禁", "加入黑名单" });
+
+        // 月跑入机参数（RoleId 10 = MoonRunner）
+        MoonSkillCd = CustomOption.Register(134, 10, "技能CD(秒)",
+            ModConfig.MoonSkillCd.Value, 5, 60, 5, 1f);
+        MoonBuffDuration = CustomOption.Register(135, 10, "增益持续时间(秒)",
+            ModConfig.MoonBuffDuration.Value, 5, 120, 5, 1f);
+        MoonBuffInitial = CustomOption.Register(136, 10, "初始增益速度%",
+            ModConfig.MoonBuffInitial.Value, 100, 200, 5, 0.01f);
+        MoonBuffRate = CustomOption.Register(137, 10, "每次叠加增益倍率%",
+            ModConfig.MoonBuffRate.Value, 100, 200, 5, 0.01f);
+        MoonBuffMaxStacks = CustomOption.Register(138, 10, "达到最大值所需次数",
+            ModConfig.MoonBuffMaxStacks.Value, 2, 10, 1, 1f);
+        MoonReveal = CustomOption.Register(139, 10, "是否暴露双方身份",
+            ModConfig.MoonReveal.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        MoonHuntCd = CustomOption.Register(140, 10, "追杀击杀CD(秒)",
+            ModConfig.MoonHuntCd.Value, 5, 60, 5, 1f);
+        MoonHuntSuicideTime = CustomOption.Register(141, 10, "追杀自杀时间(秒)",
+            ModConfig.MoonHuntSuicideTime.Value, 10, 180, 5, 1f);
         GuessMode = CustomOption.Register(107, ModGroupId, "猜测模式",
             ModConfig.GuessMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         GuessCrewmate = CustomOption.Register(108, ModGroupId, "猜测模式：船员可猜测",

@@ -89,6 +89,15 @@ public static class ModConfig
     /// <summary>作弊处理方式（0=警告 1=踢出 2=封禁 3=加入黑名单，默认踢出）</summary>
     public static ConfigEntry<int> CheatAction { get; private set; } = null!;
 
+    public static ConfigEntry<int> MoonSkillCd { get; private set; } = null!;
+    public static ConfigEntry<int> MoonBuffDuration { get; private set; } = null!;
+    public static ConfigEntry<int> MoonBuffInitial { get; private set; } = null!;
+    public static ConfigEntry<int> MoonBuffRate { get; private set; } = null!;
+    public static ConfigEntry<int> MoonBuffMaxStacks { get; private set; } = null!;
+    public static ConfigEntry<bool> MoonReveal { get; private set; } = null!;
+    public static ConfigEntry<int> MoonHuntCd { get; private set; } = null!;
+    public static ConfigEntry<int> MoonHuntSuicideTime { get; private set; } = null!;
+
     /// <summary>主菜单：GitHub 按钮链接</summary>
     public static ConfigEntry<string> GithubUrl { get; private set; } = null!;
 
@@ -164,6 +173,15 @@ public static class ModConfig
         ModAllowEnd = config.Bind("模组设置 Mod", "协管权限允许end ModAllowEnd", true, "协管可使用 /end 与 ALT+F4 结束对局");
         CheatAction = config.Bind("模组设置 Mod", "作弊处理方式 CheatAction", 1,
             "反作弊发现作弊的处理方式：0=警告 1=踢出 2=封禁 3=加入黑名单");
+
+        MoonSkillCd = config.Bind("月跑入机 MoonRunner", "技能CD SkillCd", 15, "技能冷却（秒）");
+        MoonBuffDuration = config.Bind("月跑入机 MoonRunner", "增益持续时间 BuffDuration", 30, "速度增益持续（秒）");
+        MoonBuffInitial = config.Bind("月跑入机 MoonRunner", "初始增益速度 BuffInitial", 110, "初始增益速度（%，默认 110 = 1.1 倍）");
+        MoonBuffRate = config.Bind("月跑入机 MoonRunner", "每次叠加增益倍率 BuffRate", 125, "对同一人每次叠加倍率（%，默认 125 = ×1.25）");
+        MoonBuffMaxStacks = config.Bind("月跑入机 MoonRunner", "达到最大值所需次数 BuffMaxStacks", 3, "对同一玩家使用几次技能达到增益最大值");
+        MoonReveal = config.Bind("月跑入机 MoonRunner", "是否暴露双方身份 Reveal", true, "增益达到最大值时是否自动透露双方身份");
+        MoonHuntCd = config.Bind("月跑入机 MoonRunner", "追杀击杀CD HuntCd", 10, "追杀者击杀后者的冷却（秒）");
+        MoonHuntSuicideTime = config.Bind("月跑入机 MoonRunner", "追杀自杀时间 HuntSuicideTime", 45, "追杀者限期击杀后者的秒数，超时自杀且无法胜利");
 
         GithubUrl = config.Bind("主菜单 MainMenu", "GitHub 地址 GithubUrl", "https://github.com/",
             "主菜单 GitHub 按钮打开的链接");

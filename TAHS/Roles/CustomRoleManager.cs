@@ -24,6 +24,7 @@ public static class CustomRoleManager
         (7, () => new Repenter()), // 内鬼阵营：忏悔者
         (8, () => new Minister()), // 船员阵营：内阁
         (9, () => new Apostle()),  // 船员阵营：使徒
+        (10, () => new MoonRunner()), // 中立阵营（友好）：月跑入机
     };
 
     /// <summary>
@@ -69,6 +70,15 @@ public static class CustomRoleManager
                 && coward.Player != winner)
                 CustomWinners.Add(coward.Player);
         }
+    }
+
+    /// <summary>设置多个自定义胜利者（月跑入机直接胜利等）</summary>
+    public static void SetCustomWinners(IEnumerable<PlayerControl> winners)
+    {
+        CustomWinners.Clear();
+        foreach (var winner in winners)
+            if (winner != null && !CustomWinners.Contains(winner))
+                CustomWinners.Add(winner);
     }
 
     /// <summary>
@@ -270,5 +280,6 @@ public static class CustomRoleManager
         CustomWinners.Clear();
         DeathTracker.Clear();
         GameArchive.ArchiveAndReset();
+        MoonRunner.ResetStatics();
     }
 }

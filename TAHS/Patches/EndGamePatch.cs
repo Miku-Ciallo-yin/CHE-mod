@@ -26,7 +26,21 @@ public static class EndGamePatch
     public static void Postfix(EndGameManager __instance)
     {
         var winners = CustomRoleManager.CustomWinners;
-        if (winners.Count == 0) return;
+
+        // 无自定义胜利者时：月跑入机的共同幸存者并入原版胜利名单
+        if (winners.Count == 0)
+        {
+            foreach (var coWinner in TAHS.Roles.Neutral.MoonRunner.CoWinners)
+            {
+                if (coWinner == null || coWinner.Data == null) continue;
+                var exists = false;
+                foreach (var w in EndGameResult.CachedWinners)
+                    if (w.PlayerName == coWinner.Data.PlayerName) { exists = true; break; }
+                if (!exists)
+                    EndGameResult.CachedWinners.Add(new CachedPlayerData(coWinner.Data));
+            }
+            return;
+        }
 
         var first = winners[0];
         var role = CustomRoleManager.GetRole(first);

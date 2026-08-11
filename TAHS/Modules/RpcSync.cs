@@ -251,6 +251,14 @@ public static class RpcSync
                 case Roles.Impostor.Repenter repenter:
                     repenter.ServerKillRequest(target);
                     break;
+                case Roles.Neutral.MoonRunner runner:
+                    runner.UseSkill(target); // 月跑入机的击杀键即技能
+                    break;
+                default:
+                    // 无职业的追杀者（月跑入机链接中的前者）
+                    if (Roles.Neutral.MoonRunner.HunterPrey.ContainsKey(sender.PlayerId))
+                        Roles.Neutral.MoonRunner.ServerHunterKill(sender, target);
+                    break;
             }
             return true;
         }
