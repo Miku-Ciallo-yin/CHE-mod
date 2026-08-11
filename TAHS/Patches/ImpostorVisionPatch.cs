@@ -34,7 +34,7 @@ public static class ImpostorVisionPatch
             // 追杀者（月跑入机链接中临时变成变形者的玩家）的红名对内鬼隐藏
             if (local.Data.Role.IsImpostor
                 && __instance.Data.Role.IsImpostor
-                && Neutral.MoonRunner.IsProtectedHunter(__instance))
+                && TAHS.Roles.Neutral.MoonRunner.IsProtectedHunter(__instance))
             {
                 var t = __instance.cosmetics.nameText;
                 if (t != null) t.color = Color.white;
@@ -67,7 +67,7 @@ public static class ImpostorVisionPatch
                 if (target == null) continue;
 
                 // 追杀者红名隐藏（不受内鬼互认开关影响）
-                if (Neutral.MoonRunner.IsProtectedHunter(target)
+                if (TAHS.Roles.Neutral.MoonRunner.IsProtectedHunter(target)
                     && target.Data != null && target.Data.Role != null && target.Data.Role.IsImpostor)
                 {
                     if (pva.NameText != null) pva.NameText.color = Color.white;
