@@ -258,13 +258,19 @@ public static class CustomOptions
         MinisterTaskDeadline = CustomOption.Register(128, 8, "任务限时(秒)",
             ModConfig.MinisterTaskDeadline.Value, 10, 300, 10, 1f);
 
-        // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）
+        // 每个职业一项生成概率（ID 与 RoleRegistry 的职业 ID 相同）+ 一项人数（ID + 50）
         foreach (var (id, name, _) in CustomRoleManager.GetRegisteredRoles())
+        {
             CustomOption.Register(id, id, "生成概率%", 100, 0, 100, 10, 1f);
+            CustomOption.Register((byte)(id + 50), id, "人数", 1, 1, 15, 1, 1f);
+        }
 
-        // 每个附加职业一项生成概率（ID 与 AddonRegistry 的 ID 相同）
+        // 每个附加职业一项生成概率 + 一项人数（ID 规则同上）
         foreach (var (id, name) in CustomRoleManager.GetRegisteredAddons())
+        {
             CustomOption.Register(id, id, "生成概率%", 100, 0, 100, 10, 1f);
+            CustomOption.Register((byte)(id + 50), id, "人数", 1, 1, 15, 1, 1f);
+        }
 
         // 赌怪参数（RoleId 4 = Guesser.AddonId）
         GuesserCanGuessAddons = CustomOption.Register(105, Guesser.AddonId, "可猜测附加职业",
@@ -284,4 +290,7 @@ public static class CustomOptions
 
     /// <summary>某职业的生成概率（0~100），未注册默认 100</summary>
     public static int GetRoleChance(byte roleId) => CustomOption.Get(roleId)?.Value ?? 100;
+
+    /// <summary>某职业的人数（每次出场独立判定概率），未注册默认 1</summary>
+    public static int GetRoleCount(byte roleId) => CustomOption.Get((byte)(roleId + 50))?.Value ?? 1;
 }

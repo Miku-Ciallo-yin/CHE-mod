@@ -124,67 +124,70 @@ public static class CustomRoleManager
         var assignments = new List<(byte PlayerId, byte RoleId)>();
         var taken = new HashSet<byte>();
 
-        // 非中立职业：每种最多一名玩家
+        // 船员/内鬼职业：每种职业按"人数 × 生成概率"独立判定
         foreach (var (id, factory) in RoleRegistry)
         {
-            if (factory().Faction == Faction.Neutral) continue; // 中立走数量配置
-
-            // 按大厅设置中的生成概率决定该职业是否出场
-            if (rng.Next(100) >= CustomOptions.GetRoleChance(id)) continue;
-
-            var candidates = players.Where(p => !taken.Contains(p.PlayerId)).ToList();
-            if (candidates.Count == 0) break;
-
-            var pick = candidates[rng.Next(candidates.Count)];
-            taken.Add(pick.PlayerId);
-            assignments.Add((pick.PlayerId, id));
+            if (factory().Faction == Faction.Neutral) continue; // 中立走类别预算
+            AssignByCount(id, int.MaxValue);
         }
 
-        // 中立职业：按数量配置分配（带刀=敌对中立，无刀=友好中立）
-        AssignNeutrals(true, CustomOptions.NeutralKnifeCount.Value);
-        AssignNeutrals(false, CustomOptions.NeutralNoKnifeCount.Value);
+        // 中立职业：人数 × 概率判定，且受带刀/无刀类别数量预算限制
+        var knifeBudget = CustomOptions.NeutralKnifeCount.Value;
+        var noKnifeBudget = CustomOptions.NeutralNoKnifeCount.Value;
+        foreach (var (id, factory) in RoleRegistry.OrderBy(_ => rng.Next()))
+        {
+            var sample = factory();
+            if (sample.Faction != Faction.Neutral) continue;
 
-        // 附加职业：与主职业独立，可叠加在任意玩家身上
+            var assigned = AssignByCount(id, sample.IsHostileNeutral ? knifeBudget : noKnifeBudget);
+            if (sample.IsHostileNeutral) knifeBudget -= assigned;
+            else noKnifeBudget -= assigned;
+        }
+
+        // 附加职业：与主职业独立，按"人数 × 概率"判定，可叠加在任意玩家身上
         var addonAssignments = new List<(byte PlayerId, byte AddonId)>();
         foreach (var (addonId, _) in AddonRegistry)
         {
-            if (rng.Next(100) >= CustomOptions.GetRoleChance(addonId)) continue;
+            for (var i = 0; i < CustomOptions.GetRoleCount(addonId); i++)
+            {
+                if (rng.Next(100) >= CustomOptions.GetRoleChance(addonId)) continue;
 
-            var pick = players[rng.Next(players.Count)];
-            addonAssignments.Add((pick.PlayerId, addonId));
+                var available = players
+                    .Where(p => !PlayerAddons.TryGetValue(p.PlayerId, out var list)
+                                || list.All(a => a.Id != addonId))
+                    .ToList();
+                // 注意：此处在分配前查询，PlayerAddons 为空，去重在应用后生效；
+                // 同一玩家被同种附加职业分配多次时仅生效一次
+                if (available.Count == 0) break;
+
+                var pick = available[rng.Next(available.Count)];
+                if (addonAssignments.Any(a => a.PlayerId == pick.PlayerId && a.AddonId == addonId)) continue;
+                addonAssignments.Add((pick.PlayerId, addonId));
+            }
         }
 
         ApplyRoleAssignments(assignments, addonAssignments);
         RpcSync.BroadcastOptions();
         RpcSync.BroadcastRoleAssignments(assignments, addonAssignments);
 
-        // 中立职业按数量分配（同职业可重复分配给不同玩家）
-        void AssignNeutrals(bool hostile, int count)
+        // 每种职业按人数上限逐个判定概率并分配，返回实际分配数
+        int AssignByCount(byte roleId, int maxCount)
         {
-            var eligible = RoleRegistry
-                .Where(r =>
-                {
-                    var sample = r.Factory();
-                    return sample.Faction == Faction.Neutral && sample.IsHostileNeutral == hostile;
-                })
-                .Select(r => r.Id)
-                .ToList();
-            if (eligible.Count == 0) return;
-
-            for (var i = 0; i < count; i++)
+            var assigned = 0;
+            var count = CustomOptions.GetRoleCount(roleId);
+            for (var i = 0; i < count && assigned < maxCount; i++)
             {
+                if (rng.Next(100) >= CustomOptions.GetRoleChance(roleId)) continue;
+
                 var available = players.Where(p => !taken.Contains(p.PlayerId)).ToList();
-                if (available.Count == 0) return;
+                if (available.Count == 0) return assigned;
 
-                // 每次从通过生成概率的中立职业中随机选一个
-                var rolled = eligible.Where(id => rng.Next(100) < CustomOptions.GetRoleChance(id)).ToList();
-                if (rolled.Count == 0) continue;
-
-                var roleId = rolled[rng.Next(rolled.Count)];
                 var pick = available[rng.Next(available.Count)];
                 taken.Add(pick.PlayerId);
                 assignments.Add((pick.PlayerId, roleId));
+                assigned++;
             }
+            return assigned;
         }
     }
 
