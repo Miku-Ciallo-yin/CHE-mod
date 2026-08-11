@@ -98,6 +98,15 @@ public static class ModConfig
     public static ConfigEntry<int> MoonHuntCd { get; private set; } = null!;
     public static ConfigEntry<int> MoonHuntSuicideTime { get; private set; } = null!;
 
+    public static ConfigEntry<int> PilotSkillCd { get; private set; } = null!;
+    public static ConfigEntry<bool> PilotCanNormalKill { get; private set; } = null!;
+    public static ConfigEntry<int> PilotKillCd { get; private set; } = null!;
+    public static ConfigEntry<bool> PilotSurviveExplosion { get; private set; } = null!;
+    public static ConfigEntry<bool> PilotFriendlyFire { get; private set; } = null!;
+    public static ConfigEntry<int> PilotDashSpeed { get; private set; } = null!;
+    public static ConfigEntry<int> PilotDashKillRange { get; private set; } = null!;
+    public static ConfigEntry<int> PilotExplosionRange { get; private set; } = null!;
+
     /// <summary>主菜单：GitHub 按钮链接</summary>
     public static ConfigEntry<string> GithubUrl { get; private set; } = null!;
 
@@ -182,6 +191,15 @@ public static class ModConfig
         MoonReveal = config.Bind("月跑入机 MoonRunner", "是否暴露双方身份 Reveal", true, "增益达到最大值时是否自动透露双方身份");
         MoonHuntCd = config.Bind("月跑入机 MoonRunner", "追杀击杀CD HuntCd", 10, "追杀者击杀后者的冷却（秒）");
         MoonHuntSuicideTime = config.Bind("月跑入机 MoonRunner", "追杀自杀时间 HuntSuicideTime", 45, "追杀者限期击杀后者的秒数，超时自杀且无法胜利");
+
+        PilotSkillCd = config.Bind("中东机长 Pilot", "技能冷却 SkillCd", 30, "冲刺技能冷却（秒）");
+        PilotCanNormalKill = config.Bind("中东机长 Pilot", "是否可以正常击杀 CanNormalKill", true, "关闭后中东机长不能手动击杀");
+        PilotKillCd = config.Bind("中东机长 Pilot", "击杀冷却 KillCd", 25, "手动击杀冷却（秒）");
+        PilotSurviveExplosion = config.Bind("中东机长 Pilot", "爆炸中是否存活 SurviveExplosion", true, "关闭后爆炸会杀死中东机长自己");
+        PilotFriendlyFire = config.Bind("中东机长 Pilot", "技能是否误杀队友 FriendlyFire", false, "开启后技能会波及内鬼队友");
+        PilotDashSpeed = config.Bind("中东机长 Pilot", "冲刺速度 DashSpeed", 25, "冲刺速度（×0.1，默认 25 = 2.5）");
+        PilotDashKillRange = config.Bind("中东机长 Pilot", "冲刺击杀范围 DashKillRange", 10, "冲刺沿途击杀范围（×0.1，默认 10 = 1.0）");
+        PilotExplosionRange = config.Bind("中东机长 Pilot", "爆炸击杀范围 ExplosionRange", 20, "爆炸击杀范围（×0.1，默认 20 = 2.0）");
 
         GithubUrl = config.Bind("主菜单 MainMenu", "GitHub 地址 GithubUrl", "https://github.com/",
             "主菜单 GitHub 按钮打开的链接");

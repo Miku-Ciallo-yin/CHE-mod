@@ -105,6 +105,14 @@ public static class CustomOptions
     public static CustomOption MoonReveal { get; private set; } = null!;
     public static CustomOption MoonHuntCd { get; private set; } = null!;
     public static CustomOption MoonHuntSuicideTime { get; private set; } = null!;
+    public static CustomOption PilotSkillCd { get; private set; } = null!;
+    public static CustomOption PilotCanNormalKill { get; private set; } = null!;
+    public static CustomOption PilotKillCd { get; private set; } = null!;
+    public static CustomOption PilotSurviveExplosion { get; private set; } = null!;
+    public static CustomOption PilotFriendlyFire { get; private set; } = null!;
+    public static CustomOption PilotDashSpeed { get; private set; } = null!;
+    public static CustomOption PilotDashKillRange { get; private set; } = null!;
+    public static CustomOption PilotExplosionRange { get; private set; } = null!;
     public static CustomOption GuessMode { get; private set; } = null!;
     public static CustomOption GuessCrewmate { get; private set; } = null!;
     public static CustomOption GuessImpostor { get; private set; } = null!;
@@ -171,6 +179,24 @@ public static class CustomOptions
             ModConfig.MoonHuntCd.Value, 5, 60, 5, 1f);
         MoonHuntSuicideTime = CustomOption.Register(141, 10, "追杀自杀时间(秒)",
             ModConfig.MoonHuntSuicideTime.Value, 10, 180, 5, 1f);
+
+        // 中东机长参数（RoleId 11 = Pilot）
+        PilotSkillCd = CustomOption.Register(142, 11, "技能冷却(秒)",
+            ModConfig.PilotSkillCd.Value, 5, 120, 5, 1f);
+        PilotCanNormalKill = CustomOption.Register(143, 11, "是否可以正常击杀",
+            ModConfig.PilotCanNormalKill.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        PilotKillCd = CustomOption.Register(144, 11, "击杀冷却(秒)",
+            ModConfig.PilotKillCd.Value, 5, 120, 5, 1f);
+        PilotSurviveExplosion = CustomOption.Register(145, 11, "爆炸中是否存活",
+            ModConfig.PilotSurviveExplosion.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        PilotFriendlyFire = CustomOption.Register(146, 11, "技能是否误杀队友",
+            ModConfig.PilotFriendlyFire.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        PilotDashSpeed = CustomOption.Register(147, 11, "冲刺速度×0.1",
+            ModConfig.PilotDashSpeed.Value, 10, 100, 5, 0.1f);
+        PilotDashKillRange = CustomOption.Register(148, 11, "冲刺击杀范围×0.1",
+            ModConfig.PilotDashKillRange.Value, 5, 50, 5, 0.1f);
+        PilotExplosionRange = CustomOption.Register(149, 11, "爆炸击杀范围×0.1",
+            ModConfig.PilotExplosionRange.Value, 5, 60, 5, 0.1f);
         GuessMode = CustomOption.Register(107, ModGroupId, "猜测模式",
             ModConfig.GuessMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         GuessCrewmate = CustomOption.Register(108, ModGroupId, "猜测模式：船员可猜测",

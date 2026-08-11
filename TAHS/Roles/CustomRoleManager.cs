@@ -25,6 +25,7 @@ public static class CustomRoleManager
         (8, () => new Minister()), // 船员阵营：内阁
         (9, () => new Apostle()),  // 船员阵营：使徒
         (10, () => new MoonRunner()), // 中立阵营（友好）：月跑入机
+        (11, () => new Pilot()),   // 内鬼阵营：中东机长
     };
 
     /// <summary>
