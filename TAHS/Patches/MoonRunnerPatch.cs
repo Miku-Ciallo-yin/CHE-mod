@@ -18,12 +18,18 @@ public static class MoonRunnerPatch
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.MurderPlayer))]
     public static class MurderBlock
     {
-        public static bool Prefix(PlayerControl target)
+        public static bool Prefix(PlayerControl __instance, PlayerControl target)
         {
+            if (target == null || __instance == null) return true;
+
             // 月跑入机技能期间（有激活增益）无敌
             if (MoonRunner.HasActiveBuffAnywhere(target)) return false;
             // 追杀者在后者死亡前无法被击杀
             if (MoonRunner.IsProtectedHunter(target)) return false;
+            // 追杀者只能击杀后者（击杀按钮路径也要拦）
+            if (MoonRunner.HunterPrey.TryGetValue(__instance.PlayerId, out var preyId)
+                && target.PlayerId != preyId)
+                return false;
             return true;
         }
     }

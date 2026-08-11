@@ -32,6 +32,7 @@ public class MoonRunner : RoleBase
     private PlayerControl? _maxed;   // 当前达到最大值的玩家
     private PlayerControl? _hunter;  // 前者（追杀者）
     private PlayerControl? _prey;    // 后者（被追杀者）
+    private bool _hunterWasImpostor; // 追杀者原本身份是否为内鬼系（链接结束恢复用）
     private float _huntTimer;
     private float _huntCd;
     private float _skillTimer;
@@ -230,8 +231,13 @@ public class MoonRunner : RoleBase
         _huntTimer = CustomOptions.MoonHuntSuicideTime.Value;
         _huntCd = 0f;
 
-        TAHSPlugin.Log.LogInfo($"[TAHS] 追杀开始：{hunter.Data?.PlayerName} → {prey.Data?.PlayerName}");
-        GameArchive.RecordTransition($"{hunter.Data?.PlayerName} 获得追杀 {prey.Data?.PlayerName} 的能力");
+        // 赋予原版内鬼系职业（变形者）：获得击杀按钮，无模组客户端也可用；
+        // 链接结束后恢复原身份
+        _hunterWasImpostor = hunter.Data != null && hunter.Data.Role != null && hunter.Data.Role.IsImpostor;
+        hunter.RpcSetRole(AmongUs.GameOptions.RoleTypes.Shapeshifter);
+
+        TAHSPlugin.Log.LogInfo($"[TAHS] 追杀开始：{hunter.Data?.PlayerName} → {prey.Data?.PlayerName}（已赋予击杀按钮）");
+        GameArchive.RecordTransition($"{hunter.Data?.PlayerName} 获得追杀 {prey.Data?.PlayerName} 的能力（击杀按钮）");
     }
 
     /// <summary>追杀计时与结算</summary>
@@ -239,17 +245,14 @@ public class MoonRunner : RoleBase
     {
         if (_hunter == null || _prey == null) return;
 
-        // 一方死亡：链接结束
+        // 一方死亡：链接结束（后者被击杀即追杀完成）
         if (_hunter.Data == null || _hunter.Data.IsDead || _prey.Data == null || _prey.Data.IsDead)
         {
+            if (_prey.Data != null && _prey.Data.IsDead)
+                GameArchive.RecordTransition($"{_hunter.Data?.PlayerName} 追杀了 {_prey.Data?.PlayerName}");
             EndHunt();
             return;
         }
-
-        // 追杀者靠近后者且 CD 就绪 → 自动出刀（无模组客户端没有按键入口，由主机执行）
-        if (_huntCd <= 0f
-            && Vector2.Distance(_hunter.GetTruePosition(), _prey.GetTruePosition()) <= SkillRange)
-            ServerHunterKill(_hunter, _prey);
 
         _huntTimer -= dt;
         if (_huntTimer > 0f) return;
@@ -270,7 +273,13 @@ public class MoonRunner : RoleBase
 
     private void EndHunt()
     {
-        if (_hunter != null) HunterPrey.Remove(_hunter.PlayerId);
+        if (_hunter != null)
+        {
+            HunterPrey.Remove(_hunter.PlayerId);
+            // 回收击杀按钮：恢复原身份
+            if (_hunter.Data != null && !_hunter.Data.IsDead)
+                _hunter.RpcSetRole(_hunterWasImpostor ? AmongUs.GameOptions.RoleTypes.Impostor : AmongUs.GameOptions.RoleTypes.Crewmate);
+        }
         _hunter = null;
         _prey = null;
     }
