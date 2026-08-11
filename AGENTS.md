@@ -1,4 +1,4 @@
-# CHE — Among Us 职业模组
+# TAHS — Among Us 职业模组
 
 开发者：米裤恰油
 
@@ -53,9 +53,9 @@
 
 ## 结构
 
-- `CHE/Plugin.cs` — BepInEx 入口
-- `CHE/Modules/` — 配置（ModConfig/CustomOption）、RPC（RpcSync）、弹窗（CustomPopup）、工具
-- `CHE/Roles/` — 职业体系（RoleBase/AddonBase/CustomRoleManager），职业按阵营分目录
-- `CHE/Patches/` — 全部 Harmony 补丁（一功能一文件）
+- `TAHS/Plugin.cs` — BepInEx 入口
+- `TAHS/Modules/` — 配置（ModConfig/CustomOption）、RPC（RpcSync）、弹窗（CustomPopup）、工具
+- `TAHS/Roles/` — 职业体系（RoleBase/AddonBase/CustomRoleManager），职业按阵营分目录
+- `TAHS/Patches/` — 全部 Harmony 补丁（一功能一文件）
 
 详细说明见 README.md。

@@ -1,4 +1,4 @@
-# CHE
+# TAHS
 
 > Among Us 职业模组 — 参考 TONE（TownOfNewEpic）架构，为游戏增加更多职业和中立阵营。
 >
@@ -21,13 +21,13 @@
 dotnet build
 ```
 
-编译成功后 `CHE.dll` 会自动复制到 csproj 中 `AmongUsPluginsDir` 指定的
+编译成功后 `TAHS.dll` 会自动复制到 csproj 中 `AmongUsPluginsDir` 指定的
 `BepInEx\plugins` 目录（留空该属性可关闭自动部署），启动游戏即可加载。
 
 ## 目录结构
 
 ```
-CHE/
+TAHS/
 ├── Plugin.cs                 # BepInEx 插件入口
 ├── Modules/
 │   ├── ModConfig.cs          # BepInEx 配置（作为游戏内选项的默认值）
@@ -41,7 +41,7 @@ CHE/
 │   └── Neutral/Jester.cs     # 小丑（中立，被投出即获胜）
 └── Patches/
     ├── RoleAssignPatch.cs    # 对局开始分配职业（主机）、结束重置
-    ├── RpcPatch.cs           # 自定义 RPC 接收入口（拦截 CHE CallId）
+    ├── RpcPatch.cs           # 自定义 RPC 接收入口（拦截 TAHS CallId）
     ├── ModGameOptionsMenu.cs  # 设置 UI 共享状态（页签编号/布局常量）
     ├── ModSettingsMenuPatch.cs # 设置菜单页签：模板克隆、按钮、ChangeTab 拦截
     ├── ModOptionsMenuPatch.cs # 页签内容构建（参考 TOHE，Initialize/CreateSettings 接管）
@@ -72,7 +72,7 @@ CHE/
 
 ## 主菜单自定义背景
 
-把一张图片命名为 `background.png` 放入游戏目录 `CHE-DATA\`（如 `Among Us\CNE\CHE-DATA\background.png`），
+把一张图片命名为 `background.png` 放入游戏目录 `TAHS-DATA\`（如 `Among Us\CNE\TAHS-DATA\background.png`），
 即可替换主菜单背景（建议二次元人物图，16:9）。不放则使用程序生成的星空渐变背景。
 
 ## 配置
@@ -80,7 +80,7 @@ CHE/
 两种方式，游戏内选项优先：
 
 - **大厅设置菜单（推荐）**：创建房间后打开"游戏设置 → 编辑"，顶部页签除原版的
-  预设 / 游戏设置 / 职业设置外，新增 **"模组设置"** 和 **"职业设置"** 两个 CHE 页签：
+  预设 / 游戏设置 / 职业设置外，新增 **"模组设置"** 和 **"职业设置"** 两个 TAHS 页签：
   - 模组设置：全局功能开关（内鬼互认等），平铺调整。
   - 职业设置：一级为职业名称按钮（右侧显示当前生成概率），点击职业名进入该职业的配置页面，
     "← 返回"回到职业列表。
@@ -127,14 +127,14 @@ CHE/
 | --- | --- | --- |
 | `/start [秒数]` | 以指定倒计时开始游戏（默认 5 秒） | 仅主机、大厅中 |
 | `/end` | 强制结束对局返回大厅 | 仅主机、对局中 |
-| `/dump` | 导出当前日志到桌面（`CHE-Log-时间戳.txt`），并在聊天栏显示最近 8 行 | 仅房主 |
+| `/dump` | 导出当前日志到桌面（`TAHS-Log-时间戳.txt`），并在聊天栏显示最近 8 行 | 仅房主 |
 | `/help` | 显示全部指令及功能 | 无 |
 | `/id` | 显示所有玩家的名字及其对应 ID | 无 |
 | `/m` | 查看自己本局职业介绍（含附加职业） | 无 |
 | `/r` | 查看本局已开启的全部职业 | 无 |
 | `/d` | 死亡后查看击杀自己的玩家（名字+职业） | 无 |
 | `/l` | 查看上一局身份转换详情及击杀记录（含初始分配） | 无 |
-| `/addmod <ID>` | 将该 ID 玩家加入协管名单（CHE-DATA/Moderators.txt） | 仅房主 |
+| `/addmod <ID>` | 将该 ID 玩家加入协管名单（TAHS-DATA/Moderators.txt） | 仅房主 |
 | `/s <内容>` | 发布醒目公告（屏幕大字 + 聊天广播，全员可见） | 房主/协管 |
 
 ## 协管名单
@@ -143,21 +143,21 @@ CHE/
   - 协管权限：/start（默认开）
   - 协管权限：/s（默认开）
   - 协管权限：/end与ALT+F4（默认开）
-- 名单文件：游戏目录 `CHE-DATA\Moderators.txt`，每行一个好友代码（FriendCode），可手动编辑
+- 名单文件：游戏目录 `TAHS-DATA\Moderators.txt`，每行一个好友代码（FriendCode），可手动编辑
 - 房主输入 `/addmod <玩家ID>` 自动写入名单（先用 `/id` 查 ID）
 - 协管的指令经 RPC 由主机验证后执行（Host Only 原则）
 
 ## 黑名单与反作弊
 
-- **黑名单**：`CHE-DATA\BanList.txt`（每行一个好友代码），名单内玩家进房即被踢出封禁，无法进入游戏
+- **黑名单**：`TAHS-DATA\BanList.txt`（每行一个好友代码），名单内玩家进房即被踢出封禁，无法进入游戏
 - **反作弊**（主机判定）：非内鬼且无合法带刀职业的玩家触发击杀即判定作弊，按模组设置中的
   **作弊处理方式** 执行：警告（聊天广播）/ 踢出 / 封禁 / 加入黑名单（自动写入 BanList.txt 并封禁）
 | `/bt <ID> <职业>` | 猜测该 ID 玩家的职业，猜对目标死、猜错自己死（如 `/bt 2 佃农`） | 有猜测权限者 |
 
 ## 添加新职业 / 附加职业
 
-- 主职业：在 `CHE/Roles/<阵营>/` 下新建类继承 `RoleBase`，在 `CustomRoleManager.RoleRegistry` 注册 `(新ID, () => new YourRole())`。
-- 附加职业：在 `CHE/Roles/Addons/` 下新建类继承 `AddonBase`，在 `CustomRoleManager.AddonRegistry` 注册（ID 与主职业同空间，勿冲突）。
+- 主职业：在 `TAHS/Roles/<阵营>/` 下新建类继承 `RoleBase`，在 `CustomRoleManager.RoleRegistry` 注册 `(新ID, () => new YourRole())`。
+- 附加职业：在 `TAHS/Roles/Addons/` 下新建类继承 `AddonBase`，在 `CustomRoleManager.AddonRegistry` 注册（ID 与主职业同空间，勿冲突）。
 
 注册后自动生成"生成概率"设置项并归入对应分类页，ID 用于 RPC 同步，不要改动已有 ID。
 
