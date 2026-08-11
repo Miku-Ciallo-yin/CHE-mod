@@ -59,13 +59,11 @@ public class Converter : RoleBase
         if (_first == null)
         {
             _first = target;
-            Feedback(voter, $"[TAHS] 已选择第一名玩家：{target.Data.PlayerName}（再选第二名）");
             return;
         }
 
         if (target == _first)
         {
-            Feedback(voter, "[TAHS] 不能选择同一名玩家");
             return;
         }
 
@@ -95,14 +93,6 @@ public class Converter : RoleBase
             $"[TAHS] 转换者 {voter.Data?.PlayerName}：{first.Data?.PlayerName}（{originalName}）→ {target.Data?.PlayerName} 的职业（{sourceRole?.Name ?? "白板"}）");
         GameArchive.RecordTransition(
             $"转换者 {voter.Data?.PlayerName} 将 {first.Data?.PlayerName} 从 {originalName} 转换为 {sourceRole?.Name ?? "白板"}");
-        Feedback(voter, $"[TAHS] 转换完成！{first.Data?.PlayerName} 的原职业是：{originalName}");
-    }
-
-    /// <summary>反馈给转换者（模组端聊天栏，主机直达/远程经 RPC）</summary>
-    private static void Feedback(PlayerControl voter, string text)
-    {
-        if (voter.AmOwner) ChatHelper.Show(text);
-        else RpcSync.SendShowMessage(voter.OwnerId, text);
     }
 
     public override string GetStatusText()
