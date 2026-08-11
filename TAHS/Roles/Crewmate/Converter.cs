@@ -94,15 +94,8 @@ public class Converter : RoleBase
         GameArchive.RecordTransition(
             $"转换者 {voter.Data?.PlayerName} 将 {first.Data?.PlayerName} 从 {originalName} 转换为 {sourceRole?.Name ?? "白板"}");
 
-        // 私有标签：转换者看到被转换者名字下方的新阵营（无模组端转换者同样可见）
-        var newFaction = CustomRoleManager.GetFaction(first);
-        var (color, factionName) = newFaction switch
-        {
-            Faction.Impostor => ("#FF5555", "内鬼"),
-            Faction.Neutral => ("#999999", "中立"),
-            _ => ("#66E6FF", "船员"),
-        };
-        Modules.PrivateTag.SetTag(voter.OwnerId, first, $"<color={color}>{factionName}</color>");
+        // 私有标签：被转换者名字下方显示其原职业，仅转换者可见（定向改名，无模组端转换者同样可见）
+        Modules.PrivateTag.SetTag(voter.OwnerId, first, $"<color=#FFD700>原职业：{originalName}</color>");
     }
 
     public override string GetStatusText()
