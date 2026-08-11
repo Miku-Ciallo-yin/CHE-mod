@@ -21,14 +21,28 @@ public static class ImpostorVisionPatch
                && local.Data.Role.IsImpostor && other.Data.Role.IsImpostor;
     }
 
-    /// <summary>对局内：覆盖原版给内鬼队友标红的颜色</summary>
+    /// <summary>对局内：覆盖原版给内鬼队友标红的颜色；追杀者（临时变形者）的红名对内鬼隐藏</summary>
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.FixedUpdate))]
     public static class PlayerNamePatch
     {
         public static void Postfix(PlayerControl __instance)
         {
+            var local = PlayerControl.LocalPlayer;
+            if (local == null || local.Data == null || local.Data.Role == null) return;
+            if (__instance.Data == null || __instance.Data.Role == null) return;
+
+            // 追杀者（月跑入机链接中临时变成变形者的玩家）的红名对内鬼隐藏
+            if (local.Data.Role.IsImpostor
+                && __instance.Data.Role.IsImpostor
+                && Neutral.MoonRunner.IsProtectedHunter(__instance))
+            {
+                var t = __instance.cosmetics.nameText;
+                if (t != null) t.color = Color.white;
+                return;
+            }
+
             if (!Enabled) return;
-            if (!BothImpostor(PlayerControl.LocalPlayer, __instance)) return;
+            if (!BothImpostor(local, __instance)) return;
 
             var nameText = __instance.cosmetics.nameText;
             if (nameText != null)
@@ -36,14 +50,12 @@ public static class ImpostorVisionPatch
         }
     }
 
-    /// <summary>会议中：覆盖玩家按钮上的红色名字</summary>
+    /// <summary>会议中：覆盖玩家按钮上的红色名字；追杀者红名同样隐藏</summary>
     [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Update))]
     public static class MeetingNamePatch
     {
         public static void Postfix(MeetingHud __instance)
         {
-            if (!Enabled) return;
-
             var local = PlayerControl.LocalPlayer;
             if (local == null || local.Data == null || local.Data.Role == null
                 || !local.Data.Role.IsImpostor) return;
@@ -52,6 +64,17 @@ public static class ImpostorVisionPatch
             {
                 var target = PlayerControl.AllPlayerControls.ToArray()
                     .FirstOrDefault(p => p != null && p.PlayerId == pva.TargetPlayerId);
+                if (target == null) continue;
+
+                // 追杀者红名隐藏（不受内鬼互认开关影响）
+                if (Neutral.MoonRunner.IsProtectedHunter(target)
+                    && target.Data != null && target.Data.Role != null && target.Data.Role.IsImpostor)
+                {
+                    if (pva.NameText != null) pva.NameText.color = Color.white;
+                    continue;
+                }
+
+                if (!Enabled) continue;
                 if (!BothImpostor(local, target)) continue;
 
                 if (pva.NameText != null)
