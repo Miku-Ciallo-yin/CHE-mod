@@ -183,6 +183,12 @@ public static class ForceEndPatch
         private static bool HandleRename(string text)
         {
             var show = Modules.ChatHelper.Show;
+            if (AmongUsClient.Instance != null
+                && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
+            {
+                show("[TAHS] /rn 对局中不可用");
+                return false;
+            }
             var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 2)
             {
@@ -205,6 +211,12 @@ public static class ForceEndPatch
         private static bool HandleColor(string text)
         {
             var show = Modules.ChatHelper.Show;
+            if (AmongUsClient.Instance != null
+                && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
+            {
+                show("[TAHS] /cor 对局中不可用");
+                return false;
+            }
             var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 2)
             {
@@ -572,8 +584,8 @@ public static class ForceEndPatch
                 "/help — 显示本帮助",
                 "/id — 显示所有玩家的名字及其对应 ID",
                 "/kill <玩家ID> — 直接击杀对应玩家（仅房主/对局中）",
-                "/rn <名字> — 修改自己的名字",
-                "/cor <颜色> — 修改自己的颜色（中英文色名或0~17）",
+                "/rn <名字> — 修改自己的名字（仅大厅）",
+                "/cor <颜色> — 修改自己的颜色（仅大厅，中英文色名或0~17）",
                 "/m — 查看自己本局职业介绍",
                 "/r — 查看本局已开启的全部职业",
                 "/d — 死亡后查看击杀自己的玩家",
