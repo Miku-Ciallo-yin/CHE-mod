@@ -145,6 +145,7 @@ public static class CustomRoleManager
         }
 
         // 附加职业：与主职业独立，按"人数 × 概率"判定，可叠加在任意玩家身上
+        // （受玩家附加职业数量上限限制）
         var addonAssignments = new List<(byte PlayerId, byte AddonId)>();
         foreach (var (addonId, _) in AddonRegistry)
         {
@@ -152,12 +153,10 @@ public static class CustomRoleManager
             {
                 if (rng.Next(100) >= CustomOptions.GetRoleChance(addonId)) continue;
 
+                var maxAddons = CustomOptions.MaxAddonsPerPlayer.Value;
                 var available = players
-                    .Where(p => !PlayerAddons.TryGetValue(p.PlayerId, out var list)
-                                || list.All(a => a.Id != addonId))
+                    .Where(p => addonAssignments.Count(a => a.PlayerId == p.PlayerId) < maxAddons)
                     .ToList();
-                // 注意：此处在分配前查询，PlayerAddons 为空，去重在应用后生效；
-                // 同一玩家被同种附加职业分配多次时仅生效一次
                 if (available.Count == 0) break;
 
                 var pick = available[rng.Next(available.Count)];
@@ -293,6 +292,7 @@ public static class CustomRoleManager
         var candidates = PlayerControl.AllPlayerControls.ToArray()
             .Where(p => p != null && p.Data != null && !p.Data.IsDead)
             .Where(p => GetFaction(p) == Faction.Crewmate)
+            .Where(p => GetAddons(p).Count < CustomOptions.MaxAddonsPerPlayer.Value) // 附加职业数量上限
             .Where(p => !GetAddons(p).Any(a => a.Id == addonId))
             .ToList();
         if (candidates.Count == 0) return;

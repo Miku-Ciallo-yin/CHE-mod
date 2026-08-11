@@ -215,6 +215,13 @@ public static class ModOptionsMenuPatch
             // 分类 3 是附加职业，其余按阵营归类主职业
             if (category == 3)
             {
+                // 附加分类页：顶部显示玩家附加职业数量上限（RoleId 99 伪分组）
+                foreach (var opt in CustomOption.OfRole(99))
+                {
+                    AddOptionRow(menu, opt, y);
+                    y -= RowHeight;
+                }
+
                 foreach (var (addonId, addonName) in CustomRoleManager.GetRegisteredAddons())
                 {
                     var row = CreateDisplayRow(menu, addonName, $"{CustomOptions.GetRoleChance(addonId)}%", y);

@@ -99,6 +99,7 @@ public static class CustomOptions
     public static CustomOption CheatAction { get; private set; } = null!;
     public static CustomOption NeutralKnifeCount { get; private set; } = null!;
     public static CustomOption NeutralNoKnifeCount { get; private set; } = null!;
+    public static CustomOption MaxAddonsPerPlayer { get; private set; } = null!;
     public static CustomOption MoonSkillCd { get; private set; } = null!;
     public static CustomOption MoonBuffDuration { get; private set; } = null!;
     public static CustomOption MoonBuffInitial { get; private set; } = null!;
@@ -169,6 +170,10 @@ public static class CustomOptions
             ModConfig.NeutralKnifeCount.Value, 0, 7, 1, 1f);
         NeutralNoKnifeCount = CustomOption.Register(151, 98, "无刀中立数量",
             ModConfig.NeutralNoKnifeCount.Value, 0, 7, 1, 1f);
+
+        // 附加职业（RoleId 99 = 附加分类页）
+        MaxAddonsPerPlayer = CustomOption.Register(152, 99, "玩家附加职业数量上限",
+            ModConfig.MaxAddonsPerPlayer.Value, 1, 5, 1, 1f);
 
         // 月跑入机参数（RoleId 10 = MoonRunner）
         MoonSkillCd = CustomOption.Register(134, 10, "技能CD(秒)",

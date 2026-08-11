@@ -92,6 +92,8 @@ public static class ModConfig
     public static ConfigEntry<int> NeutralKnifeCount { get; private set; } = null!;
     /// <summary>无刀中立数量（默认 1，0~7）</summary>
     public static ConfigEntry<int> NeutralNoKnifeCount { get; private set; } = null!;
+    /// <summary>玩家附加职业数量上限（默认 1，1~5）</summary>
+    public static ConfigEntry<int> MaxAddonsPerPlayer { get; private set; } = null!;
 
     public static ConfigEntry<int> MoonSkillCd { get; private set; } = null!;
     public static ConfigEntry<int> MoonBuffDuration { get; private set; } = null!;
@@ -190,6 +192,8 @@ public static class ModConfig
             "每局分配的敌对（带刀）中立职业数量（0~7）");
         NeutralNoKnifeCount = config.Bind("职业数量 RoleCount", "无刀中立数量 NeutralNoKnifeCount", 1,
             "每局分配的友好（无刀）中立职业数量（0~7）");
+        MaxAddonsPerPlayer = config.Bind("职业数量 RoleCount", "玩家附加职业数量上限 MaxAddonsPerPlayer", 1,
+            "每名玩家最多拥有的附加职业数量（1~5）");
 
         MoonSkillCd = config.Bind("月跑入机 MoonRunner", "技能CD SkillCd", 15, "技能冷却（秒）");
         MoonBuffDuration = config.Bind("月跑入机 MoonRunner", "增益持续时间 BuffDuration", 30, "速度增益持续（秒）");
