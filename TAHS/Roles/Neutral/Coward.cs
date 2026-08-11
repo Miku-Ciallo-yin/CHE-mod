@@ -60,6 +60,8 @@ public class Coward : RoleBase
     {
         base.OnAssign(player);
         KillTimer = GlobalKillCooldown(); // 开局冷却跟随全局设置
+        // 准则：带刀职业给予原版击杀按钮（无模组端也可用）
+        CustomRoleManager.GrantVanillaButtons(player);
     }
 
     /// <summary>主机驱动（Host Only）</summary>
@@ -74,52 +76,9 @@ public class Coward : RoleBase
         {
             if (KillCount >= KillsToConvert)
                 UpdateProximity(dt);
-
-            // 主机本地懦弱者直接按 Q
-            if (HasKillAbility && KillTimer <= 0f && Player.AmOwner && Input.GetKeyDown(KeyCode.Q))
-                TryKill();
         }
 
         CheckLink();
-    }
-
-    /// <summary>非主机模组端：按 Q 向主机请求击杀</summary>
-    public override void OnClientUpdate()
-    {
-        if (Player == null || Player.Data == null || Player.Data.IsDead) return;
-        if (!Input.GetKeyDown(KeyCode.Q)) return;
-
-        var target = FindNearest(KillRange);
-        if (target != null)
-            RpcSync.SendKillRequest(target.PlayerId);
-    }
-
-    /// <summary>主机：处理击杀请求（验证冷却/能力/距离后执行）</summary>
-    public void ServerKillRequest(PlayerControl target)
-    {
-        if (!HasKillAbility || KillTimer > 0f || Player == null || target == null) return;
-        if (Vector2.Distance(Player.GetTruePosition(), target.GetTruePosition()) > KillRange) return;
-
-        // 自杀式 RPC 保证各端一致
-        target.RpcMurderPlayer(target, true);
-        OnKill(target);
-    }
-
-    /// <summary>主机本地击杀（Q 键）</summary>
-    private void TryKill()
-    {
-        var target = FindNearest(KillRange);
-        if (target == null) return;
-
-        Player!.RpcMurderPlayer(target, true);
-        OnKill(target);
-    }
-
-    private void OnKill(PlayerControl target)
-    {
-        KillCount++;
-        KillTimer = GlobalKillCooldown();
-        TAHSPlugin.Log.LogInfo($"[TAHS] 懦弱者击杀了 {target.Data!.PlayerName}（{KillCount}/{KillsToConvert}）");
     }
 
     /// <summary>贴近转化：杀满 3 人后持续贴近同一名玩家则转变为其阵营</summary>
@@ -149,6 +108,7 @@ public class Coward : RoleBase
         {
             case Faction.Crewmate:
                 _faction = Faction.Crewmate;
+                CustomRoleManager.RevokeVanillaButtons(Player!); // 失去击杀能力，回收按钮
                 TAHSPlugin.Log.LogInfo("[TAHS] 懦弱者转变为船员阵营，失去击杀能力");
                 GameArchive.RecordTransition($"懦弱者 {Player?.Data?.PlayerName} 转变为船员阵营，失去击杀能力");
                 break;
@@ -161,6 +121,7 @@ public class Coward : RoleBase
 
             case Faction.Neutral:
                 _faction = Faction.Neutral;
+                CustomRoleManager.RevokeVanillaButtons(Player!); // 变为对方职业，回收按钮
                 var role = CustomRoleManager.GetRole(target);
                 _adoptedRoleName = role?.Name ?? "中立";
                 LinkedPlayer = target;

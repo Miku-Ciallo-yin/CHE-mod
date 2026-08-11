@@ -37,6 +37,7 @@ public class Farmer : RoleBase
 
     private float _stealTimer;
     private readonly System.Random _rng = new();
+    private bool _buttonGranted;
 
     public override void OnUpdate()
     {
@@ -46,10 +47,13 @@ public class Farmer : RoleBase
 
         if (HasKillAbility)
         {
-            // 已解锁击杀：不再抢夺，只处理冷却和击杀按键（仅主机本地佃农直接按 Q）
+            if (!_buttonGranted)
+            {
+                // 准则：拥有击杀能力时给予原版击杀按钮（无模组端也可用）
+                _buttonGranted = true;
+                CustomRoleManager.GrantVanillaButtons(Player!);
+            }
             if (KillTimer > 0f) KillTimer -= dt;
-            if (KillTimer <= 0f && Player!.AmOwner && Input.GetKeyDown(KeyCode.Q))
-                TryKill();
             return;
         }
 
@@ -63,28 +67,17 @@ public class Farmer : RoleBase
         CheckKillUnlock();
     }
 
-    /// <summary>非主机模组端：按 Q 向主机请求击杀（主机用 ServerKillRequest 验证执行）</summary>
-    public override void OnClientUpdate()
+    /// <summary>击杀结算（任意击杀路径）：误杀船员转中立 + 应用击杀 CD</summary>
+    public override void OnMurder(PlayerControl target)
     {
-        if (Player == null || Player.Data == null || Player.Data.IsDead) return;
-        if (!Input.GetKeyDown(KeyCode.Q)) return;
-
-        var target = FindNearestTarget();
-        if (target != null)
-            RpcSync.SendKillRequest(target.PlayerId);
-    }
-
-    /// <summary>主机：处理模组端的击杀请求，验证解锁状态/冷却/距离后执行</summary>
-    public void ServerKillRequest(PlayerControl target)
-    {
-        if (!HasKillAbility || KillTimer > 0f || Player == null || target == null) return;
-        if (Vector2.Distance(Player.GetTruePosition(), target.GetTruePosition()) > KillRange) return;
-
-        // 用自杀式 RPC 保证各端一致（与赌怪同一模式），转化判定手动触发
-        target.RpcMurderPlayer(target, true);
-        OnMurder(target);
         KillTimer = CustomOptions.FarmerKillCooldown.ScaledValue;
-        TAHSPlugin.Log.LogInfo($"[TAHS] 佃农（远程请求）击杀了 {target.Data!.PlayerName}");
+
+        if (_faction == Faction.Neutral) return;
+        if (CustomRoleManager.GetFaction(target) != Faction.Crewmate) return;
+
+        _faction = Faction.Neutral;
+        TAHSPlugin.Log.LogInfo("[TAHS] 佃农击杀了船员阵营玩家，已转化为中立阵营");
+        GameArchive.RecordTransition($"佃农 {Player?.Data?.PlayerName} 误杀船员，转变为中立阵营");
     }
 
     /// <summary>对范围内的每个船员按概率抢夺一个任务</summary>
@@ -145,43 +138,10 @@ public class Farmer : RoleBase
         TAHSPlugin.Log.LogInfo("[TAHS] 佃农已获得击杀能力");
     }
 
-    /// <summary>击杀范围内最近的存活玩家</summary>
-    private PlayerControl? FindNearestTarget()
-    {
-        var pos = Player!.GetTruePosition();
-        return PlayerControl.AllPlayerControls.ToArray()
-            .Where(p => p != null && p != Player && p.Data != null && !p.Data.IsDead)
-            .Where(p => Vector2.Distance(pos, p.GetTruePosition()) <= KillRange)
-            .OrderBy(p => Vector2.Distance(pos, p.GetTruePosition()))
-            .FirstOrDefault();
-    }
-
-    /// <summary>主机本地佃农击杀（Q 键）</summary>
-    private void TryKill()
-    {
-        var target = FindNearestTarget();
-        if (target == null) return;
-
-        Player!.RpcMurderPlayer(target, true);
-        KillTimer = CustomOptions.FarmerKillCooldown.ScaledValue;
-        TAHSPlugin.Log.LogInfo($"[TAHS] 佃农击杀了 {target.Data!.PlayerName}");
-    }
-
-    /// <summary>击杀结算：误杀船员阵营则转化为中立</summary>
-    public override void OnMurder(PlayerControl target)
-    {
-        if (_faction == Faction.Neutral) return;
-        if (CustomRoleManager.GetFaction(target) != Faction.Crewmate) return;
-
-        _faction = Faction.Neutral;
-        TAHSPlugin.Log.LogInfo("[TAHS] 佃农击杀了船员阵营玩家，已转化为中立阵营");
-        GameArchive.RecordTransition($"佃农 {Player?.Data?.PlayerName} 误杀船员，转变为中立阵营");
-    }
-
     public override string GetStatusText()
     {
         if (HasKillAbility)
-            return KillTimer > 0f ? $"击杀冷却 {KillTimer:0}s" : "[Q] 击杀就绪";
+            return KillTimer > 0f ? $"击杀冷却 {KillTimer:0}s" : "击杀已就绪（击杀按钮）";
         return $"抢夺进度 {StealCount}/{CustomOptions.FarmerStealsForKill.Value}";
     }
 }

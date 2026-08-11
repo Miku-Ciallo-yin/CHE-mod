@@ -17,17 +17,11 @@ public static class RpcSync
     /// <summary>选项值广播（主机 -> 全员）。</summary>
     public const byte SyncOptionsCallId = 218;
 
-    /// <summary>击杀请求（非主机模组端 -> 主机，佃农按 Q）。</summary>
-    public const byte KillRequestCallId = 219;
-
     /// <summary>玩家 ID 映射广播（主机 -> 全员）。</summary>
     public const byte SyncPlayerIdsCallId = 220;
 
     /// <summary>猜测请求（非主机模组端 -> 主机）。</summary>
     public const byte GuessRequestCallId = 221;
-
-    /// <summary>忏悔者变形请求（非主机模组端 -> 主机）。</summary>
-    public const byte ConvertRequestCallId = 222;
 
     /// <summary>向指定客户端显示聊天栏消息（主机 -> 指定模组端）。</summary>
     public const byte ShowMessageCallId = 223;
@@ -119,17 +113,6 @@ public static class RpcSync
         client.FinishRpcImmediately(writer);
     }
 
-    /// <summary>非主机模组端：向主机发送变形请求（忏悔者按 F）。</summary>
-    public static void SendConvertRequest()
-    {
-        var client = AmongUsClient.Instance;
-        if (client == null || client.AmHost || client.allClients.Count <= 1) return;
-
-        var writer = client.StartRpcImmediately(
-            PlayerControl.LocalPlayer.NetId, ConvertRequestCallId, SendOption.Reliable, client.HostId);
-        client.FinishRpcImmediately(writer);
-    }
-
     /// <summary>非主机模组端：向主机发送猜测请求。</summary>
     public static void SendGuessRequest(byte targetId, bool isAddon, byte guessId)
     {
@@ -161,18 +144,6 @@ public static class RpcSync
                 .FirstOrDefault(p => p != null && p.OwnerId == clientId);
             writer.Write(player != null && ModeratorManager.IsModerator(player));
         }
-        client.FinishRpcImmediately(writer);
-    }
-
-    /// <summary>非主机模组端：向主机发送击杀请求（仅发给主机）。</summary>
-    public static void SendKillRequest(byte targetId)
-    {
-        var client = AmongUsClient.Instance;
-        if (client == null || client.AmHost || client.allClients.Count <= 1) return;
-
-        var writer = client.StartRpcImmediately(
-            PlayerControl.LocalPlayer.NetId, KillRequestCallId, SendOption.Reliable, client.HostId);
-        writer.Write(targetId);
         client.FinishRpcImmediately(writer);
     }
 
@@ -240,43 +211,6 @@ public static class RpcSync
             return true;
         }
 
-        if (callId == KillRequestCallId)
-        {
-            // 只有主机处理击杀请求，验证请求者职业后执行
-            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return true;
-
-            var targetId = reader.ReadByte();
-            var target = PlayerControl.AllPlayerControls.ToArray()
-                .FirstOrDefault(p => p != null && p.PlayerId == targetId);
-            if (target == null) return true;
-
-            // 按请求者职业路由击杀请求（佃农 / 懦弱者 / 美警 / 忏悔者）
-            switch (CustomRoleManager.GetRole(sender))
-            {
-                case Roles.Crewmate.Farmer farmer:
-                    farmer.ServerKillRequest(target);
-                    break;
-                case Roles.Neutral.Coward coward:
-                    coward.ServerKillRequest(target);
-                    break;
-                case Roles.Crewmate.Cop cop:
-                    cop.ServerKillRequest(target);
-                    break;
-                case Roles.Impostor.Repenter repenter:
-                    repenter.ServerKillRequest(target);
-                    break;
-                case Roles.Neutral.MoonRunner runner:
-                    runner.UseSkill(target); // 月跑入机的击杀键即技能
-                    break;
-                default:
-                    // 无职业的追杀者（月跑入机链接中的前者）
-                    if (Roles.Neutral.MoonRunner.HunterPrey.ContainsKey(sender.PlayerId))
-                        Roles.Neutral.MoonRunner.ServerHunterKill(sender, target);
-                    break;
-            }
-            return true;
-        }
-
         if (callId == SyncPlayerIdsCallId)
         {
             var count = reader.ReadByte();
@@ -303,15 +237,6 @@ public static class RpcSync
 
             Patches.GuesserPatch.ExecuteGuess(sender, target,
                 new Patches.GuesserPatch.GuessEntry { IsAddon = isAddon, Id = guessId });
-            return true;
-        }
-
-        if (callId == ConvertRequestCallId)
-        {
-            // 只有主机处理变形请求，ServerConvert 内含击杀数校验
-            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return true;
-            if (CustomRoleManager.GetRole(sender) is Roles.Impostor.Repenter repenter)
-                repenter.ServerConvert();
             return true;
         }
 

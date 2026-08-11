@@ -16,14 +16,27 @@ public static class PilotPatch
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Shapeshift))]
     public static class ShapeshiftHijack
     {
-        public static bool Prefix(PlayerControl __instance)
+        public static bool Prefix(PlayerControl __instance, PlayerControl targetPlayer)
         {
-            if (CustomRoleManager.GetRole(__instance) is not Pilot pilot) return true;
+            var role = CustomRoleManager.GetRole(__instance);
+            if (role == null) return true;
 
-            // 主机触发技能；各端都阻断原版变形
-            if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
-                pilot.TryStartDash();
-            return false;
+            var host = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
+
+            switch (role)
+            {
+                // 准则：技能职业用原版变形按钮释放技能（不触发原版变形）
+                case Pilot pilot:
+                    if (host) pilot.TryStartDash();
+                    return false;
+                case Repenter repenter:
+                    if (host && repenter.CanConvert) repenter.ServerConvert();
+                    return false;
+                case TAHS.Roles.Neutral.MoonRunner runner:
+                    if (host && targetPlayer != null) runner.UseSkill(targetPlayer); // 菜单选中的目标即增益对象
+                    return false;
+            }
+            return true;
         }
     }
 

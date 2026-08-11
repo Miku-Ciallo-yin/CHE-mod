@@ -45,6 +45,9 @@ public class Repenter : RoleBase
     {
         base.OnAssign(player);
         KillTimer = GlobalKillCooldown();
+        // 准则：技能职业给予原版变形按钮用于释放技能（变形者保留击杀按钮）
+        if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+            player.RpcSetRole(AmongUs.GameOptions.RoleTypes.Shapeshifter);
     }
 
     /// <summary>主机驱动（Host Only）</summary>
@@ -56,48 +59,12 @@ public class Repenter : RoleBase
         if (KillTimer > 0f) KillTimer -= dt;
 
         if (!_converted)
-        {
-            if (Player.AmOwner)
-            {
-                if (KillTimer <= 0f && Input.GetKeyDown(KeyCode.Q))
-                    TryKill();
-                if (CanConvert && Input.GetKeyDown(KeyCode.F))
-                    Convert();
-            }
             return;
-        }
 
         // 转变后：自裁倒计时
         _suicideTimer -= dt;
         if (_suicideTimer <= 0f)
             Suicide();
-    }
-
-    /// <summary>非主机模组端：Q 请求击杀 / F 请求变形</summary>
-    public override void OnClientUpdate()
-    {
-        if (Player == null || Player.Data == null || Player.Data.IsDead) return;
-
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            var target = FindNearest(KillRange);
-            if (target != null)
-                RpcSync.SendKillRequest(target.PlayerId);
-        }
-        else if (Input.GetKeyDown(KeyCode.F))
-        {
-            RpcSync.SendConvertRequest();
-        }
-    }
-
-    /// <summary>主机：处理击杀请求</summary>
-    public void ServerKillRequest(PlayerControl target)
-    {
-        if (_converted || KillTimer > 0f || Player == null || target == null) return;
-        if (Vector2.Distance(Player.GetTruePosition(), target.GetTruePosition()) > KillRange) return;
-
-        target.RpcMurderPlayer(target, true);
-        OnKill(target);
     }
 
     /// <summary>主机：处理变形请求（验证击杀数后转变）</summary>
@@ -107,27 +74,12 @@ public class Repenter : RoleBase
         Convert();
     }
 
-    private void TryKill()
-    {
-        var target = FindNearest(KillRange);
-        if (target == null) return;
-
-        Player!.RpcMurderPlayer(target, true);
-        OnKill(target);
-    }
-
-    private void OnKill(PlayerControl target)
-    {
-        KillCount++;
-        KillTimer = GlobalKillCooldown();
-        TAHSPlugin.Log.LogInfo($"[TAHS] 忏悔者击杀了 {target.Data!.PlayerName}（{KillCount}/{CustomOptions.RepenterKillsToConvert.Value}）");
-    }
-
     /// <summary>变形：转变为船员阵营，失去击杀能力，开始自裁倒计时</summary>
     private void Convert()
     {
         _converted = true;
         _faction = Faction.Crewmate;
+        CustomRoleManager.RevokeVanillaButtons(Player!); // 失去击杀能力，回收按钮
         _suicideTimer = CustomOptions.RepenterSuicideTime.Value;
         TAHSPlugin.Log.LogInfo($"[TAHS] 忏悔者变形为船员，{_suicideTimer:0} 秒后自裁");
         GameArchive.RecordTransition($"忏悔者 {Player?.Data?.PlayerName} 变形为船员阵营");

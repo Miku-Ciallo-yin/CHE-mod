@@ -41,6 +41,8 @@ public class Cop : RoleBase
     {
         base.OnAssign(player);
         KillTimer = CustomOptions.CopKillCooldown.ScaledValue;
+        // 准则：带刀职业给予原版击杀按钮（无模组端也可用）
+        CustomRoleManager.GrantVanillaButtons(player);
     }
 
     /// <summary>主机驱动（Host Only）</summary>
@@ -54,59 +56,28 @@ public class Cop : RoleBase
         // 自动击杀：贴近深色船员
         UpdateAutoKill(dt);
 
-        // 主机本地美警手动击杀
-        if (Player.AmOwner && KillTimer <= 0f && Input.GetKeyDown(KeyCode.Q))
-            TryKill();
     }
 
-    /// <summary>非主机模组端：按 Q 向主机请求击杀</summary>
-    public override void OnClientUpdate()
+    /// <summary>击杀船员规则（击杀按钮路径被 KillRulesPatch 拦截到这里执行）：船员按配置死亡，美警自杀抵命</summary>
+    public void ExecuteCrewKill(PlayerControl target)
     {
-        if (Player == null || Player.Data == null || Player.Data.IsDead) return;
-        if (!Input.GetKeyDown(KeyCode.Q)) return;
+        if (KillTimer > 0f) return;
 
-        var target = FindNearest(KillRange);
-        if (target != null)
-            RpcSync.SendKillRequest(target.PlayerId);
-    }
-
-    /// <summary>主机：处理手动击杀请求</summary>
-    public void ServerKillRequest(PlayerControl target)
-    {
-        if (KillTimer > 0f || Player == null || target == null) return;
-        if (Vector2.Distance(Player.GetTruePosition(), target.GetTruePosition()) > KillRange) return;
-
-        ExecuteManualKill(target);
-    }
-
-    private void TryKill()
-    {
-        var target = FindNearest(KillRange);
-        if (target == null) return;
-        ExecuteManualKill(target);
-    }
-
-    /// <summary>手动击杀规则：中立/内鬼则目标死，船员则美警自杀</summary>
-    private void ExecuteManualKill(PlayerControl target)
-    {
-        var faction = CustomRoleManager.GetFaction(target);
-
-        if (faction == Faction.Crewmate && !Converted)
+        if (CustomOptions.CopKillCrewmateAlsoDies.Value == 1)
         {
-            // 误杀船员：美警自杀抵命；配置开启时船员一并死亡
-            if (CustomOptions.CopKillCrewmateAlsoDies.Value == 1)
-            {
-                target.RpcMurderPlayer(target, true);
-                TAHSPlugin.Log.LogInfo($"[TAHS] 美警击杀船员 {target.Data!.PlayerName}（配置：船员一并死亡）");
-            }
-            Player!.RpcMurderPlayer(Player, true);
-            TAHSPlugin.Log.LogInfo("[TAHS] 美警误杀船员，以命抵命（自杀）");
-            return;
+            target.RpcMurderPlayer(target, true);
+            TAHSPlugin.Log.LogInfo($"[TAHS] 美警击杀船员 {target.Data!.PlayerName}（配置：船员一并死亡）");
         }
+        Player!.RpcMurderPlayer(Player, true);
+        KillTimer = CustomOptions.CopKillCooldown.ScaledValue;
+        TAHSPlugin.Log.LogInfo("[TAHS] 美警误杀船员，以命抵命（自杀）");
+    }
 
-        target.RpcMurderPlayer(target, true);
+    /// <summary>击杀结算（按钮路径，中立/内鬼目标）：应用击杀 CD</summary>
+    public override void OnMurder(PlayerControl target)
+    {
         KillTimer = Converted ? GlobalKillCooldown() : CustomOptions.CopKillCooldown.ScaledValue;
-        TAHSPlugin.Log.LogInfo($"[TAHS] 美警击杀了 {target.Data!.PlayerName}（{faction}）");
+        TAHSPlugin.Log.LogInfo($"[TAHS] 美警击杀了 {target.Data!.PlayerName}（{CustomRoleManager.GetFaction(target)}）");
     }
 
     /// <summary>自动击杀：贴近内阁直接秒杀（无需计时、不计入转变人数）；贴近深色船员达配置时间后击杀</summary>

@@ -45,6 +45,32 @@ public static class CustomRoleManager
     /// <summary>本局已分配的全部职业</summary>
     public static IReadOnlyCollection<RoleBase> ActiveRoles => PlayerRoles.Values;
 
+    /// <summary>
+    /// 临时获得内鬼系身份（变形者）以拥有原版按钮的非内鬼阵营玩家。
+    /// 用于对内鬼隐藏他们的红名。
+    /// </summary>
+    public static readonly HashSet<byte> FakeImpostors = new();
+
+    /// <summary>主机：赋予原版内鬼按钮（变形者身份），并登记红名隐藏</summary>
+    public static void GrantVanillaButtons(PlayerControl player)
+    {
+        if (player == null) return;
+        if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+            player.RpcSetRole(AmongUs.GameOptions.RoleTypes.Shapeshifter);
+        FakeImpostors.Add(player.PlayerId);
+    }
+
+    /// <summary>主机：回收原版按钮，恢复原本身份</summary>
+    public static void RevokeVanillaButtons(PlayerControl player, bool toImpostor = false)
+    {
+        if (player == null) return;
+        if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+            player.RpcSetRole(toImpostor
+                ? AmongUs.GameOptions.RoleTypes.Impostor
+                : AmongUs.GameOptions.RoleTypes.Crewmate);
+        FakeImpostors.Remove(player.PlayerId);
+    }
+
     /// <summary>本局是否已完成分配</summary>
     public static bool Assigned { get; private set; }
 
@@ -279,6 +305,7 @@ public static class CustomRoleManager
         PlayerAddons.Clear();
         Assigned = false;
         CustomWinners.Clear();
+        FakeImpostors.Clear();
         DeathTracker.Clear();
         GameArchive.ArchiveAndReset();
         MoonRunner.ResetStatics();

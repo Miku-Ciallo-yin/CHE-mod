@@ -46,6 +46,13 @@ public class MoonRunner : RoleBase
     /// <summary>跟随胜利的幸存者（结算时并入胜利名单）</summary>
     public static readonly List<PlayerControl> CoWinners = new();
 
+    public override void OnAssign(PlayerControl player)
+    {
+        base.OnAssign(player);
+        // 准则：技能职业给予原版变形按钮用于释放技能（无模组端也可用）
+        CustomRoleManager.GrantVanillaButtons(player);
+    }
+
     public override string Name => "月跑入机";
     public override string NameEn => "MoonRunner";
     public override Faction Faction => Faction.Neutral;
@@ -90,13 +97,6 @@ public class MoonRunner : RoleBase
             _unguessable.Remove(pid);
             Revealed.Remove(pid);
             if (_maxed != null && _maxed.PlayerId == pid) _maxed = null;
-        }
-
-        // 主机本地按 Q 使用技能
-        if (Player.AmOwner && _skillTimer <= 0f && Input.GetKeyDown(KeyCode.Q))
-        {
-            var target = FindNearest(SkillRange);
-            if (target != null) UseSkill(target);
         }
 
         // 无模组客户端的增益加速：主机按官方 RpcSnapTo 做位移助推
@@ -144,17 +144,6 @@ public class MoonRunner : RoleBase
             }
             _lastPos[pid] = pos;
         }
-    }
-
-    /// <summary>非主机模组端：按 Q 请求使用技能</summary>
-    public override void OnClientUpdate()
-    {
-        if (Player == null || Player.Data == null || Player.Data.IsDead) return;
-        if (!Input.GetKeyDown(KeyCode.Q)) return;
-
-        var target = FindNearest(SkillRange);
-        if (target != null)
-            RpcSync.SendKillRequest(target.PlayerId); // 复用击杀请求通道，主机按职业路由到 UseSkill
     }
 
     /// <summary>主机：使用技能（增益目标）</summary>
@@ -234,7 +223,7 @@ public class MoonRunner : RoleBase
         // 赋予原版内鬼系职业（变形者）：获得击杀按钮，无模组客户端也可用；
         // 链接结束后恢复原身份
         _hunterWasImpostor = hunter.Data != null && hunter.Data.Role != null && hunter.Data.Role.IsImpostor;
-        hunter.RpcSetRole(AmongUs.GameOptions.RoleTypes.Shapeshifter);
+        CustomRoleManager.GrantVanillaButtons(hunter); // 击杀按钮 + 红名隐藏登记
 
         TAHSPlugin.Log.LogInfo($"[TAHS] 追杀开始：{hunter.Data?.PlayerName} → {prey.Data?.PlayerName}（已赋予击杀按钮）");
         GameArchive.RecordTransition($"{hunter.Data?.PlayerName} 获得追杀 {prey.Data?.PlayerName} 的能力（击杀按钮）");
@@ -278,7 +267,7 @@ public class MoonRunner : RoleBase
             HunterPrey.Remove(_hunter.PlayerId);
             // 回收击杀按钮：恢复原身份
             if (_hunter.Data != null && !_hunter.Data.IsDead)
-                _hunter.RpcSetRole(_hunterWasImpostor ? AmongUs.GameOptions.RoleTypes.Impostor : AmongUs.GameOptions.RoleTypes.Crewmate);
+                CustomRoleManager.RevokeVanillaButtons(_hunter, _hunterWasImpostor);
         }
         _hunter = null;
         _prey = null;
