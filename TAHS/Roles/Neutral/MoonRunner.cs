@@ -98,7 +98,51 @@ public class MoonRunner : RoleBase
             if (target != null) UseSkill(target);
         }
 
+        // 无模组客户端的增益加速：主机按官方 RpcSnapTo 做位移助推
+        // （速度由各自客户端计算，模组端本地加速，无模组端只能由主机助推）
+        _snapTimer -= dt;
+        if (_snapTimer <= 0f)
+        {
+            _snapTimer = SnapInterval;
+            SnapBoostTick();
+        }
+
         UpdateHunt(dt);
+    }
+
+    /// <summary>快照助推间隔（秒）</summary>
+    private const float SnapInterval = 0.2f;
+    private float _snapTimer;
+    private readonly Dictionary<byte, Vector2> _lastPos = new();
+
+    /// <summary>对无模组客户端的增益玩家按移动方向助推</summary>
+    private void SnapBoostTick()
+    {
+        foreach (var (pid, st) in _buffs)
+        {
+            if (st.Timer <= 0f) continue;
+            var p = FindByPlayerId(pid);
+            if (p == null || p.Data == null || p.Data.IsDead) continue;
+            if (PlayerIdManager.IsModdedClient(p)) continue; // 模组端本地加速，无需助推
+
+            var pos = p.GetTruePosition();
+            if (_lastPos.TryGetValue(pid, out var last))
+            {
+                var delta = pos - last;
+                if (delta.sqrMagnitude > 0.0001f)
+                {
+                    var mult = GetSpeedMultiplier(p);
+                    if (mult > 1f)
+                    {
+                        var baseSpeed = GameOptionsManager.Instance.CurrentGameOptions
+                            .GetFloat(AmongUs.GameOptions.FloatOptionNames.PlayerSpeedMod);
+                        var extra = delta.normalized * (baseSpeed * (mult - 1f) * SnapInterval);
+                        p.NetTransform.RpcSnapTo(pos + extra);
+                    }
+                }
+            }
+            _lastPos[pid] = pos;
+        }
     }
 
     /// <summary>非主机模组端：按 Q 请求使用技能</summary>
@@ -201,6 +245,11 @@ public class MoonRunner : RoleBase
             EndHunt();
             return;
         }
+
+        // 追杀者靠近后者且 CD 就绪 → 自动出刀（无模组客户端没有按键入口，由主机执行）
+        if (_huntCd <= 0f
+            && Vector2.Distance(_hunter.GetTruePosition(), _prey.GetTruePosition()) <= SkillRange)
+            ServerHunterKill(_hunter, _prey);
 
         _huntTimer -= dt;
         if (_huntTimer > 0f) return;

@@ -22,4 +22,11 @@ public static class PlayerIdPatch
     {
         PlayerIdManager.Clear();
     }
+
+    /// <summary>进房时向主机发送模组握手（无模组客户端不发送，据此区分）</summary>
+    [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Start)), HarmonyPostfix]
+    public static void LobbyStartPostfix()
+    {
+        RpcSync.SendHandshake();
+    }
 }

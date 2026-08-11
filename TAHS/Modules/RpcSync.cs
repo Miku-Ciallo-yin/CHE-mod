@@ -41,6 +41,20 @@ public static class RpcSync
     /// <summary>附加职业赐予（主机 -> 全员）：使徒完成任务时。</summary>
     public const byte AddonGrantCallId = 226;
 
+    /// <summary>模组握手（模组端 -> 主机）：进房时告知主机自己装有模组。</summary>
+    public const byte HandshakeCallId = 227;
+
+    /// <summary>模组端进房时向主机发送握手。</summary>
+    public static void SendHandshake()
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.AmHost || PlayerControl.LocalPlayer == null) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, HandshakeCallId, SendOption.Reliable, client.HostId);
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>主机：广播附加职业赐予。</summary>
     public static void BroadcastAddonGrant(byte playerId, byte addonId)
     {
@@ -357,6 +371,13 @@ public static class RpcSync
                 .FirstOrDefault(p => p != null && p.PlayerId == playerId);
             if (player != null)
                 CustomRoleManager.GrantAddon(player, addonId);
+            return true;
+        }
+
+        if (callId == HandshakeCallId)
+        {
+            if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                PlayerIdManager.MarkModded(sender.OwnerId);
             return true;
         }
 

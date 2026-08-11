@@ -13,6 +13,21 @@ public static class PlayerIdManager
     /// <summary>协管 ClientId 集合（主机随 ID 映射广播）</summary>
     private static readonly HashSet<int> _mods = new();
 
+    /// <summary>已握手的模组端 ClientId 集合（主机用于区分模组/无模组客户端）</summary>
+    private static readonly HashSet<int> _moddedClients = new();
+
+    /// <summary>主机：标记某客户端装有模组（握手 RPC）</summary>
+    public static void MarkModded(int clientId) => _moddedClients.Add(clientId);
+
+    /// <summary>该玩家的客户端是否装有模组（本机恒为 true——本机就在运行模组）</summary>
+    public static bool IsModdedClient(PlayerControl player)
+    {
+        if (player == null) return false;
+        if (AmongUsClient.Instance != null && player.OwnerId == AmongUsClient.Instance.ClientId)
+            return true;
+        return _moddedClients.Contains(player.OwnerId);
+    }
+
     /// <summary>主机：有玩家进房时调用（含房主自己的兜底分配）</summary>
     public static void OnPlayerJoined(int clientId)
     {
@@ -82,5 +97,6 @@ public static class PlayerIdManager
     {
         _ids.Clear();
         _mods.Clear();
+        _moddedClients.Clear();
     }
 }
