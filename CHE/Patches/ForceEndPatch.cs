@@ -104,6 +104,11 @@ public static class ForceEndPatch
                 ShowMyKiller();
                 return false;
             }
+            if (text.Equals("/l", System.StringComparison.OrdinalIgnoreCase))
+            {
+                Modules.GameArchive.ShowLast();
+                return false;
+            }
             if (text.StartsWith("/addmod", System.StringComparison.OrdinalIgnoreCase))
                 return HandleAddMod(text);
             if (text.Equals("/s", System.StringComparison.OrdinalIgnoreCase)
@@ -336,6 +341,7 @@ public static class ForceEndPatch
                 "/m — 查看自己本局职业介绍",
                 "/r — 查看本局已开启的全部职业",
                 "/d — 死亡后查看击杀自己的玩家",
+                "/l — 查看上一局身份转换详情及击杀记录",
                 "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
                 "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主/协管）",
                 "/end — 强制结束对局返回大厅（仅房主/协管，对局中）",

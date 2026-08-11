@@ -135,6 +135,7 @@ public static class CustomRoleManager
             PlayerRoles[playerId] = role;
 
             CHEPlugin.Log.LogInfo($"[CHE] {player.Data.PlayerName} -> {role.Name} ({role.Faction})");
+            GameArchive.RecordAssignment($"{player.Data.PlayerName} → {role.Name}");
         }
 
         foreach (var (playerId, addonId) in addonAssignments)
@@ -152,6 +153,7 @@ public static class CustomRoleManager
             list.Add(addon);
 
             CHEPlugin.Log.LogInfo($"[CHE] {player.Data.PlayerName} -> 附加:{addon.Name}");
+            GameArchive.RecordAssignment($"{player.Data.PlayerName} → 附加:{addon.Name}");
         }
 
         Assigned = true;
@@ -229,5 +231,6 @@ public static class CustomRoleManager
         Assigned = false;
         CustomWinners.Clear();
         DeathTracker.Clear();
+        GameArchive.ArchiveAndReset();
     }
 }

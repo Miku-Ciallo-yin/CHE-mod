@@ -152,6 +152,7 @@ public class Cop : RoleBase
             _faction = Faction.Impostor;
             KillTimer = GlobalKillCooldown();
             CHEPlugin.Log.LogInfo("[CHE] 美警已转变为内鬼阵营，击杀CD跟随全局设置");
+            GameArchive.RecordTransition($"美警 {Player?.Data?.PlayerName} 转变为内鬼阵营");
         }
     }
 

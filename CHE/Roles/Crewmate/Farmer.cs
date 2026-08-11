@@ -175,6 +175,7 @@ public class Farmer : RoleBase
 
         _faction = Faction.Neutral;
         CHEPlugin.Log.LogInfo("[CHE] 佃农击杀了船员阵营玩家，已转化为中立阵营");
+        GameArchive.RecordTransition($"佃农 {Player?.Data?.PlayerName} 误杀船员，转变为中立阵营");
     }
 
     public override string GetStatusText()

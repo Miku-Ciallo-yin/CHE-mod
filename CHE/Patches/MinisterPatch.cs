@@ -51,6 +51,7 @@ public static class MinisterPatch
 
                 CustomRoleManager.TransformToRole(player, new Minister());
                 CHEPlugin.Log.LogInfo($"[CHE] {player.Data.PlayerName} 转变为内阁（将跟随船员胜利）");
+                Modules.GameArchive.RecordTransition($"{player.Data.PlayerName} 转变为内阁（将跟随船员胜利）");
             }
 
             Minister.PendingKillers.Clear();

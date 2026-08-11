@@ -130,6 +130,7 @@ public class Repenter : RoleBase
         _faction = Faction.Crewmate;
         _suicideTimer = CustomOptions.RepenterSuicideTime.Value;
         CHEPlugin.Log.LogInfo($"[CHE] 忏悔者变形为船员，{_suicideTimer:0} 秒后自裁");
+        GameArchive.RecordTransition($"忏悔者 {Player?.Data?.PlayerName} 变形为船员阵营");
     }
 
     /// <summary>自裁：转为中立（无法胜利）后死亡</summary>
@@ -140,6 +141,7 @@ public class Repenter : RoleBase
         _faction = Faction.Neutral; // 自裁者不属于任何阵营，无法胜利
         Player!.RpcMurderPlayer(Player, true);
         CHEPlugin.Log.LogInfo("[CHE] 忏悔者自裁（无法胜利）");
+        GameArchive.RecordTransition($"忏悔者 {Player?.Data?.PlayerName} 自裁（无法胜利）");
     }
 
     private PlayerControl? FindNearest(float range)

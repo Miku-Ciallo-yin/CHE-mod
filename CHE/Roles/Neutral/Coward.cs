@@ -150,11 +150,13 @@ public class Coward : RoleBase
             case Faction.Crewmate:
                 _faction = Faction.Crewmate;
                 CHEPlugin.Log.LogInfo("[CHE] 懦弱者转变为船员阵营，失去击杀能力");
+                GameArchive.RecordTransition($"懦弱者 {Player?.Data?.PlayerName} 转变为船员阵营，失去击杀能力");
                 break;
 
             case Faction.Impostor:
                 _faction = Faction.Impostor;
                 CHEPlugin.Log.LogInfo("[CHE] 懦弱者转变为内鬼阵营");
+                GameArchive.RecordTransition($"懦弱者 {Player?.Data?.PlayerName} 转变为内鬼阵营");
                 break;
 
             case Faction.Neutral:
@@ -167,6 +169,7 @@ public class Coward : RoleBase
                 CHEPlugin.Log.LogInfo(
                     $"[CHE] 懦弱者转变为中立职业「{_adoptedRoleName}」，" +
                     $"与 {target.Data?.PlayerName} 共同胜利");
+                GameArchive.RecordTransition($"懦弱者 {Player?.Data?.PlayerName} 转变为中立职业「{_adoptedRoleName}」，与 {target.Data?.PlayerName} 共同胜利");
                 break;
         }
     }
@@ -181,6 +184,7 @@ public class Coward : RoleBase
         {
             LinkActive = false;
             CHEPlugin.Log.LogInfo("[CHE] 懦弱者的共同胜利链接已失效（伙伴转变了阵营或职业）");
+            GameArchive.RecordTransition($"懦弱者 {Player?.Data?.PlayerName} 的共同胜利链接失效");
         }
     }
 
