@@ -286,7 +286,7 @@ public static class MainMenuPatch
         CreateButton(menu, template, "GitHub", basePos + new Vector3(2.4f, 1.55f, 0f),
             () => Application.OpenURL(ModConfig.GithubUrl.Value));
         CreateButton(menu, template, "交流群", basePos + new Vector3(2.4f, 2.3f, 0f),
-            () => Application.OpenURL(ModConfig.CommunityUrl.Value));
+            () => CustomPopup.Show(menu.transform, "交流群", "QQ群：1058198257"));
     }
 
     private static void CreateButton(MainMenuManager menu, GameObject template, string text, Vector3 localPos, System.Action action)
