@@ -229,6 +229,16 @@ public static class ModOptionsMenuPatch
                 return y;
             }
 
+            // 中立分类页：顶部显示带刀/无刀数量配置（RoleId 98 伪分组）
+            if (category == 1)
+            {
+                foreach (var opt in CustomOption.OfRole(98))
+                {
+                    AddOptionRow(menu, opt, y);
+                    y -= RowHeight;
+                }
+            }
+
             foreach (var (roleId, roleName, faction) in CustomRoleManager.GetRegisteredRoles())
             {
                 if (CategoryOf(faction) != category) continue;

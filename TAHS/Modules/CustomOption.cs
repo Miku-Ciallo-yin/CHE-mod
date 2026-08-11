@@ -97,6 +97,8 @@ public static class CustomOptions
     public static CustomOption ModAllowS { get; private set; } = null!;
     public static CustomOption ModAllowEnd { get; private set; } = null!;
     public static CustomOption CheatAction { get; private set; } = null!;
+    public static CustomOption NeutralKnifeCount { get; private set; } = null!;
+    public static CustomOption NeutralNoKnifeCount { get; private set; } = null!;
     public static CustomOption MoonSkillCd { get; private set; } = null!;
     public static CustomOption MoonBuffDuration { get; private set; } = null!;
     public static CustomOption MoonBuffInitial { get; private set; } = null!;
@@ -161,6 +163,12 @@ public static class CustomOptions
         CheatAction = CustomOption.Register(133, ModGroupId, "作弊处理方式",
             ModConfig.CheatAction.Value, 0, 3, 1, 1f,
             formatNames: new[] { "警告", "踢出", "封禁", "加入黑名单" });
+
+        // 中立阵营数量（RoleId 98 = 中立分类页）
+        NeutralKnifeCount = CustomOption.Register(150, 98, "带刀中立数量",
+            ModConfig.NeutralKnifeCount.Value, 0, 7, 1, 1f);
+        NeutralNoKnifeCount = CustomOption.Register(151, 98, "无刀中立数量",
+            ModConfig.NeutralNoKnifeCount.Value, 0, 7, 1, 1f);
 
         // 月跑入机参数（RoleId 10 = MoonRunner）
         MoonSkillCd = CustomOption.Register(134, 10, "技能CD(秒)",

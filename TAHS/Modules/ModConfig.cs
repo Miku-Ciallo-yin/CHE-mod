@@ -88,6 +88,10 @@ public static class ModConfig
     public static ConfigEntry<bool> ModAllowEnd { get; private set; } = null!;
     /// <summary>作弊处理方式（0=警告 1=踢出 2=封禁 3=加入黑名单，默认踢出）</summary>
     public static ConfigEntry<int> CheatAction { get; private set; } = null!;
+    /// <summary>带刀中立数量（默认 1，0~7）</summary>
+    public static ConfigEntry<int> NeutralKnifeCount { get; private set; } = null!;
+    /// <summary>无刀中立数量（默认 1，0~7）</summary>
+    public static ConfigEntry<int> NeutralNoKnifeCount { get; private set; } = null!;
 
     public static ConfigEntry<int> MoonSkillCd { get; private set; } = null!;
     public static ConfigEntry<int> MoonBuffDuration { get; private set; } = null!;
@@ -182,6 +186,10 @@ public static class ModConfig
         ModAllowEnd = config.Bind("模组设置 Mod", "协管权限允许end ModAllowEnd", true, "协管可使用 /end 与 ALT+F4 结束对局");
         CheatAction = config.Bind("模组设置 Mod", "作弊处理方式 CheatAction", 1,
             "反作弊发现作弊的处理方式：0=警告 1=踢出 2=封禁 3=加入黑名单");
+        NeutralKnifeCount = config.Bind("职业数量 RoleCount", "带刀中立数量 NeutralKnifeCount", 1,
+            "每局分配的敌对（带刀）中立职业数量（0~7）");
+        NeutralNoKnifeCount = config.Bind("职业数量 RoleCount", "无刀中立数量 NeutralNoKnifeCount", 1,
+            "每局分配的友好（无刀）中立职业数量（0~7）");
 
         MoonSkillCd = config.Bind("月跑入机 MoonRunner", "技能CD SkillCd", 15, "技能冷却（秒）");
         MoonBuffDuration = config.Bind("月跑入机 MoonRunner", "增益持续时间 BuffDuration", 30, "速度增益持续（秒）");
