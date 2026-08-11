@@ -248,11 +248,24 @@ public static class RpcSync
 
         if (callId == ModCommandCallId)
         {
-            // 只有主机处理，且需协管名单开启 + 发送者在名单内
+            // 只有主机处理
             if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return true;
-            if (!ModeratorManager.IsEnabled || !ModeratorManager.IsModerator(sender)) return true;
 
             var kind = reader.ReadByte();
+            if (kind == 4)
+            {
+                // /vote 请求：所有玩家可用（转换者正常投票的唯一通道）
+                var voteTarget = reader.ReadInt32();
+                if (MeetingHud.Instance != null)
+                {
+                    MeetingHud.Instance.CastVote(sender.PlayerId, (byte)voteTarget);
+                    TAHSPlugin.Log.LogInfo($"[TAHS] {sender.Data?.PlayerName} 通过 /vote 投票给 {voteTarget}");
+                }
+                return true;
+            }
+
+            if (!ModeratorManager.IsEnabled || !ModeratorManager.IsModerator(sender)) return true;
+
             if (kind == 1)
             {
                 var sec = reader.ReadInt32();

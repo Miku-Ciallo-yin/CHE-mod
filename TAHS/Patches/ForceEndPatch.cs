@@ -119,12 +119,51 @@ public static class ForceEndPatch
             if (text.Equals("/s", System.StringComparison.OrdinalIgnoreCase)
                 || text.StartsWith("/s ", System.StringComparison.OrdinalIgnoreCase))
                 return HandleAnnounce(text);
+            if (text.StartsWith("/vote", System.StringComparison.OrdinalIgnoreCase))
+                return HandleVote(text);
 
             // 其余以 / 开头的输入一律隐藏（不广播给其他玩家，防指令泄露）
             if (text.StartsWith('/'))
                 return false;
 
             return true;
+        }
+
+        /// <summary>/vote id：投票给对应 ID 的玩家（所有人可用，转换者正常投票通道）</summary>
+        private static bool HandleVote(string text)
+        {
+            var show = Modules.ChatHelper.Show;
+
+            if (MeetingHud.Instance == null)
+            {
+                show("[TAHS] /vote 仅会议中可用");
+                return false;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
+            {
+                show("[TAHS] 用法：/vote <玩家ID>，先用 /id 查看");
+                return false;
+            }
+
+            var target = Modules.PlayerIdManager.GetPlayerById(id);
+            if (target == null)
+            {
+                show($"[TAHS] 未找到 ID 为 {id} 的玩家");
+                return false;
+            }
+
+            var local = PlayerControl.LocalPlayer;
+            if (local == null) return false;
+
+            if (IsHost())
+                MeetingHud.Instance.CastVote(local.PlayerId, target.PlayerId);
+            else
+                Modules.RpcSync.SendModCommand(4, id); // 请求主机代为投票
+
+            show($"[TAHS] 已投票给 [{id}] {target.Data?.PlayerName}");
+            return false;
         }
 
         /// <summary>/s 内容：发布醒目公告（房主/协管，参考 TONE 的主机消息）</summary>

@@ -108,6 +108,7 @@ public static class CustomOptions
     public static CustomOption MoonReveal { get; private set; } = null!;
     public static CustomOption MoonHuntCd { get; private set; } = null!;
     public static CustomOption MoonHuntSuicideTime { get; private set; } = null!;
+    public static CustomOption ConverterSkillUses { get; private set; } = null!;
     public static CustomOption PilotSkillCd { get; private set; } = null!;
     public static CustomOption PilotCanNormalKill { get; private set; } = null!;
     public static CustomOption PilotKillCd { get; private set; } = null!;
@@ -179,6 +180,10 @@ public static class CustomOptions
         // 附加职业（RoleId 99 = 附加分类页）
         MaxAddonsPerPlayer = CustomOption.Register(152, 99, "玩家附加职业数量上限",
             ModConfig.MaxAddonsPerPlayer.Value, 1, 5, 1, 1f);
+
+        // 转换者参数（RoleId 12 = Converter）
+        ConverterSkillUses = CustomOption.Register(158, 12, "技能可使用次数",
+            ModConfig.ConverterSkillUses.Value, 1, 10, 1, 1f);
 
         // 月跑入机参数（RoleId 10 = MoonRunner）
         MoonSkillCd = CustomOption.Register(134, 10, "技能CD(秒)",

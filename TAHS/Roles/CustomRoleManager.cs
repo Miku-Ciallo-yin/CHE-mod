@@ -26,6 +26,7 @@ public static class CustomRoleManager
         (9, () => new Apostle()),  // 船员阵营：使徒
         (10, () => new MoonRunner()), // 中立阵营（友好）：月跑入机
         (11, () => new Pilot()),   // 内鬼阵营：中东机长
+        (12, () => new Converter()), // 船员阵营：转换者
     };
 
     /// <summary>
@@ -261,10 +262,29 @@ public static class CustomRoleManager
     /// <summary>把玩家转变为指定职业实例（替换原有职业，如凶手变内阁）</summary>
     public static void TransformToRole(PlayerControl player, RoleBase newRole)
     {
+        // 转变前回收旧职业的原版按钮
+        if (FakeImpostors.Contains(player.PlayerId))
+            RevokeVanillaButtons(player);
+
         // ID 取新职业在注册表中的 ID（猜测/判定依赖职业 ID）
         newRole.Id = RoleRegistry.FirstOrDefault(r => r.Factory().GetType() == newRole.GetType()).Id;
         newRole.OnAssign(player);
         PlayerRoles[player.PlayerId] = newRole;
+    }
+
+    /// <summary>按已有职业实例的类型创建新实例（转换者复制职业用）</summary>
+    public static RoleBase? CreateRoleOfType(RoleBase sample)
+    {
+        var factory = RoleRegistry.FirstOrDefault(r => r.Factory().GetType() == sample.GetType()).Factory;
+        return factory?.Invoke();
+    }
+
+    /// <summary>移除玩家的职业（变回原版身份）</summary>
+    public static void RemoveRole(PlayerControl player)
+    {
+        if (FakeImpostors.Contains(player.PlayerId))
+            RevokeVanillaButtons(player);
+        PlayerRoles.Remove(player.PlayerId);
     }
 
     /// <summary>赐予玩家一个附加职业（使徒完成任务时，主机调用并广播）</summary>
