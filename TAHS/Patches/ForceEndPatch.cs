@@ -125,6 +125,10 @@ public static class ForceEndPatch
                 return HandleBalance();
             if (text.StartsWith("/kill", System.StringComparison.OrdinalIgnoreCase))
                 return HandleKill(text);
+            if (text.StartsWith("/rn", System.StringComparison.OrdinalIgnoreCase))
+                return HandleRename(text);
+            if (text.StartsWith("/cor", System.StringComparison.OrdinalIgnoreCase))
+                return HandleColor(text);
 
             // 其余以 / 开头的输入一律隐藏（不广播给其他玩家，防指令泄露）
             if (text.StartsWith('/'))
@@ -173,6 +177,83 @@ public static class ForceEndPatch
             TAHSPlugin.Log.LogInfo($"[TAHS] 房主 /kill 击杀了 [{id}] {target.Data.PlayerName}");
             show($"[TAHS] 已击杀 [{id}] {target.Data.PlayerName}");
             return false;
+        }
+
+        /// <summary>/rn 名字：修改自己的名字（参考 TONE，所有人可用）</summary>
+        private static bool HandleRename(string text)
+        {
+            var show = Modules.ChatHelper.Show;
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                show("[TAHS] 用法：/rn <新名字>");
+                return false;
+            }
+
+            var newName = string.Join(' ', parts.Skip(1));
+            if (newName.Length > 20) newName = newName[..20];
+
+            var local = PlayerControl.LocalPlayer;
+            if (local == null) return false;
+
+            local.RpcSetName(newName);
+            show($"[TAHS] 已改名为：{newName}");
+            return false;
+        }
+
+        /// <summary>/cor 颜色：修改自己的颜色（参考 TONE，所有人可用；支持中英文色名或颜色 ID）</summary>
+        private static bool HandleColor(string text)
+        {
+            var show = Modules.ChatHelper.Show;
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                show("[TAHS] 用法：/cor <颜色>，如 /cor 红 或 /cor red 或 /cor 0");
+                return false;
+            }
+
+            var colorId = ParseColor(parts[1]);
+            if (colorId < 0)
+            {
+                show($"[TAHS] 未知颜色：{parts[1]}（支持 红/蓝/绿/粉/橙/黄/黑/白/紫/棕/青/柠檬/栗/玫瑰/香蕉/灰/棕褐/珊瑚 或 0~17）");
+                return false;
+            }
+
+            var local = PlayerControl.LocalPlayer;
+            if (local == null) return false;
+
+            local.RpcSetColor((byte)colorId);
+            show($"[TAHS] 已更换颜色：{parts[1]}（ID {colorId}）");
+            return false;
+        }
+
+        /// <summary>颜色名/ID 解析，失败返回 -1</summary>
+        private static int ParseColor(string input)
+        {
+            if (int.TryParse(input, out var id) && id >= 0 && id <= 17) return id;
+
+            return input.ToLowerInvariant() switch
+            {
+                "红" or "red" => 0,
+                "蓝" or "深蓝" or "blue" => 1,
+                "绿" or "green" => 2,
+                "粉" or "pink" => 3,
+                "橙" or "orange" => 4,
+                "黄" or "yellow" => 5,
+                "黑" or "black" => 6,
+                "白" or "white" => 7,
+                "紫" or "purple" => 8,
+                "棕" or "brown" => 9,
+                "青" or "cyan" => 10,
+                "柠檬" or "lime" => 11,
+                "栗" or "maroon" => 12,
+                "玫瑰" or "rose" => 13,
+                "香蕉" or "banana" => 14,
+                "灰" or "gray" or "grey" => 15,
+                "棕褐" or "tan" => 16,
+                "珊瑚" or "coral" => 17,
+                _ => -1,
+            };
         }
 
         /// <summary>/ph：平衡主义者处决超编阵营玩家（仅平衡主义者，对局中）</summary>
@@ -491,6 +572,8 @@ public static class ForceEndPatch
                 "/help — 显示本帮助",
                 "/id — 显示所有玩家的名字及其对应 ID",
                 "/kill <玩家ID> — 直接击杀对应玩家（仅房主/对局中）",
+                "/rn <名字> — 修改自己的名字",
+                "/cor <颜色> — 修改自己的颜色（中英文色名或0~17）",
                 "/m — 查看自己本局职业介绍",
                 "/r — 查看本局已开启的全部职业",
                 "/d — 死亡后查看击杀自己的玩家",
