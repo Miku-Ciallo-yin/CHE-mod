@@ -719,6 +719,10 @@ public static class ForceEndPatch
             if (text.StartsWith("/bt", System.StringComparison.OrdinalIgnoreCase))
             { HostBet(source, text, tell); return; }
 
+            // 平衡主义者处决（主机验证职业并执行）
+            if (text.Equals("/ph", System.StringComparison.OrdinalIgnoreCase))
+            { HostBalance(source, tell); return; }
+
             // 大厅自我服务（主机代为改名/换色）
             if (text.StartsWith("/rn", System.StringComparison.OrdinalIgnoreCase))
             { HostRename(source, text, tell); return; }
@@ -746,9 +750,26 @@ public static class ForceEndPatch
             { tell("[TAHS] 该指令仅房主可用"); return; }
 
             // 需要模组端本地交互
-            if (text.StartsWith("/vote", System.StringComparison.OrdinalIgnoreCase)
-                || text.Equals("/ph", System.StringComparison.OrdinalIgnoreCase))
+            if (text.StartsWith("/vote", System.StringComparison.OrdinalIgnoreCase))
             { tell("[TAHS] 该指令需要安装模组端使用"); return; }
+        }
+
+        /// <summary>主机代收 /ph：验证职业后执行平衡主义者处决（与 /bt 同模式）</summary>
+        private static void HostBalance(PlayerControl source, System.Action<string> tell)
+        {
+            if (AmongUsClient.Instance == null
+                || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
+            {
+                tell("[TAHS] /ph 仅对局中可用");
+                return;
+            }
+            if (Roles.CustomRoleManager.GetRole(source) is not Roles.Crewmate.Balancer)
+            {
+                tell("[TAHS] /ph 仅平衡主义者可用");
+                return;
+            }
+
+            Roles.Crewmate.Balancer.UseSkill(source); // 主机权威执行，反馈走定向私信
         }
 
         /// <summary>无模组协管校验（按好友代码识别，权限项需开启）</summary>
