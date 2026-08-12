@@ -3,7 +3,7 @@ using HarmonyLib;
 
 namespace TAHS.Patches;
 
-/// <summary>驱动公告计时（/s 醒目消息自动消失）与私有名牌刷新</summary>
+/// <summary>驱动公告计时（/s 醒目消息自动消失）、私有名牌刷新与叛徒互认红名</summary>
 [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
 public static class AnnouncementPatch
 {
@@ -11,6 +11,7 @@ public static class AnnouncementPatch
     {
         Announcement.Tick();
         PrivateTag.Tick();
+        TraitorNameColors.Tick();
         MineVisuals.Tick();
     }
 }

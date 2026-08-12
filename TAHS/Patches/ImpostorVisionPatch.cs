@@ -8,10 +8,10 @@ namespace TAHS.Patches;
 /// <summary>
 /// 内鬼不互认（模组设置 -> 内鬼互认 = 关 时生效）：
 /// 对局内和会议中，内鬼看其他内鬼的名字都是白色而不是红色。
-/// 另包含叛徒附加职业的红名互认（模组端本地表现）：
+/// 另包含叛徒附加职业的红名互认（模组端本地即时表现）：
 /// - 与内鬼互认：叛徒看内鬼红名、内鬼看叛徒红名；
 /// - 与其他叛徒互认：叛徒之间互见红名。
-/// 无模组客户端无红名提示（Host Only 降级点）。
+/// 无模组客户端的红名由主机经 PrivateTag 定向改名下发（见 TraitorNameColors）。
 /// </summary>
 public static class ImpostorVisionPatch
 {

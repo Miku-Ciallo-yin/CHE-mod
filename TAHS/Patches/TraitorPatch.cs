@@ -78,3 +78,98 @@ public static class TraitorEndCriteriaPatch
         return false;
     }
 }
+
+/// <summary>
+/// 叛徒互认红名的主机驱动（参考 TONE 定向改名，无模组客户端也可见）：
+/// 定期按配置计算"谁应该看到谁的红色名字"，经 PrivateTag 定向 SetName 下发；
+/// 名字颜色只作用于指定观看者的客户端，其他人看到的仍是原名色。
+/// </summary>
+public static class TraitorNameColors
+{
+    private const string Red = "#FF1919";
+    private const float Interval = 1.5f;
+    private static float _timer;
+
+    /// <summary>每帧驱动（AnnouncementPatch 调用）；仅主机执行</summary>
+    public static void Tick()
+    {
+        if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
+
+        _timer -= UnityEngine.Time.deltaTime;
+        if (_timer > 0f) return;
+        _timer = Interval;
+
+        // 非对局状态：清掉全部红名
+        if (AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started
+            || GameData.Instance == null)
+        {
+            foreach (var (viewer, target) in PrivateTag.ColorPairs.ToList())
+            {
+                var t = FindPlayer(target);
+                if (t != null) PrivateTag.RemoveColor(viewer, t);
+            }
+            return;
+        }
+
+        var desired = ComputeDesired();
+
+        // 移除不再需要的（差量对比 PrivateTag 实际登记，ClearAll 后可自愈）
+        foreach (var (viewer, target) in PrivateTag.ColorPairs.ToList())
+        {
+            if (desired.Contains((viewer, target))) continue;
+            var t = FindPlayer(target);
+            if (t != null) PrivateTag.RemoveColor(viewer, t);
+        }
+
+        // 补上新增的
+        foreach (var (viewer, target) in desired)
+        {
+            if (PrivateTag.GetColor(viewer, target) != null) continue;
+            var t = FindPlayer(target);
+            if (t != null) PrivateTag.SetColor(viewer, t, Red);
+        }
+    }
+
+    /// <summary>按当前配置计算全部互认对（观看者 ClientId, 目标 PlayerId）</summary>
+    private static HashSet<(int Viewer, byte Target)> ComputeDesired()
+    {
+        var desired = new HashSet<(int, byte)>();
+        var knowImpostors = CustomOptions.TraitorKnowImpostors.Value == 1;
+        var knowEachOther = CustomOptions.TraitorKnowEachOther.Value == 1;
+        if (!knowImpostors && !knowEachOther) return desired;
+
+        var traitors = new List<PlayerControl>();
+        var impostors = new List<PlayerControl>();
+        foreach (var p in PlayerControl.AllPlayerControls)
+        {
+            if (p == null || p.Data == null) continue;
+            if (Traitor.IsTraitor(p))
+                traitors.Add(p);
+            else if (CustomRoleManager.GetFaction(p) == Faction.Impostor
+                     && !CustomRoleManager.FakeImpostors.Contains(p.PlayerId)) // 追杀者临时身份不算
+                impostors.Add(p);
+        }
+
+        if (knowImpostors)
+            foreach (var traitor in traitors)
+                foreach (var impostor in impostors)
+                {
+                    desired.Add((traitor.OwnerId, impostor.PlayerId)); // 叛徒看内鬼红
+                    desired.Add((impostor.OwnerId, traitor.PlayerId)); // 内鬼看叛徒红
+                }
+
+        if (knowEachOther)
+            foreach (var t1 in traitors)
+                foreach (var t2 in traitors)
+                    if (t1 != t2)
+                        desired.Add((t1.OwnerId, t2.PlayerId));
+
+        return desired;
+    }
+
+    private static PlayerControl? FindPlayer(byte playerId)
+    {
+        return PlayerControl.AllPlayerControls.ToArray()
+            .FirstOrDefault(p => p != null && p.PlayerId == playerId);
+    }
+}
