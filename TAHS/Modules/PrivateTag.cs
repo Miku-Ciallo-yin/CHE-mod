@@ -108,12 +108,14 @@ public static class PrivateTag
     {
         var baseName = player.Data?.PlayerName;
         if (string.IsNullOrEmpty(baseName)) return;
-        // 防止嵌套叠加：剥离已有标签行与颜色标记
-        var clean = StripColor(baseName.Split('\n')[0]);
+        // 防止嵌套叠加：剥离已有标签行、颜色标记与首刀保护的十字前缀
+        var clean = StripColor(baseName.Split('\n')[0]).TrimStart('＋');
 
         var name = _colors.TryGetValue((viewerClientId, player.PlayerId), out var color)
             ? $"<color={color}>{clean}</color>"
             : clean;
+        // 首刀保护的蓝色十字前缀（全员可见的一部分，定向合成时保留）
+        name = (FirstKillProtection.NamePrefixFor(player.PlayerId) ?? string.Empty) + name;
         if (_tags.TryGetValue((viewerClientId, player.PlayerId), out var tag))
             name = $"{name}\n<size=60%>{tag}</size>";
 
