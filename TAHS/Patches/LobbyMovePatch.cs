@@ -224,7 +224,7 @@ public static class LobbyMovePatch
 /// <summary>
 /// 聊天指令隐藏 + 主机代收（参考 TONE）：
 /// - 模组端收到任何以 / 开头的聊天消息一律不显示（防指令泄露）；
-/// - 主机在此基础上处理无模组端玩家发来的指令（/tpout、/tpin）。
+/// - 主机在此基础上处理无模组端玩家发来的指令（/r、/help 私信回复，/tpout、/tpin 代为传送）。
 /// 无模组客户端之间仍能看到彼此发出的指令原文（原版聊天广播，Host Only 无法拦截）。
 /// </summary>
 [HarmonyPatch(typeof(ChatController), nameof(ChatController.AddChat))]
@@ -237,7 +237,7 @@ public static class HostChatCommandPatch
 
         if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost
             && sourcePlayer != null && !sourcePlayer.AmOwner)
-            LobbyMovePatch.HandleHostCommand(sourcePlayer, text);
+            ForceEndPatch.ChatCommandPatch.HandleHostCommand(sourcePlayer, text);
 
         return false; // 指令一律不在聊天栏显示
     }

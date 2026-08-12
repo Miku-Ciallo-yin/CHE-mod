@@ -559,6 +559,12 @@ public static class ForceEndPatch
         /// <summary>/r：查看全局已开启的职业（所有人可用）</summary>
         private static void ShowEnabledRoles()
         {
+            Modules.ChatHelper.ShowMany(BuildEnabledRolesLines());
+        }
+
+        /// <summary>/r 内容（本地显示与主机代收无模组端指令时私信共用）</summary>
+        public static List<string> BuildEnabledRolesLines()
+        {
             var lines = new List<string> { "<color=#4FC3F7>===== 已开启职业 =====</color>" };
             foreach (var (id, name, faction) in Roles.CustomRoleManager.GetRegisteredRoles())
             {
@@ -570,7 +576,7 @@ public static class ForceEndPatch
                 if (Modules.CustomOptions.GetRoleChance(id) <= 0) continue;
                 lines.Add($"{name}（附加）");
             }
-            Modules.ChatHelper.ShowMany(lines);
+            return lines;
         }
 
         /// <summary>/d：死亡后查看击杀自己的玩家（所有人可用）</summary>
@@ -647,29 +653,48 @@ public static class ForceEndPatch
         /// <summary>/help：输出全部指令及功能（合并为一条气泡，超长自动拆分）</summary>
         private static void ShowHelp()
         {
-            Modules.ChatHelper.ShowMany(new[]
-            {
-                "<color=#4FC3F7>===== TAHS 指令帮助 =====</color>",
-                "/help — 显示本帮助",
-                "/id — 显示所有玩家的名字及其对应 ID",
-                "/kill <玩家ID> — 直接击杀对应玩家（仅房主/对局中）",
-                "/rn <名字> — 修改自己的名字（仅大厅）",
-                "/cor <颜色> — 修改自己的颜色（仅大厅，中英文色名或0~17）",
-                "/tpout — 传送到飞船外面（大厅/死亡后）",
-                "/tpin — 传送回飞船内（大厅/死亡后）",
-                "/m — 查看自己本局职业介绍",
-                "/r — 查看本局已开启的全部职业",
-                "/d — 死亡后查看击杀自己的玩家",
-                "/l — 查看上一局身份转换详情及击杀记录",
-                "/kc — 查看存活内鬼与中立人数（需场上有存活使徒）",
-                "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
-                "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主/协管）",
-                "/end — 强制结束对局返回大厅（仅房主/协管，对局中）",
-                "/dump — 导出日志到桌面并显示最近日志（仅房主）",
-                "/addmod <玩家ID> — 将该玩家加入协管名单（仅房主）",
-                "/s <内容> — 发布醒目公告（仅房主/协管，全员可见）",
-                "快捷键：ALT+F4 — 强制结束对局（仅房主/协管，对局中）",
-            });
+            Modules.ChatHelper.ShowMany(BuildHelpLines());
+        }
+
+        /// <summary>/help 内容（本地显示与主机代收无模组端指令时私信共用）</summary>
+        public static string[] BuildHelpLines() => new[]
+        {
+            "<color=#4FC3F7>===== TAHS 指令帮助 =====</color>",
+            "/help — 显示本帮助",
+            "/id — 显示所有玩家的名字及其对应 ID",
+            "/kill <玩家ID> — 直接击杀对应玩家（仅房主/对局中）",
+            "/rn <名字> — 修改自己的名字（仅大厅）",
+            "/cor <颜色> — 修改自己的颜色（仅大厅，中英文色名或0~17）",
+            "/tpout — 传送到飞船外面（大厅/死亡后）",
+            "/tpin — 传送回飞船内（大厅/死亡后）",
+            "/m — 查看自己本局职业介绍",
+            "/r — 查看本局已开启的全部职业",
+            "/d — 死亡后查看击杀自己的玩家",
+            "/l — 查看上一局身份转换详情及击杀记录",
+            "/kc — 查看存活内鬼与中立人数（需场上有存活使徒）",
+            "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
+            "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主/协管）",
+            "/end — 强制结束对局返回大厅（仅房主/协管，对局中）",
+            "/dump — 导出日志到桌面并显示最近日志（仅房主）",
+            "/addmod <玩家ID> — 将该玩家加入协管名单（仅房主）",
+            "/s <内容> — 发布醒目公告（仅房主/协管，全员可见）",
+            "快捷键：ALT+F4 — 强制结束对局（仅房主/协管，对局中）",
+        };
+
+        /// <summary>
+        /// 主机代收无模组端玩家发来的指令（模组端指令在本地处理且不会广播）：
+        /// /r、/help 私信回复内容（仅发起者可见）；/tpout、/tpin 转交传送处理。
+        /// </summary>
+        public static void HandleHostCommand(PlayerControl source, string text)
+        {
+            if (source == null) return;
+
+            if (text.Equals("/r", System.StringComparison.OrdinalIgnoreCase))
+                Modules.ChatHelper.ShowPrivateMany(source, BuildEnabledRolesLines());
+            else if (text.Equals("/help", System.StringComparison.OrdinalIgnoreCase))
+                Modules.ChatHelper.ShowPrivateMany(source, BuildHelpLines());
+            else
+                LobbyMovePatch.HandleHostCommand(source, text);
         }
 
         /// <summary>/end：强制结束对局（房主直接执行；协管经 RPC 由主机执行）</summary>

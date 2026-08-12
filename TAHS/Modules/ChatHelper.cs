@@ -56,4 +56,29 @@ public static class ChatHelper
         if (sb.Length > 0)
             Show(sb.ToString());
     }
+
+    /// <summary>
+    /// 多行私信（主机调用）：与 <see cref="ShowMany"/> 同样的拆分规则，
+    /// 逐条定向发送，仅指定玩家可见（用于主机代收无模组端的信息类指令）。
+    /// </summary>
+    public static void ShowPrivateMany(PlayerControl player, IEnumerable<string> lines)
+    {
+        if (player == null) return;
+
+        var sb = new System.Text.StringBuilder();
+        foreach (var line in lines)
+        {
+            if (sb.Length > 0 && sb.Length + line.Length + 1 > MaxMessageLength)
+            {
+                ShowPrivate(player, sb.ToString());
+                sb.Clear();
+            }
+
+            if (sb.Length > 0) sb.Append('\n');
+            sb.Append(line);
+        }
+
+        if (sb.Length > 0)
+            ShowPrivate(player, sb.ToString());
+    }
 }
