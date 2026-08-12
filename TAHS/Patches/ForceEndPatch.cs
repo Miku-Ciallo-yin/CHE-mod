@@ -183,6 +183,11 @@ public static class ForceEndPatch
         private static bool HandleRename(string text)
         {
             var show = Modules.ChatHelper.Show;
+            if (Modules.CustomOptions.RenameEnabled.Value != 1)
+            {
+                show("[TAHS] /rn 已被房主关闭");
+                return false;
+            }
             if (AmongUsClient.Instance != null
                 && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
             {
@@ -211,6 +216,11 @@ public static class ForceEndPatch
         private static bool HandleColor(string text)
         {
             var show = Modules.ChatHelper.Show;
+            if (Modules.CustomOptions.ColorEnabled.Value != 1)
+            {
+                show("[TAHS] /cor 已被房主关闭");
+                return false;
+            }
             if (AmongUsClient.Instance != null
                 && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
             {

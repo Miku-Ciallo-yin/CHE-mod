@@ -93,6 +93,8 @@ public static class CustomOptions
     public static CustomOption ImpostorKnowEachOther { get; private set; } = null!;
     public static CustomOption TestMode { get; private set; } = null!;
     public static CustomOption ModeratorList { get; private set; } = null!;
+    public static CustomOption RenameEnabled { get; private set; } = null!;
+    public static CustomOption ColorEnabled { get; private set; } = null!;
     public static CustomOption ModAllowStart { get; private set; } = null!;
     public static CustomOption ModAllowS { get; private set; } = null!;
     public static CustomOption ModAllowEnd { get; private set; } = null!;
@@ -167,6 +169,10 @@ public static class CustomOptions
             ModConfig.TestMode.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         ModeratorList = CustomOption.Register(129, ModGroupId, "协管名单",
             ModConfig.ModeratorList.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        RenameEnabled = CustomOption.Register(165, ModGroupId, "开启 /rn 改名",
+            ModConfig.RenameEnabled.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        ColorEnabled = CustomOption.Register(166, ModGroupId, "开启 /cor 换色",
+            ModConfig.ColorEnabled.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         ModAllowStart = CustomOption.Register(130, ModGroupId, "协管权限：/start",
             ModConfig.ModAllowStart.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 129);
         ModAllowS = CustomOption.Register(131, ModGroupId, "协管权限：/s",

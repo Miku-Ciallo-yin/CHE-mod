@@ -90,6 +90,10 @@ public static class ModConfig
 
     /// <summary>模组设置：协管名单（默认关），名单文件 TAHS-DATA/Moderators.txt</summary>
     public static ConfigEntry<bool> ModeratorList { get; private set; } = null!;
+    /// <summary>模组设置：开启 /rn 改名（默认开）</summary>
+    public static ConfigEntry<bool> RenameEnabled { get; private set; } = null!;
+    /// <summary>模组设置：开启 /cor 换色（默认开）</summary>
+    public static ConfigEntry<bool> ColorEnabled { get; private set; } = null!;
     /// <summary>协管权限：/start（默认开）</summary>
     public static ConfigEntry<bool> ModAllowStart { get; private set; } = null!;
     /// <summary>协管权限：/s（默认开）</summary>
@@ -204,6 +208,8 @@ public static class ModConfig
 
         TestMode = config.Bind("模组设置 Mod", "测试模式 TestMode", false,
             "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");
+        RenameEnabled = config.Bind("模组设置 Mod", "开启rn改名 RenameEnabled", true, "关闭后 /rn 指令不可用");
+        ColorEnabled = config.Bind("模组设置 Mod", "开启cor换色 ColorEnabled", true, "关闭后 /cor 指令不可用");
 
         ModeratorList = config.Bind("模组设置 Mod", "协管名单 ModeratorList", false,
             "开启后协管名单（TAHS-DATA/Moderators.txt）内的玩家可使用 /start、/end 等房主指令");
