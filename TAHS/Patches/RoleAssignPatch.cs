@@ -6,8 +6,13 @@ using AmongUs.GameOptions;
 namespace TAHS.Patches;
 
 /// <summary>
-/// 对局状态监控：离开对局后重置职业分配。
-/// 分配时机见 <see cref="IntroAssignPatch"/>。
+/// 职业分配触发与对局结束重置，挂在 HudManager.Update 上检测。
+///
+/// 联机分配时机：等开场动画结束（本地玩家恢复可移动）再分配——
+/// 此时原版身份（RpcSetRole 船员/内鬼）早已下发完毕，随后发给带刀职业的
+/// RpcSetRole(Shapeshifter) 不会被原版分配覆盖，各玩家 PlayerControl 也已全部生成。
+/// 注意：不要依赖 IntroCutscene.OnDestroy——该对象在部分版本不会在对局开始时销毁，
+/// 回调可能直到对局结束才触发，导致分配整局不生效。
 /// </summary>
 [HarmonyPatch(typeof(HudManager), nameof(HudManager.Update))]
 public static class RoleAssignPatch
@@ -17,44 +22,24 @@ public static class RoleAssignPatch
         var client = AmongUsClient.Instance;
         if (client == null) return;
 
-        // 不在对局中：若已分配过则清空，等待下一局
-        if (client.GameState != InnerNetClient.GameStates.Started)
+        // 回到大厅或主菜单才清空分配，等待下一局。
+        // 注意不要用"!= Started"：客户端加载场景/播开场动画期间状态可能滞后，
+        // 此时收到主机分配 RPC 后若被误判清空，职业就再也回不来（表现为被原版职业顶掉）
+        if (client.GameState is InnerNetClient.GameStates.Joined or InnerNetClient.GameStates.NotJoined)
         {
             if (CustomRoleManager.Assigned)
                 CustomRoleManager.Reset();
             return;
         }
 
-        // 单机/练习模式没有开场动画，直接分配（联机走 IntroAssignPatch）
-        if (client.NetworkMode == NetworkModes.OnlineGame) return;
+        if (client.GameState != InnerNetClient.GameStates.Started) return;
         if (CustomRoleManager.Assigned) return;
-        if (PlayerControl.LocalPlayer == null) return;
 
-        var options = GameOptionsManager.Instance?.CurrentGameOptions;
-        if (options != null && options.GameMode != GameModes.Normal
-            && options.GameMode != GameModes.NormalFools) return;
+        var local = PlayerControl.LocalPlayer;
+        if (local == null) return;
 
-        CustomRoleManager.AssignRoles();
-    }
-}
-
-/// <summary>
-/// 职业分配触发（参考 TONE 的 IntroCutsceneDestroyPatch）：
-/// 等到开场动画结束（IntroCutscene.OnDestroy）再分配——此时原版身份
-/// （RpcSetRole 船员/内鬼）已下发完毕，随后发给带刀职业的 RpcSetRole(Shapeshifter)
-/// 不会被原版分配覆盖；各玩家 PlayerControl 也已全部生成。
-/// 之前在 GameState=Started 时立即分配，会与原版身份分配竞争，
-/// 导致无模组端（纯靠原版 RPC 驱动）拿不到职业按钮。
-/// </summary>
-[HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.OnDestroy))]
-public static class IntroAssignPatch
-{
-    public static void Postfix()
-    {
-        var client = AmongUsClient.Instance;
-        if (client == null || client.GameState != InnerNetClient.GameStates.Started) return;
-        if (CustomRoleManager.Assigned) return;
-        if (PlayerControl.LocalPlayer == null) return;
+        // 联机：开场动画期间玩家不可移动，等恢复可移动（动画结束）再分配
+        if (client.NetworkMode == NetworkModes.OnlineGame && !local.moveable) return;
 
         // 职业系统只在经典模式启用（躲猫猫等模式不分配职业）
         var options = GameOptionsManager.Instance?.CurrentGameOptions;
