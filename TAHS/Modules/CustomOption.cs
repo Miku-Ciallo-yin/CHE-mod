@@ -102,6 +102,7 @@ public static class CustomOptions
     public static CustomOption AutoStart { get; private set; } = null!;
     public static CustomOption AutoStartMinPlayers { get; private set; } = null!;
     public static CustomOption AutoStartCountdown { get; private set; } = null!;
+    public static CustomOption FirstKillProtection { get; private set; } = null!;
     public static CustomOption ModAllowStart { get; private set; } = null!;
     public static CustomOption ModAllowS { get; private set; } = null!;
     public static CustomOption ModAllowEnd { get; private set; } = null!;
@@ -203,6 +204,8 @@ public static class CustomOptions
             ModConfig.AutoStartMinPlayers.Value, 2, 15, 1, 1f, parentId: 174);
         AutoStartCountdown = CustomOption.Register(176, ModGroupId, "自动开始倒计时(秒)",
             ModConfig.AutoStartCountdown.Value, 0, 60, 1, 1f, parentId: 174);
+        FirstKillProtection = CustomOption.Register(177, ModGroupId, "首刀保护",
+            ModConfig.FirstKillProtection.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         CheatAction = CustomOption.Register(133, ModGroupId, "作弊处理方式",
             ModConfig.CheatAction.Value, 0, 3, 1, 1f,
             formatNames: new[] { "警告", "踢出", "封禁", "加入黑名单" });

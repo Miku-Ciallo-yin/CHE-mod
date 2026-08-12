@@ -23,6 +23,14 @@ public static class KillRulesPatch
     {
         if (__instance == null || target == null || __instance == target) return true;
 
+        // 首刀保护：上一局第一个死亡的玩家不能被首刀（本局有人被击杀后失效）
+        if (Modules.FirstKillProtection.IsProtected(target))
+        {
+            if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                Modules.ChatHelper.ShowPrivate(__instance, "[TAHS] 首刀保护：该玩家上一局第一个死亡，本局不能被首刀");
+            return false;
+        }
+
         // 法军（目标侧）：被内鬼击杀时不死亡，缴械成为叛徒（已缴械则正常死亡）
         if (CustomRoleManager.GetRole(target) is FrenchArmy frenchArmy
             && !frenchArmy.Disarmed

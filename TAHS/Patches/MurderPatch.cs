@@ -15,6 +15,7 @@ public static class MurderPatch
         if (!resultFlags.HasFlag(MurderResultFlags.Succeeded)) return;
 
         Modules.DeathTracker.Record(__instance, target);
+        Modules.FirstKillProtection.RecordDeath(target);
         Modules.GameArchive.RecordKill(KillText(__instance, target));
         ConverterPatch.ApostleTags.TagForApostles(target); // 使徒私有标签（含无模组端使徒）
         CustomRoleManager.GetRole(__instance)?.OnMurder(target);

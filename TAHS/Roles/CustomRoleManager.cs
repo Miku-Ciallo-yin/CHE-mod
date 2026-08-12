@@ -213,6 +213,7 @@ public static class CustomRoleManager
         IReadOnlyList<(byte PlayerId, byte AddonId)> addonAssignments)
     {
         Reset();
+        FirstKillProtection.OnNewGame(); // 首刀保护：结转上一局首死者
 
         foreach (var (playerId, roleId) in assignments)
         {
