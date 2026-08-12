@@ -43,6 +43,7 @@ public static class LobbyMovePatch
 
         TickNoClip(local);
         TickZoom();
+        TickPendingTp();
     }
 
     /// <summary>Ctrl 穿墙：按住时禁用本地碰撞体，松开/离开大厅恢复</summary>
@@ -163,7 +164,7 @@ public static class LobbyMovePatch
         if (tpOut)
         {
             _hostTpReturn[player.PlayerId] = player.transform.position;
-            player.NetTransform.RpcSnapTo((Vector2)player.transform.position + Vector2.down * 8f);
+            HostSnapWithRetry(player, (Vector2)player.transform.position + Vector2.down * 8f);
             show("[TAHS] 已传送到飞船外面（/tpin 返回）");
         }
         else
@@ -172,8 +173,50 @@ public static class LobbyMovePatch
                 ? saved
                 : new Vector2(0f, 0.5f);
             _hostTpReturn.Remove(player.PlayerId);
-            player.NetTransform.RpcSnapTo(pos);
+            HostSnapWithRetry(player, pos);
             show("[TAHS] 已返回飞船内");
+        }
+    }
+
+    /// <summary>主机待重发的传送（PlayerId → 目标位置/过期时间/下次重发时间）</summary>
+    private static readonly Dictionary<byte, (Vector2 Pos, float Expire, float Next)> _pendingTp = new();
+
+    /// <summary>
+    /// 主机传送其他玩家并短暂连续重发：
+    /// 无模组端自己的 NetTransform 序列号领先主机持有的副本时，单次 RpcSnapTo
+    /// 会被对方客户端当作过期包拒收（表现为对方原地不动、一移动就闪回）。
+    /// 每 0.2 秒重发、持续 2 秒，等其序列号静止后传送即生效。
+    /// </summary>
+    private static void HostSnapWithRetry(PlayerControl player, Vector2 pos)
+    {
+        player.NetTransform.RpcSnapTo(pos);
+        _pendingTp[player.PlayerId] = (pos, Time.time + 2f, Time.time + 0.2f);
+    }
+
+    /// <summary>每帧驱动重发（仅主机）</summary>
+    private static void TickPendingTp()
+    {
+        if (_pendingTp.Count == 0) return;
+        if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost)
+        {
+            _pendingTp.Clear();
+            return;
+        }
+
+        var now = Time.time;
+        foreach (var (playerId, pending) in _pendingTp.ToArray())
+        {
+            if (now >= pending.Expire)
+            {
+                _pendingTp.Remove(playerId);
+                continue;
+            }
+            if (now < pending.Next) continue;
+
+            _pendingTp[playerId] = (pending.Pos, pending.Expire, now + 0.2f);
+            var player = PlayerControl.AllPlayerControls.ToArray()
+                .FirstOrDefault(p => p != null && p.PlayerId == playerId);
+            player?.NetTransform.RpcSnapTo(pending.Pos);
         }
     }
 }
