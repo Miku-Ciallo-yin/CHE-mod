@@ -565,21 +565,44 @@ public static class ForceEndPatch
             Modules.ChatHelper.ShowMany(BuildEnabledRolesLines());
         }
 
-        /// <summary>/r 内容（本地显示与主机代收无模组端指令时私信共用）</summary>
+        /// <summary>/r 内容（本地显示与主机代收无模组端指令时私信共用）：按船员/内鬼/中立分节</summary>
         public static List<string> BuildEnabledRolesLines()
         {
             var lines = new List<string> { "<color=#4FC3F7>===== 已开启职业 =====</color>" };
-            foreach (var (id, name, faction) in Roles.CustomRoleManager.GetRegisteredRoles())
-            {
-                if (Modules.CustomOptions.GetRoleChance(id) <= 0) continue;
-                lines.Add($"{name}（{faction}）");
-            }
+
+            // 三个阵营分节（有明显的间隔标识，空节不显示）
+            AppendRoleSection(lines, Roles.Faction.Crewmate, "#66E6FF", "船员职业");
+            AppendRoleSection(lines, Roles.Faction.Impostor, "#FF5555", "内鬼职业");
+            AppendRoleSection(lines, Roles.Faction.Neutral, "#999999", "中立职业");
+
+            var addons = new List<string>();
             foreach (var (id, name, _) in Roles.CustomRoleManager.GetRegisteredAddons())
             {
                 if (Modules.CustomOptions.GetRoleChance(id) <= 0) continue;
-                lines.Add($"{name}（附加）");
+                addons.Add(name);
+            }
+            if (addons.Count > 0)
+            {
+                lines.Add("<color=#FFB84D>—— 附加职业 ——</color>");
+                lines.AddRange(addons);
             }
             return lines;
+        }
+
+        /// <summary>追加一个阵营分节（无启用职业时不显示该节）</summary>
+        private static void AppendRoleSection(List<string> lines, Roles.Faction faction, string color, string title)
+        {
+            var names = new List<string>();
+            foreach (var (id, name, f) in Roles.CustomRoleManager.GetRegisteredRoles())
+            {
+                if (f != faction) continue;
+                if (Modules.CustomOptions.GetRoleChance(id) <= 0) continue;
+                names.Add(name);
+            }
+            if (names.Count == 0) return;
+
+            lines.Add($"<color={color}>—— {title} ——</color>");
+            lines.AddRange(names);
         }
 
         /// <summary>/d：死亡后查看击杀自己的玩家（所有人可用）</summary>
