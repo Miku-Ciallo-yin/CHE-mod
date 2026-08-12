@@ -29,6 +29,7 @@ public static class CustomRoleManager
         (12, () => new Converter()), // 船员阵营：转换者
         (13, () => new Balancer()),  // 船员阵营：平衡主义者
         (14, () => new Miner()),   // 内鬼阵营：埋雷兵
+        (16, () => new FrenchArmy()), // 船员阵营：法军
     };
 
     /// <summary>
@@ -166,6 +167,9 @@ public static class CustomRoleManager
                     // 叛徒不分配给内鬼阵营（跟随内鬼胜利对内鬼无意义）
                     .Where(p => addonId != Traitor.AddonId || !IsImpostorFactionFor(
                         assignments.FirstOrDefault(a => a.PlayerId == p.PlayerId).RoleId, p))
+                    // 叛徒不分配给法军（法军自带被内鬼击杀后缴械成叛徒的机制）
+                    .Where(p => addonId != Traitor.AddonId
+                        || assignments.FirstOrDefault(a => a.PlayerId == p.PlayerId).RoleId != FrenchArmy.RoleId)
                     .ToList();
                 if (available.Count == 0) break;
 

@@ -8,6 +8,7 @@ namespace TAHS.Patches;
 
 /// <summary>
 /// 击杀规则统一拦截（原版击杀按钮路径）：
+/// - 法军（目标侧）：被内鬼出刀时不死亡，缴械成为叛徒，出刀内鬼重置击杀 CD
 /// - 佃农：未解锁或冷却中不可杀
 /// - 懦弱者：转变后（失去击杀能力）或冷却中不可杀
 /// - 美警：击杀船员走 ExecuteCrewKill（船员按配置死亡 + 美警自杀抵命）
@@ -21,6 +22,15 @@ public static class KillRulesPatch
     public static bool Prefix(PlayerControl __instance, PlayerControl target)
     {
         if (__instance == null || target == null || __instance == target) return true;
+
+        // 法军（目标侧）：被内鬼击杀时不死亡，缴械成为叛徒（已缴械则正常死亡）
+        if (CustomRoleManager.GetRole(target) is FrenchArmy frenchArmy
+            && !frenchArmy.Disarmed
+            && CustomRoleManager.GetFaction(__instance) == Faction.Impostor)
+        {
+            frenchArmy.OnAttackedByImpostor(__instance);
+            return false;
+        }
 
         switch (CustomRoleManager.GetRole(__instance))
         {
@@ -44,6 +54,9 @@ public static class KillRulesPatch
 
             case MoonRunner:
                 return false;
+
+            case FrenchArmy army:
+                return !army.Disarmed && army.KillTimer <= 0f;
         }
         return true;
     }
