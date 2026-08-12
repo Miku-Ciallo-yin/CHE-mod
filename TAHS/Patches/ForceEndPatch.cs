@@ -129,6 +129,10 @@ public static class ForceEndPatch
                 return HandleRename(text);
             if (text.StartsWith("/cor", System.StringComparison.OrdinalIgnoreCase))
                 return HandleColor(text);
+            if (text.Equals("/tpout", System.StringComparison.OrdinalIgnoreCase))
+                return HandleTpOut();
+            if (text.Equals("/tpin", System.StringComparison.OrdinalIgnoreCase))
+                return HandleTpIn();
 
             // 其余以 / 开头的输入一律隐藏（不广播给其他玩家，防指令泄露）
             if (text.StartsWith('/'))
@@ -246,6 +250,57 @@ public static class ForceEndPatch
 
             local.RpcSetColor((byte)colorId);
             show($"[TAHS] 已更换颜色：{parts[1]}（ID {colorId}）");
+            return false;
+        }
+
+        /// <summary>/tpout 前的飞船内位置（/tpin 返回用）</summary>
+        private static Vector2? _tpReturnPos;
+
+        /// <summary>/tpout：传送到飞船外面（参考 TONE，等待大厅或对局死亡后可用）</summary>
+        private static bool HandleTpOut()
+        {
+            var show = Modules.ChatHelper.Show;
+            if (Modules.CustomOptions.TpCommands.Value != 1)
+            {
+                show("[TAHS] /tpout 已被房主关闭");
+                return false;
+            }
+
+            var local = PlayerControl.LocalPlayer;
+            if (local == null) return false;
+            if (!LobbyMovePatch.InLobby && !(local.Data != null && local.Data.IsDead))
+            {
+                show("[TAHS] /tpout 仅在等待大厅或对局死亡后可用");
+                return false;
+            }
+
+            _tpReturnPos = local.transform.position;
+            local.NetTransform.SnapTo((Vector2)local.transform.position + Vector2.down * 8f);
+            show("[TAHS] 已传送到飞船外面（/tpin 返回）");
+            return false;
+        }
+
+        /// <summary>/tpin：传送回飞船内（返回 /tpout 前的位置，未记录则回出生点）</summary>
+        private static bool HandleTpIn()
+        {
+            var show = Modules.ChatHelper.Show;
+            if (Modules.CustomOptions.TpCommands.Value != 1)
+            {
+                show("[TAHS] /tpin 已被房主关闭");
+                return false;
+            }
+
+            var local = PlayerControl.LocalPlayer;
+            if (local == null) return false;
+            if (!LobbyMovePatch.InLobby && !(local.Data != null && local.Data.IsDead))
+            {
+                show("[TAHS] /tpin 仅在等待大厅或对局死亡后可用");
+                return false;
+            }
+
+            local.NetTransform.SnapTo(_tpReturnPos ?? new Vector2(0f, 0.5f));
+            _tpReturnPos = null;
+            show("[TAHS] 已返回飞船内");
             return false;
         }
 
@@ -600,6 +655,8 @@ public static class ForceEndPatch
                 "/kill <玩家ID> — 直接击杀对应玩家（仅房主/对局中）",
                 "/rn <名字> — 修改自己的名字（仅大厅）",
                 "/cor <颜色> — 修改自己的颜色（仅大厅，中英文色名或0~17）",
+                "/tpout — 传送到飞船外面（大厅/死亡后）",
+                "/tpin — 传送回飞船内（大厅/死亡后）",
                 "/m — 查看自己本局职业介绍",
                 "/r — 查看本局已开启的全部职业",
                 "/d — 死亡后查看击杀自己的玩家",

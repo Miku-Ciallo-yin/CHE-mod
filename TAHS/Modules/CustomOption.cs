@@ -95,6 +95,8 @@ public static class CustomOptions
     public static CustomOption ModeratorList { get; private set; } = null!;
     public static CustomOption RenameEnabled { get; private set; } = null!;
     public static CustomOption ColorEnabled { get; private set; } = null!;
+    public static CustomOption CtrlNoClip { get; private set; } = null!;
+    public static CustomOption TpCommands { get; private set; } = null!;
     public static CustomOption ModAllowStart { get; private set; } = null!;
     public static CustomOption ModAllowS { get; private set; } = null!;
     public static CustomOption ModAllowEnd { get; private set; } = null!;
@@ -176,6 +178,10 @@ public static class CustomOptions
             ModConfig.RenameEnabled.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         ColorEnabled = CustomOption.Register(166, ModGroupId, "开启 /cor 换色",
             ModConfig.ColorEnabled.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        CtrlNoClip = CustomOption.Register(170, ModGroupId, "开启 Ctrl 穿墙",
+            ModConfig.CtrlNoClip.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        TpCommands = CustomOption.Register(171, ModGroupId, "开启 /tpout /tpin",
+            ModConfig.TpCommands.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         ModAllowStart = CustomOption.Register(130, ModGroupId, "协管权限：/start",
             ModConfig.ModAllowStart.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 129);
         ModAllowS = CustomOption.Register(131, ModGroupId, "协管权限：/s",

@@ -41,6 +41,11 @@ public static class ModConfig
     /// <summary>叛徒：是否与其他叛徒互认（默认关）</summary>
     public static ConfigEntry<bool> TraitorKnowEachOther { get; private set; } = null!;
 
+    /// <summary>模组设置：等待大厅按住 Ctrl 穿墙（默认开）</summary>
+    public static ConfigEntry<bool> CtrlNoClip { get; private set; } = null!;
+    /// <summary>模组设置：开启 /tpout 与 /tpin 指令（默认开）</summary>
+    public static ConfigEntry<bool> TpCommands { get; private set; } = null!;
+
     /// <summary>猜测模式：总开关</summary>
     public static ConfigEntry<bool> GuessMode { get; private set; } = null!;
     /// <summary>猜测模式：船员可猜测</summary>
@@ -224,6 +229,8 @@ public static class ModConfig
             "开启后游戏不会正常结束，需用 /end 或 ALT+F4 手动强制结束");
         RenameEnabled = config.Bind("模组设置 Mod", "开启rn改名 RenameEnabled", true, "关闭后 /rn 指令不可用");
         ColorEnabled = config.Bind("模组设置 Mod", "开启cor换色 ColorEnabled", true, "关闭后 /cor 指令不可用");
+        CtrlNoClip = config.Bind("模组设置 Mod", "开启Ctrl穿墙 CtrlNoClip", true, "等待大厅按住 Ctrl 可穿墙到飞船外面（模组端）");
+        TpCommands = config.Bind("模组设置 Mod", "开启tp指令 TpCommands", true, "关闭后 /tpout 与 /tpin 指令不可用");
 
         ModeratorList = config.Bind("模组设置 Mod", "协管名单 ModeratorList", false,
             "开启后协管名单（TAHS-DATA/Moderators.txt）内的玩家可使用 /start、/end 等房主指令");
