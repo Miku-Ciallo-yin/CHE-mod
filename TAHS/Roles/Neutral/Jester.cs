@@ -16,6 +16,9 @@ public class Jester : RoleBase
     /// <summary>被投票放逐：判定小丑单独获胜并结束游戏</summary>
     public override void OnExile()
     {
+        // 测试模式：不触发小丑胜利结束游戏
+        if (TAHS.Modules.CustomOptions.TestMode.Value == 1) return;
+
         // 叛徒附加：原本胜利条件失效（跟随内鬼），被投出不触发小丑胜利
         if (Player != null && CustomRoleManager.HasAddon(Player, TAHS.Roles.Addons.Traitor.AddonId)) return;
 

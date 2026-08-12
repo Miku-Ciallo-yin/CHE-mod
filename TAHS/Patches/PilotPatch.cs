@@ -39,6 +39,10 @@ public static class PilotPatch
                     if (host && targetPlayer != null) runner.UseSkill(targetPlayer); // 菜单选中的目标即增益对象
                     return false;
             }
+
+            // 其余假内鬼（带刀的非内鬼阵营职业）不允许原版变形
+            if (CustomRoleManager.FakeImpostors.Contains(__instance.PlayerId))
+                return false;
             return true;
         }
     }

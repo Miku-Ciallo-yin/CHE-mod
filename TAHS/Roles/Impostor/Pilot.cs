@@ -22,6 +22,9 @@ public class Pilot : RoleBase
     public override Color Color => new(0.9f, 0.5f, 0.1f); // 沙橙
     public override string Description => "塔台，这是最后一程。";
 
+    /// <summary>技能挂原版变形按钮</summary>
+    public override bool UsesShapeshiftButton => true;
+
     /// <summary>技能冷却剩余</summary>
     public float SkillTimer { get; private set; }
 
@@ -30,8 +33,10 @@ public class Pilot : RoleBase
 
     private Vector2 _dashDir;
     private float _snapTimer;
-    private Vector2 _lastPos;
-    private bool _hasLastPos;
+
+    /// <summary>最近一段位置轨迹（滑动窗口，用于求冲刺方向，比单帧差分抗网络抖动）</summary>
+    private readonly List<(float Time, Vector2 Pos)> _track = new();
+    private const float TrackWindow = 0.35f;
 
     public override void OnAssign(PlayerControl player)
     {
@@ -52,19 +57,29 @@ public class Pilot : RoleBase
         var dt = Time.fixedDeltaTime;
         if (SkillTimer > 0f) SkillTimer -= dt;
 
-        // 记录移动方向（用于冲刺方向 = 使用技能后移动的方向）
-        var pos = Player.GetTruePosition();
-        if (_hasLastPos && !Dashing)
+        // 记录滑动窗口轨迹（用于冲刺方向 = 使用技能时最近的移动方向）
+        if (!Dashing)
         {
-            var delta = pos - _lastPos;
-            if (delta.sqrMagnitude > 0.0004f)
-                _dashDir = delta.normalized;
+            _track.Add((Time.time, Player.GetTruePosition()));
+            var cutoff = Time.time - TrackWindow;
+            while (_track.Count > 0 && _track[0].Time < cutoff)
+                _track.RemoveAt(0);
         }
-        _lastPos = pos;
-        _hasLastPos = true;
 
         if (Dashing)
             DashTick(dt);
+    }
+
+    /// <summary>窗口起止位移方向；位移过小/异常时回退到向右</summary>
+    private Vector2 DashDirection()
+    {
+        if (_track.Count >= 2)
+        {
+            var delta = _track[^1].Pos - _track[0].Pos;
+            if (!float.IsNaN(delta.x) && !float.IsNaN(delta.y) && delta.sqrMagnitude > 0.02f)
+                return delta.normalized;
+        }
+        return Vector2.right;
     }
 
     /// <summary>主机：Shift 被劫持时尝试释放技能</summary>
@@ -72,8 +87,7 @@ public class Pilot : RoleBase
     {
         if (SkillTimer > 0f || Dashing || Player == null || Player.Data.IsDead) return;
 
-        if (_dashDir.sqrMagnitude < 0.01f)
-            _dashDir = Vector2.right; // 无移动输入时默认向右
+        _dashDir = DashDirection();
 
         Dashing = true;
         SkillTimer = CustomOptions.PilotSkillCd.ScaledValue;

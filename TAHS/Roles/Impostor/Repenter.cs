@@ -20,6 +20,9 @@ public class Repenter : RoleBase
     public override Color Color => new(0.5f, 0.2f, 0.7f); // 暗紫
     public override string Description => "放下屠刀，以死赎罪。";
 
+    /// <summary>转变技能挂原版变形按钮</summary>
+    public override bool UsesShapeshiftButton => true;
+
     private Faction _faction = Faction.Impostor;
 
     /// <summary>已击杀人数</summary>

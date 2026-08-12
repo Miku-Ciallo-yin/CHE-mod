@@ -120,6 +120,8 @@ public static class CustomRoleManager
     /// </summary>
     public static void AssignRoles()
     {
+        PlayerIdManager.EnsureAllAssigned(); // 兜底：进房钩子未触发时也能拿到 ID
+
         var players = PlayerControl.AllPlayerControls.ToArray()
             .Where(p => p != null && p.Data != null)
             .ToList();
@@ -227,6 +229,19 @@ public static class CustomRoleManager
             role.OnAssign(player);
             PlayerRoles[playerId] = role;
 
+            // 身份规范化（主机）：内鬼阵营或带刀/技能职业（FakeImpostors）保持变形者，
+            // 其余模组职业压回普通船员——防止原版特殊职业（科学家/工程师等）或错误发放的
+            // 内鬼身份给模组职业残留多余 UI 与技能
+            if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+            {
+                var impostorFamily = role.Faction == Faction.Impostor || FakeImpostors.Contains(playerId);
+                var want = impostorFamily
+                    ? AmongUs.GameOptions.RoleTypes.Shapeshifter
+                    : AmongUs.GameOptions.RoleTypes.Crewmate;
+                if (player.Data.Role == null || player.Data.Role.Role != want)
+                    player.RpcSetRole(want);
+            }
+
             TAHSPlugin.Log.LogInfo($"[TAHS] {player.Data.PlayerName} -> {role.Name} ({role.Faction})");
             GameArchive.RecordAssignment($"{player.Data.PlayerName} → {role.Name}");
         }
@@ -252,6 +267,24 @@ public static class CustomRoleManager
         Assigned = true;
         foreach (var role in PlayerRoles.Values)
             role.OnGameStart();
+
+        // 无模组端的职业展示（主机）：私信职业介绍 + 名字下方仅自己可见的职业标签
+        if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+        {
+            foreach (var (playerId, _) in assignments)
+            {
+                var player = PlayerControl.AllPlayerControls.ToArray()
+                    .FirstOrDefault(p => p != null && p.PlayerId == playerId);
+                if (player == null || player.Data == null) continue;
+                if (PlayerIdManager.IsModdedClient(player)) continue; // 模组端有自己的职业展示
+
+                var role = GetRole(player);
+                if (role == null) continue;
+
+                ChatHelper.ShowPrivateMany(player, Patches.ForceEndPatch.ChatCommandPatch.BuildRoleLines(player));
+                PrivateTag.SetTag(player.OwnerId, player, $"<color=#4FC3F7>你的职业：{role.Name}</color>");
+            }
+        }
     }
 
     /// <summary>已注册职业（ID、名称、阵营），供选项系统生成设置项和分类列表</summary>

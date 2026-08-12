@@ -27,6 +27,7 @@ public static class PlayerIdPatch
     [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Start)), HarmonyPostfix]
     public static void LobbyStartPostfix()
     {
+        PlayerIdManager.EnsureAllAssigned(); // 大厅内 /id 即可用（含房主自身兜底）
         RpcSync.SendHandshake();
     }
 }

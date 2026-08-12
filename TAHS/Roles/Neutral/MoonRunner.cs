@@ -60,6 +60,9 @@ public class MoonRunner : RoleBase
     public override Color Color => new(0.55f, 0.9f, 0.9f); // 月白青
     public override string Description => "赐人神速，亦赐人杀机。";
 
+    /// <summary>技能挂原版变形按钮</summary>
+    public override bool UsesShapeshiftButton => true;
+
     /// <summary>清理静态状态（对局重置时由 CustomRoleManager 调用）</summary>
     public static void ResetStatics()
     {

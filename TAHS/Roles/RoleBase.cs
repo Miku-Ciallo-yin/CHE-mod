@@ -23,6 +23,9 @@ public abstract class RoleBase
     /// <summary>敌对中立（如带刀中立）。猜测模式的"友好中立/敌对中立"开关据此区分，默认为友好</summary>
     public virtual bool IsHostileNeutral => false;
 
+    /// <summary>是否使用原版变形按钮（Shift）释放技能——此类职业保留 Shift 按钮显示，其余假内鬼隐藏</summary>
+    public virtual bool UsesShapeshiftButton => false;
+
     /// <summary>职业主题色</summary>
     public abstract Color Color { get; }
 

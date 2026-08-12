@@ -55,6 +55,33 @@ public static class PlayerIdManager
         return id;
     }
 
+    /// <summary>
+    /// 主机：给所有在场客户端兜底分配 ID（含房主自身）并广播。
+    /// 进房钩子未触发/时序异常时的自愈路径（大厅打开时与开局分配时调用）。
+    /// </summary>
+    public static void EnsureAllAssigned()
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || !client.AmHost) return;
+
+        var changed = false;
+        if (!_ids.ContainsKey(client.ClientId))
+        {
+            _ids[client.ClientId] = 0;
+            changed = true;
+        }
+        for (var i = 0; i < client.allClients.Count; i++)
+        {
+            var c = client.allClients[i];
+            if (c == null || _ids.ContainsKey(c.Id)) continue;
+            _ids[c.Id] = NextId();
+            changed = true;
+            TAHSPlugin.Log.LogInfo($"[TAHS] 玩家 {c.Id} 兜底分配 ID {_ids[c.Id]}");
+        }
+
+        if (changed) RpcSync.BroadcastPlayerIds(_ids);
+    }
+
     /// <summary>客户端：应用主机广播的 ID 映射</summary>
     public static void Set(int clientId, int id) => _ids[clientId] = id;
 

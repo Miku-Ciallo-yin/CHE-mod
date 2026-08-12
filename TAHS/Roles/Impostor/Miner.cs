@@ -33,6 +33,9 @@ public class Miner : RoleBase
     public override Color Color => new(0.55f, 0.35f, 0.15f); // 土黄
     public override string Description => "小心脚下。Shift 放雷，过会儿它就看不见了。";
 
+    /// <summary>技能挂原版变形按钮</summary>
+    public override bool UsesShapeshiftButton => true;
+
     public override void OnAssign(PlayerControl player)
     {
         base.OnAssign(player);

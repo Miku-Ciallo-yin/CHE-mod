@@ -22,6 +22,10 @@ public static class RoleUpdatePatch
 
         if (client.AmHost)
         {
+            // 会议/放逐动画期间暂停职业逻辑：
+            // 防止贴近判定在会议桌触发（美警误杀、内阁限时自杀、佃农误抢等）
+            // 会议中杀人会导致会议状态损坏（会议结束黑屏/卡死）
+            if (MeetingHud.Instance != null || ExileController.Instance != null) return;
             role.OnUpdate();
             return;
         }
