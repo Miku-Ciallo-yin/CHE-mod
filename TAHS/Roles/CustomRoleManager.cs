@@ -37,6 +37,7 @@ public static class CustomRoleManager
     private static readonly (byte Id, Func<AddonBase> Factory)[] AddonRegistry =
     {
         (Guesser.AddonId, () => new Guesser()), // 附加：赌怪
+        (Traitor.AddonId, () => new Traitor()), // 附加：叛徒
     };
 
     /// <summary>PlayerId -> 职业实例</summary>
@@ -161,6 +162,9 @@ public static class CustomRoleManager
                     .Where(p => addonAssignments.Count(a => a.PlayerId == p.PlayerId) < maxAddons)
                     // 赌怪按阵营资格过滤（用待分配的职业 ID 判定，此时职业尚未应用）
                     .Where(p => addonId != Guesser.AddonId || GuesserEligibleFor(
+                        assignments.FirstOrDefault(a => a.PlayerId == p.PlayerId).RoleId, p))
+                    // 叛徒不分配给内鬼阵营（跟随内鬼胜利对内鬼无意义）
+                    .Where(p => addonId != Traitor.AddonId || !IsImpostorFactionFor(
                         assignments.FirstOrDefault(a => a.PlayerId == p.PlayerId).RoleId, p))
                     .ToList();
                 if (available.Count == 0) break;
@@ -373,6 +377,14 @@ public static class CustomRoleManager
                 : CustomOptions.GuesserNoKnifeNeutral.Value == 1,
             _ => false,
         };
+    }
+
+    /// <summary>按待分配职业 ID 判定是否内鬼阵营（分配阶段职业未应用，供叛徒过滤）</summary>
+    private static bool IsImpostorFactionFor(byte roleId, PlayerControl player)
+    {
+        var sample = RoleRegistry.FirstOrDefault(r => r.Id == roleId).Factory?.Invoke();
+        if (sample != null) return sample.Faction == Faction.Impostor;
+        return player.Data != null && player.Data.Role != null && player.Data.Role.IsImpostor;
     }
 
     /// <summary>获取玩家职业，无职业返回 null</summary>

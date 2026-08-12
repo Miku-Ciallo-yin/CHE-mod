@@ -34,6 +34,13 @@ public static class ModConfig
     /// <summary>赌怪：无刀中立可成为赌怪（默认开）</summary>
     public static ConfigEntry<bool> GuesserNoKnifeNeutral { get; private set; } = null!;
 
+    /// <summary>叛徒：是否记入内鬼阵营人数（默认开）</summary>
+    public static ConfigEntry<bool> TraitorCountAsImpostor { get; private set; } = null!;
+    /// <summary>叛徒：是否与内鬼互认（默认关）</summary>
+    public static ConfigEntry<bool> TraitorKnowImpostors { get; private set; } = null!;
+    /// <summary>叛徒：是否与其他叛徒互认（默认关）</summary>
+    public static ConfigEntry<bool> TraitorKnowEachOther { get; private set; } = null!;
+
     /// <summary>猜测模式：总开关</summary>
     public static ConfigEntry<bool> GuessMode { get; private set; } = null!;
     /// <summary>猜测模式：船员可猜测</summary>
@@ -162,6 +169,13 @@ public static class ModConfig
         GuesserImpostor = config.Bind("赌怪 Guesser", "内鬼可成为赌怪 Impostor", false, "内鬼阵营可被分配赌怪");
         GuesserKnifeNeutral = config.Bind("赌怪 Guesser", "带刀中立可成为赌怪 KnifeNeutral", false, "敌对（带刀）中立可被分配赌怪");
         GuesserNoKnifeNeutral = config.Bind("赌怪 Guesser", "无刀中立可成为赌怪 NoKnifeNeutral", true, "友好（无刀）中立可被分配赌怪");
+
+        TraitorCountAsImpostor = config.Bind("叛徒 Traitor", "记入内鬼阵营人数 CountAsImpostor", true,
+            "开启后叛徒计入内鬼人数：叛徒存活时内鬼不会被全灭判负，人数占优时内鬼获胜");
+        TraitorKnowImpostors = config.Bind("叛徒 Traitor", "与内鬼互认 KnowImpostors", false,
+            "开启后叛徒与内鬼互相看到对方红色名字");
+        TraitorKnowEachOther = config.Bind("叛徒 Traitor", "与其他叛徒互认 KnowEachOther", false,
+            "开启后叛徒之间互相看到对方红色名字");
 
         GuessMode = config.Bind("猜测模式 GuessMode", "开启 Enable", false,
             "开启后按阵营勾选决定谁可以猜测（无需赌怪附加职业）");

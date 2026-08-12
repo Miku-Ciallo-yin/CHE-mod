@@ -153,6 +153,9 @@ public static class CustomOptions
     public static CustomOption GuesserImpostor { get; private set; } = null!;
     public static CustomOption GuesserKnifeNeutral { get; private set; } = null!;
     public static CustomOption GuesserNoKnifeNeutral { get; private set; } = null!;
+    public static CustomOption TraitorCountAsImpostor { get; private set; } = null!;
+    public static CustomOption TraitorKnowImpostors { get; private set; } = null!;
+    public static CustomOption TraitorKnowEachOther { get; private set; } = null!;
     public static CustomOption FarmerStealChance { get; private set; } = null!;
     public static CustomOption FarmerStealsForKill { get; private set; } = null!;
     public static CustomOption FarmerKillCooldown { get; private set; } = null!;
@@ -328,6 +331,14 @@ public static class CustomOptions
             ModConfig.GuesserKnifeNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: Guesser.AddonId);
         GuesserNoKnifeNeutral = CustomOption.Register(156, Guesser.AddonId, "无刀中立可成为赌怪",
             ModConfig.GuesserNoKnifeNeutral.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: Guesser.AddonId);
+
+        // 叛徒参数（RoleId 15 = Traitor.AddonId，挂在其生成概率下作下级选项）
+        TraitorCountAsImpostor = CustomOption.Register(167, Traitor.AddonId, "记入内鬼阵营人数",
+            ModConfig.TraitorCountAsImpostor.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: Traitor.AddonId);
+        TraitorKnowImpostors = CustomOption.Register(168, Traitor.AddonId, "与内鬼互认",
+            ModConfig.TraitorKnowImpostors.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: Traitor.AddonId);
+        TraitorKnowEachOther = CustomOption.Register(169, Traitor.AddonId, "与其他叛徒互认",
+            ModConfig.TraitorKnowEachOther.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: Traitor.AddonId);
 
         // 佃农职业参数（ID 从 101 起；RoleId 2 对应 RoleRegistry 中的 Farmer）
         const byte farmerRoleId = 2;

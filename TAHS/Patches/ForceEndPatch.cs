@@ -492,7 +492,11 @@ public static class ForceEndPatch
 
             // 附加职业
             foreach (var addon in Roles.CustomRoleManager.GetAddons(local))
+            {
                 lines.Add($"附加：{addon.Name} / {addon.NameEn}");
+                if (!string.IsNullOrEmpty(addon.Description))
+                    lines.Add(addon.Description);
+            }
 
             Modules.ChatHelper.ShowMany(lines);
         }
