@@ -46,6 +46,17 @@ public static class ModConfig
     /// <summary>模组设置：开启 /tpout 与 /tpin 指令（默认开）</summary>
     public static ConfigEntry<bool> TpCommands { get; private set; } = null!;
 
+    /// <summary>模组设置：自动返回等待大厅（默认关）</summary>
+    public static ConfigEntry<bool> AutoReturnLobby { get; private set; } = null!;
+    /// <summary>模组设置：自动返回等待时间（秒，默认 10）</summary>
+    public static ConfigEntry<int> AutoReturnDelay { get; private set; } = null!;
+    /// <summary>模组设置：自动开始游戏（默认关）</summary>
+    public static ConfigEntry<bool> AutoStart { get; private set; } = null!;
+    /// <summary>模组设置：自动开始最少人数（默认 10）</summary>
+    public static ConfigEntry<int> AutoStartMinPlayers { get; private set; } = null!;
+    /// <summary>模组设置：自动开始倒计时（秒，默认 10）</summary>
+    public static ConfigEntry<int> AutoStartCountdown { get; private set; } = null!;
+
     /// <summary>猜测模式：总开关</summary>
     public static ConfigEntry<bool> GuessMode { get; private set; } = null!;
     /// <summary>猜测模式：船员可猜测</summary>
@@ -231,6 +242,11 @@ public static class ModConfig
         ColorEnabled = config.Bind("模组设置 Mod", "开启cor换色 ColorEnabled", true, "关闭后 /cor 指令不可用");
         CtrlNoClip = config.Bind("模组设置 Mod", "开启Ctrl穿墙 CtrlNoClip", true, "等待大厅按住 Ctrl 可穿墙到飞船外面（模组端）");
         TpCommands = config.Bind("模组设置 Mod", "开启tp指令 TpCommands", true, "关闭后 /tpout 与 /tpin 指令不可用");
+        AutoReturnLobby = config.Bind("模组设置 Mod", "自动返回大厅 AutoReturnLobby", false, "对局结束后自动返回等待大厅（仅主机）");
+        AutoReturnDelay = config.Bind("模组设置 Mod", "自动返回等待时间 AutoReturnDelay", 10, "结算画面显示多少秒后自动返回大厅");
+        AutoStart = config.Bind("模组设置 Mod", "自动开始游戏 AutoStart", false, "大厅人数达标后自动开始游戏（仅主机）");
+        AutoStartMinPlayers = config.Bind("模组设置 Mod", "自动开始最少人数 AutoStartMinPlayers", 10, "达到该人数后自动开始倒计时");
+        AutoStartCountdown = config.Bind("模组设置 Mod", "自动开始倒计时 AutoStartCountdown", 10, "自动开始的倒计时秒数");
 
         ModeratorList = config.Bind("模组设置 Mod", "协管名单 ModeratorList", false,
             "开启后协管名单（TAHS-DATA/Moderators.txt）内的玩家可使用 /start、/end 等房主指令");

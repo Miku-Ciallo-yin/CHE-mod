@@ -97,6 +97,11 @@ public static class CustomOptions
     public static CustomOption ColorEnabled { get; private set; } = null!;
     public static CustomOption CtrlNoClip { get; private set; } = null!;
     public static CustomOption TpCommands { get; private set; } = null!;
+    public static CustomOption AutoReturnLobby { get; private set; } = null!;
+    public static CustomOption AutoReturnDelay { get; private set; } = null!;
+    public static CustomOption AutoStart { get; private set; } = null!;
+    public static CustomOption AutoStartMinPlayers { get; private set; } = null!;
+    public static CustomOption AutoStartCountdown { get; private set; } = null!;
     public static CustomOption ModAllowStart { get; private set; } = null!;
     public static CustomOption ModAllowS { get; private set; } = null!;
     public static CustomOption ModAllowEnd { get; private set; } = null!;
@@ -182,6 +187,16 @@ public static class CustomOptions
             ModConfig.CtrlNoClip.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         TpCommands = CustomOption.Register(171, ModGroupId, "开启 /tpout /tpin",
             ModConfig.TpCommands.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        AutoReturnLobby = CustomOption.Register(172, ModGroupId, "自动返回大厅",
+            ModConfig.AutoReturnLobby.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        AutoReturnDelay = CustomOption.Register(173, ModGroupId, "返回等待时间(秒)",
+            ModConfig.AutoReturnDelay.Value, 3, 60, 1, 1f, parentId: 172);
+        AutoStart = CustomOption.Register(174, ModGroupId, "自动开始游戏",
+            ModConfig.AutoStart.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        AutoStartMinPlayers = CustomOption.Register(175, ModGroupId, "自动开始最少人数",
+            ModConfig.AutoStartMinPlayers.Value, 2, 15, 1, 1f, parentId: 174);
+        AutoStartCountdown = CustomOption.Register(176, ModGroupId, "自动开始倒计时(秒)",
+            ModConfig.AutoStartCountdown.Value, 0, 60, 1, 1f, parentId: 174);
         ModAllowStart = CustomOption.Register(130, ModGroupId, "协管权限：/start",
             ModConfig.ModAllowStart.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 129);
         ModAllowS = CustomOption.Register(131, ModGroupId, "协管权限：/s",
