@@ -89,12 +89,31 @@ public static class LobbyMovePatch
             return;
         }
 
+        if (AnyMenuOpen()) return; // 打开任何菜单时不响应滚轮（避免与菜单滚动冲突）
+
         var scroll = Input.mouseScrollDelta.y;
         if (Mathf.Abs(scroll) > 0.01f)
             _zoom = Mathf.Clamp(_zoom - scroll * ZoomStep, MinZoom, MaxZoom);
 
         if (!Mathf.Approximately(cam.orthographicSize, _zoom))
             cam.orthographicSize = _zoom;
+    }
+
+    /// <summary>是否有菜单打开（聊天框 / 游戏设置 / 会议 / 好友列表等）</summary>
+    private static bool AnyMenuOpen()
+    {
+        var hud = HudManager.Instance;
+        if (hud == null) return true; // 保守处理
+
+        if (hud.Chat != null && hud.Chat.IsOpenOrOpening) return true;
+        if (GameSettingMenu.Instance != null && GameSettingMenu.Instance.gameObject.activeSelf) return true;
+        if (MeetingHud.Instance != null) return true;
+        if (ExileController.Instance != null) return true;
+
+        var friends = FriendsListManager.Instance;
+        if (friends != null && friends.Ui != null && friends.Ui.gameObject.activeSelf) return true;
+
+        return false;
     }
 
     /// <summary>对局/大厅切换时重置穿墙状态（避免碰撞体卡在禁用态）</summary>
