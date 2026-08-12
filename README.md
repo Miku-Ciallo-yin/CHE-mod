@@ -4,6 +4,17 @@
 >
 > 开发者：**米裤恰油**
 
+## 免责声明（Innersloth 模组协议）
+
+```
+This mod is not affiliated with Among Us or Innersloth LLC, and the content contained therein is not endorsed or otherwise sponsored by Innersloth LLC. Portions of the materials contained herein are property of Innersloth LLC. © Innersloth LLC.
+```
+
+本模组遵循 [Innersloth 模组协议](https://www.innersloth.com/among-us-mod-policy/)：
+游戏内全程显示官方模组标记（ModManager.ShowModStamp）；官方服务器上模组房间
+经版本分池与原版隔离（IsVersionModded 自报 + 广播版本 +25 注册）。
+模组免费分发，不含游戏本体文件，无广告与付费功能。
+
 ## 环境
 
 | 依赖 | 版本 | 说明 |
