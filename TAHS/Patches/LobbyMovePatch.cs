@@ -106,4 +106,77 @@ public static class LobbyMovePatch
         _defaultZoom = -1f;
         _zoom = -1f;
     }
+
+    /// <summary>主机记录的各玩家 /tpout 前位置（无模组端 /tpin 返回用）</summary>
+    private static readonly Dictionary<byte, Vector2> _hostTpReturn = new();
+
+    /// <summary>
+    /// 主机：处理聊天中收到的 /tpout、/tpin（参考 TONE）。
+    /// 模组端的指令在本地处理且不会广播，能走到这里的只有无模组端玩家的消息；
+    /// 传送由主机用官方 RpcSnapTo 驱动，无模组客户端同样生效；
+    /// 反馈经 ChatHelper.ShowPrivate 定向发送，仅指令发起者可见。
+    /// </summary>
+    public static void HandleHostCommand(PlayerControl source, string text)
+    {
+        if (text.Equals("/tpout", System.StringComparison.OrdinalIgnoreCase))
+            HostTp(source, true);
+        else if (text.Equals("/tpin", System.StringComparison.OrdinalIgnoreCase))
+            HostTp(source, false);
+    }
+
+    private static void HostTp(PlayerControl player, bool tpOut)
+    {
+        if (player == null || player.Data == null) return;
+        System.Action<string> show = msg => ChatHelper.ShowPrivate(player, msg);
+        var cmd = tpOut ? "/tpout" : "/tpin";
+
+        if (CustomOptions.TpCommands.Value != 1)
+        {
+            show($"[TAHS] {cmd} 已被房主关闭");
+            return;
+        }
+        if (!InLobby && !player.Data.IsDead)
+        {
+            show($"[TAHS] {cmd} 仅在等待大厅或对局死亡后可用");
+            return;
+        }
+
+        if (tpOut)
+        {
+            _hostTpReturn[player.PlayerId] = player.transform.position;
+            player.NetTransform.RpcSnapTo((Vector2)player.transform.position + Vector2.down * 8f);
+            show("[TAHS] 已传送到飞船外面（/tpin 返回）");
+        }
+        else
+        {
+            var pos = _hostTpReturn.TryGetValue(player.PlayerId, out var saved)
+                ? saved
+                : new Vector2(0f, 0.5f);
+            _hostTpReturn.Remove(player.PlayerId);
+            player.NetTransform.RpcSnapTo(pos);
+            show("[TAHS] 已返回飞船内");
+        }
+    }
+}
+
+/// <summary>
+/// 聊天指令隐藏 + 主机代收（参考 TONE）：
+/// - 模组端收到任何以 / 开头的聊天消息一律不显示（防指令泄露）；
+/// - 主机在此基础上处理无模组端玩家发来的指令（/tpout、/tpin）。
+/// 无模组客户端之间仍能看到彼此发出的指令原文（原版聊天广播，Host Only 无法拦截）。
+/// </summary>
+[HarmonyPatch(typeof(ChatController), nameof(ChatController.AddChat))]
+public static class HostChatCommandPatch
+{
+    public static bool Prefix(PlayerControl sourcePlayer, string chatText)
+    {
+        var text = chatText?.Trim();
+        if (string.IsNullOrEmpty(text) || !text.StartsWith('/')) return true;
+
+        if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost
+            && sourcePlayer != null && !sourcePlayer.AmOwner)
+            LobbyMovePatch.HandleHostCommand(sourcePlayer, text);
+
+        return false; // 指令一律不在聊天栏显示
+    }
 }
