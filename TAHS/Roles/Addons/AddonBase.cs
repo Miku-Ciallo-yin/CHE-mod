@@ -37,6 +37,9 @@ public abstract class AddonBase
     /// <summary>良性附加职业（使徒完成任务时只会赐予良性附加）</summary>
     public bool IsBenign => Type == AddonType.Benign;
 
+    /// <summary>使徒完成任务时是否可赐予该附加职业（默认可）</summary>
+    public virtual bool ApostleGrantable => true;
+
     /// <summary>附加职业说明（/m 展示，空则不显示）</summary>
     public virtual string Description => string.Empty;
 

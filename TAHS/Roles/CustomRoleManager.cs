@@ -318,7 +318,10 @@ public static class CustomRoleManager
     public static void GrantRandomBenignAddon()
     {
         var rng = new Random();
-        var benign = AddonRegistry.Where(a => a.Factory().IsBenign).ToList();
+        var benign = AddonRegistry
+            .Where(a => a.Factory().IsBenign)
+            .Where(a => a.Factory().ApostleGrantable) // 叛徒等不可赐予的除外
+            .ToList();
         if (benign.Count == 0) return;
 
         var (addonId, _) = benign[rng.Next(benign.Count)];

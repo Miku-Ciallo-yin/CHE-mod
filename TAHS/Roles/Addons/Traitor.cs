@@ -16,8 +16,11 @@ public class Traitor : AddonBase
     public override string NameEn => "Traitor";
     public override Color Color => new(1f, 0.3f, 0.3f); // 内鬼红
 
-    /// <summary>良性分类（使徒可赐予）</summary>
+    /// <summary>良性分类</summary>
     public override AddonType Type => AddonType.Benign;
+
+    /// <summary>使徒不可赐予（仅开局随机分配出现）</summary>
+    public override bool ApostleGrantable => false;
 
     public override string Description =>
         "你的原胜利条件已失效，改为跟随内鬼胜负（本身不获得击杀能力）。";
