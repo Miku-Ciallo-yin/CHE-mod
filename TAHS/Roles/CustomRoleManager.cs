@@ -273,6 +273,28 @@ public static class CustomRoleManager
         }
     }
 
+    /// <summary>已注册职业样本（ID + 实例，可取描述等完整信息，如 TAB 职业介绍）</summary>
+    public static IEnumerable<(byte Id, RoleBase Sample)> GetRoleSamples()
+    {
+        foreach (var (id, factory) in RoleRegistry)
+        {
+            var sample = factory();
+            sample.Id = id;
+            yield return (id, sample);
+        }
+    }
+
+    /// <summary>已注册附加职业样本（ID + 实例，可取描述等完整信息）</summary>
+    public static IEnumerable<(byte Id, AddonBase Sample)> GetAddonSamples()
+    {
+        foreach (var (id, factory) in AddonRegistry)
+        {
+            var sample = factory();
+            sample.Id = id;
+            yield return (id, sample);
+        }
+    }
+
     /// <summary>把玩家转变为指定职业实例（替换原有职业，如凶手变内阁）</summary>
     public static void TransformToRole(PlayerControl player, RoleBase newRole)
     {
