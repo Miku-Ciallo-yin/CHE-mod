@@ -311,7 +311,7 @@ public static class CustomOptions
         }
 
         // 每个附加职业一项生成概率 + 一项人数（ID 规则同上）
-        foreach (var (id, name) in CustomRoleManager.GetRegisteredAddons())
+        foreach (var (id, name, _) in CustomRoleManager.GetRegisteredAddons())
         {
             CustomOption.Register(id, id, "生成概率%", 100, 0, 100, 10, 1f);
             CustomOption.Register((byte)(id + 50), id, "人数", 1, 1, 15, 1, 1f);

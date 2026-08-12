@@ -154,7 +154,7 @@ public static class GuesserPatch
             if (CustomOptions.GetRoleChance(id) > 0)
                 entries.Add(new GuessEntry { Id = id, Name = name });
         if (includeAddons)
-            foreach (var (id, name) in CustomRoleManager.GetRegisteredAddons())
+            foreach (var (id, name, _) in CustomRoleManager.GetRegisteredAddons())
                 if (CustomOptions.GetRoleChance(id) > 0)
                     entries.Add(new GuessEntry { IsAddon = true, Id = id, Name = $"{name}(附加)" });
         return entries;

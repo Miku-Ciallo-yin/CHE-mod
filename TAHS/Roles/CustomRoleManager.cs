@@ -255,11 +255,14 @@ public static class CustomRoleManager
         }
     }
 
-    /// <summary>已注册附加职业（ID、名称）</summary>
-    public static IEnumerable<(byte Id, string Name)> GetRegisteredAddons()
+    /// <summary>已注册附加职业（ID、名称、类别）</summary>
+    public static IEnumerable<(byte Id, string Name, AddonType Type)> GetRegisteredAddons()
     {
         foreach (var (id, factory) in AddonRegistry)
-            yield return (id, factory().Name);
+        {
+            var sample = factory();
+            yield return (id, sample.Name, sample.Type);
+        }
     }
 
     /// <summary>把玩家转变为指定职业实例（替换原有职业，如凶手变内阁）</summary>

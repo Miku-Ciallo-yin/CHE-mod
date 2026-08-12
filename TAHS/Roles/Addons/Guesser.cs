@@ -15,4 +15,7 @@ public class Guesser : AddonBase
     public override string Name => "赌怪";
     public override string NameEn => "Guesser";
     public override Color Color => new(1f, 0.6f, 0.2f); // 橙色
+
+    /// <summary>良性附加职业（各阵营皆可成为赌怪，使徒可赐予）</summary>
+    public override AddonType Type => AddonType.Benign;
 }

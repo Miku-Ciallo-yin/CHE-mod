@@ -23,6 +23,9 @@ public static class ModGameOptionsMenu
     /// <summary>职业设置页当前分类（0 船员 / 1 中立 / 2 内鬼 / 3 附加）；null 表示分类列表页</summary>
     public static int? DetailCategory;
 
+    /// <summary>附加职业分组（索引即 AddonType：0 良性 / 1 恶性 / 2 内鬼）；null 表示附加分组列表页</summary>
+    public static int? DetailAddonGroup;
+
     /// <summary>克隆用模板（OnEnable 中克隆一次，隐藏保留复用）</summary>
     public static GameOptionsMenu? TemplateMenu;
     public static PassiveButton? TemplateButton;

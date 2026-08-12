@@ -165,6 +165,9 @@ public static class ModOptionsMenuPatch
     /// <summary>职业分类名称（索引即 DetailCategory 的值）</summary>
     private static readonly string[] CategoryNames = { "船员职业", "中立职业", "内鬼职业", "附加职业" };
 
+    /// <summary>附加职业分组名称（索引即 AddonType 的值，也是 DetailAddonGroup 的值）</summary>
+    private static readonly string[] AddonGroupNames = { "良性附加职业", "恶性附加职业", "内鬼附加职业" };
+
     /// <summary>Faction → 分类索引（附加职业暂无，预留分类 3）</summary>
     private static int CategoryOf(Faction faction) => faction switch
     {
@@ -208,6 +211,7 @@ public static class ModOptionsMenuPatch
             MakeClickable(back, () =>
             {
                 ModGameOptionsMenu.DetailCategory = null;
+                ModGameOptionsMenu.DetailAddonGroup = null;
                 BuildContent(menu);
             });
             y -= RowHeight;
@@ -215,6 +219,33 @@ public static class ModOptionsMenuPatch
             // 分类 3 是附加职业，其余按阵营归类主职业
             if (category == 3)
             {
+                // 附加分组内列表页：某分组下的附加职业（返回 → 分组列表）
+                if (ModGameOptionsMenu.DetailAddonGroup is { } group)
+                {
+                    var groupBack = CreateDisplayRow(menu, "← 返回", AddonGroupNames[group], y);
+                    MakeClickable(groupBack, () =>
+                    {
+                        ModGameOptionsMenu.DetailAddonGroup = null;
+                        BuildContent(menu);
+                    });
+                    y -= RowHeight;
+
+                    foreach (var (addonId, addonName, addonType) in CustomRoleManager.GetRegisteredAddons())
+                    {
+                        if ((int)addonType != group) continue;
+
+                        var addonRow = CreateDisplayRow(menu, addonName, $"{CustomOptions.GetRoleChance(addonId)}%", y);
+                        var id = addonId;
+                        MakeClickable(addonRow, () =>
+                        {
+                            ModGameOptionsMenu.DetailRoleId = id;
+                            BuildContent(menu);
+                        });
+                        y -= RowHeight;
+                    }
+                    return y;
+                }
+
                 // 附加分类页：顶部显示玩家附加职业数量上限（RoleId 99 伪分组）
                 foreach (var opt in CustomOption.OfRole(99))
                 {
@@ -222,13 +253,15 @@ public static class ModOptionsMenuPatch
                     y -= RowHeight;
                 }
 
-                foreach (var (addonId, addonName) in CustomRoleManager.GetRegisteredAddons())
+                // 良性 / 恶性 / 内鬼三个附加职业分组（右侧显示该分组附加职业数）
+                for (var g = 0; g < AddonGroupNames.Length; g++)
                 {
-                    var row = CreateDisplayRow(menu, addonName, $"{CustomOptions.GetRoleChance(addonId)}%", y);
-                    var id = addonId;
-                    MakeClickable(row, () =>
+                    var count = CustomRoleManager.GetRegisteredAddons().Count(a => (int)a.Type == g);
+                    var groupRow = CreateDisplayRow(menu, AddonGroupNames[g], $"{count}个", y);
+                    var g2 = g;
+                    MakeClickable(groupRow, () =>
                     {
-                        ModGameOptionsMenu.DetailRoleId = id;
+                        ModGameOptionsMenu.DetailAddonGroup = g2;
                         BuildContent(menu);
                     });
                     y -= RowHeight;

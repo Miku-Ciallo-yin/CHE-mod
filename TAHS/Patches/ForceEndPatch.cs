@@ -506,7 +506,7 @@ public static class ForceEndPatch
                 if (Modules.CustomOptions.GetRoleChance(id) <= 0) continue;
                 lines.Add($"{name}（{faction}）");
             }
-            foreach (var (id, name) in Roles.CustomRoleManager.GetRegisteredAddons())
+            foreach (var (id, name, _) in Roles.CustomRoleManager.GetRegisteredAddons())
             {
                 if (Modules.CustomOptions.GetRoleChance(id) <= 0) continue;
                 lines.Add($"{name}（附加）");
