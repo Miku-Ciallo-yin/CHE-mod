@@ -525,16 +525,20 @@ public static class ForceEndPatch
         /// <summary>/m：查看自己本局职业介绍（所有人可用）</summary>
         private static void ShowMyRole()
         {
-            var show = Modules.ChatHelper.Show;
             var local = PlayerControl.LocalPlayer;
             if (local == null || local.Data == null) return;
+            Modules.ChatHelper.ShowMany(BuildRoleLines(local));
+        }
 
-            var role = Roles.CustomRoleManager.GetRole(local);
+        /// <summary>/m 内容：指定玩家的职业介绍（本地显示与主机私信共用）</summary>
+        public static List<string> BuildRoleLines(PlayerControl player)
+        {
+            var role = Roles.CustomRoleManager.GetRole(player);
             if (role == null)
             {
-                var vanilla = local.Data.Role != null && local.Data.Role.IsImpostor ? "内鬼" : "船员";
-                show($"[TAHS] 你是原版身份：{vanilla}（无模组职业）");
-                return;
+                var vanilla = player.Data != null && player.Data.Role != null && player.Data.Role.IsImpostor
+                    ? "内鬼" : "船员";
+                return new List<string> { $"[TAHS] 你是原版身份：{vanilla}（无模组职业）" };
             }
 
             var lines = new List<string>
@@ -546,14 +550,13 @@ public static class ForceEndPatch
                 lines.Add(role.Description);
 
             // 附加职业
-            foreach (var addon in Roles.CustomRoleManager.GetAddons(local))
+            foreach (var addon in Roles.CustomRoleManager.GetAddons(player))
             {
                 lines.Add($"附加：{addon.Name} / {addon.NameEn}");
                 if (!string.IsNullOrEmpty(addon.Description))
                     lines.Add(addon.Description);
             }
-
-            Modules.ChatHelper.ShowMany(lines);
+            return lines;
         }
 
         /// <summary>/r：查看全局已开启的职业（所有人可用）</summary>
@@ -582,38 +585,37 @@ public static class ForceEndPatch
         /// <summary>/d：死亡后查看击杀自己的玩家（所有人可用）</summary>
         private static void ShowMyKiller()
         {
-            var show = Modules.ChatHelper.Show;
             var local = PlayerControl.LocalPlayer;
             if (local == null || local.Data == null) return;
+            Modules.ChatHelper.Show(BuildKillerText(local));
+        }
 
-            if (!local.Data.IsDead)
-            {
-                show("[TAHS] 你还活着（/d 在死亡后查看击杀者）");
-                return;
-            }
+        /// <summary>/d 内容：指定玩家的击杀者信息（本地显示与主机私信共用）</summary>
+        public static string BuildKillerText(PlayerControl player)
+        {
+            if (player.Data == null || !player.Data.IsDead)
+                return "[TAHS] 你还活着（/d 在死亡后查看击杀者）";
 
-            var info = Modules.DeathTracker.GetKillerInfo(local.PlayerId);
-            show(info != null
+            var info = Modules.DeathTracker.GetKillerInfo(player.PlayerId);
+            return info != null
                 ? $"[TAHS] 击杀你的是：{info}"
-                : "[TAHS] 暂无击杀记录（可能死于放逐/自杀或未被记录）");
+                : "[TAHS] 暂无击杀记录（可能死于放逐/自杀或未被记录）";
         }
 
         /// <summary>/kc：使徒在场（存活）时全员可查存活内鬼与中立人数</summary>
         private static void ShowAliveCounts()
         {
-            var show = Modules.ChatHelper.Show;
+            Modules.ChatHelper.ShowMany(BuildAliveCountLines());
+        }
 
+        /// <summary>/kc 内容（本地显示与主机私信共用）</summary>
+        public static List<string> BuildAliveCountLines()
+        {
             if (AmongUsClient.Instance == null
                 || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
-            {
-                show("[TAHS] /kc 仅对局中可用");
-                return;
-            }
+                return new List<string> { "[TAHS] /kc 仅对局中可用" };
             if (!Roles.Crewmate.Apostle.AliveApostleExists())
-            {
-                show("[TAHS] 场上没有存活的使徒，/kc 不可用");
-                return;
-            }
+                return new List<string> { "[TAHS] 场上没有存活的使徒，/kc 不可用" };
 
             var impostors = 0;
             var neutrals = 0;
@@ -627,16 +629,22 @@ public static class ForceEndPatch
                 }
             }
 
-            Modules.ChatHelper.ShowMany(new[]
+            return new List<string>
             {
                 "<color=#4FC3F7>===== 场上存活统计 =====</color>",
                 $"<color=#FF5555>存活内鬼：{impostors} 人</color>",
                 $"<color=#999999>存活中立：{neutrals} 人</color>",
-            });
+            };
         }
 
         /// <summary>/id：输出所有玩家的名字及对应 ID（仅本机可见）</summary>
         private static void ShowPlayerIds()
+        {
+            Modules.ChatHelper.ShowMany(BuildPlayerIdLines(PlayerControl.LocalPlayer));
+        }
+
+        /// <summary>/id 内容（requester 标注"（你）"，本地显示与主机私信共用）</summary>
+        public static List<string> BuildPlayerIdLines(PlayerControl? requester)
         {
             var lines = new List<string> { "<color=#4FC3F7>===== 玩家 ID 列表 =====</color>" };
             foreach (var player in PlayerControl.AllPlayerControls)
@@ -644,10 +652,10 @@ public static class ForceEndPatch
                 if (player == null || player.Data == null) continue;
                 var id = Modules.PlayerIdManager.GetId(player);
                 var idText = id.HasValue ? id.Value.ToString() : "?";
-                var self = player.AmOwner ? "（你）" : string.Empty;
+                var self = player == requester ? "（你）" : string.Empty;
                 lines.Add($"[{idText}] {player.Data.PlayerName}{self}");
             }
-            Modules.ChatHelper.ShowMany(lines);
+            return lines;
         }
 
         /// <summary>/help：输出全部指令及功能（合并为一条气泡，超长自动拆分）</summary>
@@ -683,18 +691,237 @@ public static class ForceEndPatch
 
         /// <summary>
         /// 主机代收无模组端玩家发来的指令（模组端指令在本地处理且不会广播）：
-        /// /r、/help 私信回复内容（仅发起者可见）；/tpout、/tpin 转交传送处理。
+        /// 信息类指令私信回复（仅发起者可见），操作类指令由主机验证后代为执行。
+        /// 新增指令约定：内容提取为 Build* 构建器，此处一并接入——本地显示与主机私信共用。
         /// </summary>
         public static void HandleHostCommand(PlayerControl source, string text)
         {
-            if (source == null) return;
+            if (source == null || source.Data == null) return;
+            System.Action<string> tell = msg => Modules.ChatHelper.ShowPrivate(source, msg);
 
+            // 信息类（所有人可用，私信回复）
+            if (text.Equals("/help", System.StringComparison.OrdinalIgnoreCase))
+            { Modules.ChatHelper.ShowPrivateMany(source, BuildHelpLines()); return; }
             if (text.Equals("/r", System.StringComparison.OrdinalIgnoreCase))
-                Modules.ChatHelper.ShowPrivateMany(source, BuildEnabledRolesLines());
-            else if (text.Equals("/help", System.StringComparison.OrdinalIgnoreCase))
-                Modules.ChatHelper.ShowPrivateMany(source, BuildHelpLines());
-            else
-                LobbyMovePatch.HandleHostCommand(source, text);
+            { Modules.ChatHelper.ShowPrivateMany(source, BuildEnabledRolesLines()); return; }
+            if (text.Equals("/id", System.StringComparison.OrdinalIgnoreCase))
+            { Modules.ChatHelper.ShowPrivateMany(source, BuildPlayerIdLines(source)); return; }
+            if (text.Equals("/m", System.StringComparison.OrdinalIgnoreCase))
+            { Modules.ChatHelper.ShowPrivateMany(source, BuildRoleLines(source)); return; }
+            if (text.Equals("/d", System.StringComparison.OrdinalIgnoreCase))
+            { tell(BuildKillerText(source)); return; }
+            if (text.Equals("/l", System.StringComparison.OrdinalIgnoreCase))
+            { Modules.ChatHelper.ShowPrivateMany(source, Modules.GameArchive.BuildLastLines()); return; }
+            if (text.Equals("/kc", System.StringComparison.OrdinalIgnoreCase))
+            { Modules.ChatHelper.ShowPrivateMany(source, BuildAliveCountLines()); return; }
+
+            // 猜测（主机验证资格并执行）
+            if (text.StartsWith("/bt", System.StringComparison.OrdinalIgnoreCase))
+            { HostBet(source, text, tell); return; }
+
+            // 大厅自我服务（主机代为改名/换色）
+            if (text.StartsWith("/rn", System.StringComparison.OrdinalIgnoreCase))
+            { HostRename(source, text, tell); return; }
+            if (text.StartsWith("/cor", System.StringComparison.OrdinalIgnoreCase))
+            { HostColor(source, text, tell); return; }
+
+            // 传送
+            if (text.StartsWith("/tpout", System.StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("/tpin", System.StringComparison.OrdinalIgnoreCase))
+            { LobbyMovePatch.HandleHostCommand(source, text); return; }
+
+            // 协管指令（无模组协管按好友代码识别）
+            if (text.StartsWith("/start", System.StringComparison.OrdinalIgnoreCase))
+            { HostStart(source, text, tell); return; }
+            if (text.Equals("/end", System.StringComparison.OrdinalIgnoreCase))
+            { HostEnd(source, tell); return; }
+            if (text.Equals("/s", System.StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("/s ", System.StringComparison.OrdinalIgnoreCase))
+            { HostAnnounce(source, text, tell); return; }
+
+            // 房主专属
+            if (text.StartsWith("/kill", System.StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("/dump", System.StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("/addmod", System.StringComparison.OrdinalIgnoreCase))
+            { tell("[TAHS] 该指令仅房主可用"); return; }
+
+            // 需要模组端本地交互
+            if (text.StartsWith("/vote", System.StringComparison.OrdinalIgnoreCase)
+                || text.Equals("/ph", System.StringComparison.OrdinalIgnoreCase))
+            { tell("[TAHS] 该指令需要安装模组端使用"); return; }
+        }
+
+        /// <summary>无模组协管校验（按好友代码识别，权限项需开启）</summary>
+        private static bool IsCoModWith(PlayerControl source, Modules.CustomOption permission)
+        {
+            return Modules.ModeratorManager.IsEnabled
+                   && Modules.ModeratorManager.IsModerator(source)
+                   && permission.Value == 1;
+        }
+
+        /// <summary>主机代收 /bt：验证资格后执行猜测</summary>
+        private static void HostBet(PlayerControl source, string text, System.Action<string> tell)
+        {
+            if (!Patches.GuesserPatch.CanGuess(source))
+            {
+                tell("[TAHS] 你没有猜测权限（需赌怪附加或猜测模式放行）");
+                return;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 3 || !int.TryParse(parts[1], out var id))
+            {
+                tell("[TAHS] 用法：/bt <玩家ID> <职业名>，如 /bt 2 佃农");
+                return;
+            }
+
+            var roleName = string.Join(' ', parts.Skip(2));
+            var entry = Patches.GuesserPatch.GetEnabledEntries(source)
+                .FirstOrDefault(e => e.Name.Equals(roleName, System.StringComparison.OrdinalIgnoreCase));
+            if (entry == null)
+            {
+                var valid = string.Join("、", Patches.GuesserPatch.GetEnabledEntries(source).Select(e => e.Name));
+                tell($"[TAHS] 未知职业：{roleName}。可猜测：{valid}");
+                return;
+            }
+
+            var target = Modules.PlayerIdManager.GetPlayerById(id);
+            if (target == null)
+            {
+                tell($"[TAHS] 未找到 ID 为 {id} 的玩家");
+                return;
+            }
+
+            tell($"[TAHS] 你猜测 [{id}] {target.Data?.PlayerName} 是 {entry.Name}，结果即将揭晓…");
+            Patches.GuesserPatch.ExecuteGuess(source, target, entry);
+        }
+
+        /// <summary>主机代收 /rn：代为广播改名（受开关与大厅限制）</summary>
+        private static void HostRename(PlayerControl source, string text, System.Action<string> tell)
+        {
+            if (Modules.CustomOptions.RenameEnabled.Value != 1)
+            {
+                tell("[TAHS] /rn 已被房主关闭");
+                return;
+            }
+            if (AmongUsClient.Instance != null
+                && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
+            {
+                tell("[TAHS] /rn 对局中不可用");
+                return;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                tell("[TAHS] 用法：/rn <新名字>");
+                return;
+            }
+            var newName = string.Join(' ', parts.Skip(1));
+            if (newName.Length > 20) newName = newName[..20];
+
+            // 主机权威广播 SetName（PrivateTag 同款写法）+ 主机本地应用
+            var writer = AmongUsClient.Instance.StartRpcImmediately(
+                source.NetId, (byte)RpcCalls.SetName, Hazel.SendOption.Reliable, -1);
+            writer.Write(newName);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            source.SetName(newName);
+            tell($"[TAHS] 已改名为：{newName}");
+        }
+
+        /// <summary>主机代收 /cor：代为换色（受开关与大厅限制）</summary>
+        private static void HostColor(PlayerControl source, string text, System.Action<string> tell)
+        {
+            if (Modules.CustomOptions.ColorEnabled.Value != 1)
+            {
+                tell("[TAHS] /cor 已被房主关闭");
+                return;
+            }
+            if (AmongUsClient.Instance != null
+                && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
+            {
+                tell("[TAHS] /cor 对局中不可用");
+                return;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                tell("[TAHS] 用法：/cor <颜色>，如 /cor 红 或 /cor red 或 /cor 0");
+                return;
+            }
+            var colorId = ParseColor(parts[1]);
+            if (colorId < 0)
+            {
+                tell($"[TAHS] 未知颜色：{parts[1]}（支持中英文色名或 0~17）");
+                return;
+            }
+
+            source.RpcSetColor((byte)colorId);
+            tell($"[TAHS] 已更换颜色：{parts[1]}（ID {colorId}）");
+        }
+
+        /// <summary>主机代收 /start：无模组协管请求开始倒计时</summary>
+        private static void HostStart(PlayerControl source, string text, System.Action<string> tell)
+        {
+            if (!IsCoModWith(source, Modules.CustomOptions.ModAllowStart))
+            {
+                tell("[TAHS] /start 仅房主或协管可用");
+                return;
+            }
+            var manager = GameStartManager.Instance;
+            if (manager == null)
+            {
+                tell("[TAHS] /start 仅在大厅中可用");
+                return;
+            }
+
+            var sec = StartAnyCountPatch.DefaultCountdown;
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length > 1)
+                int.TryParse(parts[1], out sec);
+            sec = UnityEngine.Mathf.Clamp(sec, 0, 99);
+
+            TAHSPlugin.Log.LogInfo($"[TAHS] 无模组协管 {source.Data?.PlayerName} 请求 /start {sec}s");
+            StartAnyCountPatch.StartCountdown(manager, sec);
+            tell($"[TAHS] 已开始 {sec} 秒倒计时");
+        }
+
+        /// <summary>主机代收 /end：无模组协管请求强制结束</summary>
+        private static void HostEnd(PlayerControl source, System.Action<string> tell)
+        {
+            if (AmongUsClient.Instance == null
+                || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
+            {
+                tell("[TAHS] /end 仅对局中可用");
+                return;
+            }
+            if (!IsCoModWith(source, Modules.CustomOptions.ModAllowEnd))
+            {
+                tell("[TAHS] /end 仅房主或协管可用");
+                return;
+            }
+
+            TAHSPlugin.Log.LogInfo($"[TAHS] 无模组协管 {source.Data?.PlayerName} 请求 /end");
+            ForceEnd();
+        }
+
+        /// <summary>主机代收 /s：无模组协管发布公告</summary>
+        private static void HostAnnounce(PlayerControl source, string text, System.Action<string> tell)
+        {
+            var content = text.Length > 2 ? text.Substring(2).Trim() : string.Empty;
+            if (content.Length == 0)
+            {
+                tell("[TAHS] 用法：/s <内容>");
+                return;
+            }
+            if (!IsCoModWith(source, Modules.CustomOptions.ModAllowS))
+            {
+                tell("[TAHS] /s 仅房主或协管可用");
+                return;
+            }
+
+            Modules.Announcement.Broadcast(false, content);
         }
 
         /// <summary>/end：强制结束对局（房主直接执行；协管经 RPC 由主机执行）</summary>

@@ -45,11 +45,14 @@ public static class GameArchive
     /// <summary>输出上一局回顾（仅本机聊天栏）</summary>
     public static void ShowLast()
     {
+        ChatHelper.ShowMany(BuildLastLines());
+    }
+
+    /// <summary>上一局回顾内容（本地显示与主机私信无模组端共用）</summary>
+    public static List<string> BuildLastLines()
+    {
         if (_lastAssignments.Count == 0 && _lastKills.Count == 0 && _lastTransitions.Count == 0)
-        {
-            ChatHelper.Show("[TAHS] 暂无上一局记录");
-            return;
-        }
+            return new List<string> { "[TAHS] 暂无上一局记录" };
 
         var lines = new List<string> { "<color=#4FC3F7>===== 上一局回顾 =====</color>" };
 
@@ -69,6 +72,6 @@ public static class GameArchive
             lines.AddRange(_lastKills);
         }
 
-        ChatHelper.ShowMany(lines);
+        return lines;
     }
 }

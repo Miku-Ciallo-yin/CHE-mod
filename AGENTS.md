@@ -61,6 +61,14 @@
 
 219/222 已废弃（击杀/技能改用原版按钮）。新增 CallId 从 228 起，避免与游戏及其他模组冲突。
 
+## 聊天指令约定（新增指令必须遵守）
+
+- 模组端：`RpcSendChat` 前缀本地处理并拦截广播（ForceEndPatch.ChatCommandPatch）。
+- 无模组端：主机在 `ChatController.AddChat` 前缀代收（HostChatCommandPatch），
+  转发到 `HandleHostCommand` 分发；反馈一律 `ChatHelper.ShowPrivate/ShowPrivateMany`
+  定向私信（仅发起者可见）。
+- 指令输出内容提取为 `Build*Lines()` 构建器，本地显示与主机私信共用同一份文本。
+
 ## 结构
 
 - `TAHS/Plugin.cs` — BepInEx 入口
