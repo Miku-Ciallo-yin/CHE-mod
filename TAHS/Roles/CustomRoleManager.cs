@@ -281,6 +281,7 @@ public static class CustomRoleManager
                 var role = GetRole(player);
                 if (role == null) continue;
 
+                TAHSPlugin.Log.LogInfo($"[TAHS] 向无模组端 {player.Data.PlayerName} 发送职业介绍与名牌标签");
                 ChatHelper.ShowPrivateMany(player, Patches.ForceEndPatch.ChatCommandPatch.BuildRoleLines(player));
                 PrivateTag.SetTag(player.OwnerId, player, $"<color=#4FC3F7>你的职业：{role.Name}</color>");
             }

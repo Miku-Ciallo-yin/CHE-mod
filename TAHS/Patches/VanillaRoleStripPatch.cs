@@ -53,3 +53,13 @@ public static class VanillaRoleStripPatch
         _backup.Clear();
     }
 }
+
+/// <summary>
+/// 禁用幽灵职业（守护天使）分配：死亡触发的幽灵职业分配会在会议中
+/// 突然给死人换身份并弹出提示，破坏会议流程；本模组不使用幽灵职业。
+/// </summary>
+[HarmonyPatch(typeof(RoleManager), nameof(RoleManager.AssignRoleOnDeath))]
+public static class GhostRoleBlockPatch
+{
+    public static bool Prefix() => false;
+}

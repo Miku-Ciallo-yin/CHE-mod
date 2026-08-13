@@ -78,16 +78,16 @@ public static class GuesserPatch
                 if (target.Data == null || target.Data.IsDead) continue;
                 if (pva.NameText == null) continue;
 
-                // 名牌前的准星标记
+                // 名牌前的准星标记（点击区收紧，避免与投票点击区域重叠误触）
                 var mark = new GameObject("TAHS_GuessMark").AddComponent<SpriteRenderer>();
                 mark.sprite = GetCrosshairSprite();
                 mark.transform.SetParent(pva.transform, false);
                 mark.transform.localPosition =
-                    pva.NameText.transform.localPosition + new Vector3(-0.55f, 0f, -5f);
-                mark.transform.localScale = Vector3.one * 0.4f;
+                    pva.NameText.transform.localPosition + new Vector3(-0.5f, 0f, -5f);
+                mark.transform.localScale = Vector3.one * 0.7f;
 
                 var col = mark.gameObject.AddComponent<BoxCollider2D>();
-                col.size = new Vector2(2.2f, 2.2f); // 点击区域比图标大一些
+                col.size = new Vector2(1.1f, 1.1f); // 点击区紧贴图标
 
                 _marks.Add((mark, target));
             }
@@ -160,7 +160,7 @@ public static class GuesserPatch
         return entries;
     }
 
-    /// <summary>打开猜测面板：当前已启用的全部职业（可选包含附加职业）</summary>
+    /// <summary>打开猜测面板：当前已启用的全部职业（可选包含附加职业）。面板置于右侧，避开名牌投票区</summary>
     private static void OpenPanel(MeetingHud meeting, PlayerControl target)
     {
         ClosePanel();
@@ -172,14 +172,14 @@ public static class GuesserPatch
 
         _panel = new GameObject("TAHS_GuessPanel");
         _panel.transform.SetParent(meeting.transform, false);
-        _panel.transform.localPosition = new Vector3(0f, 0f, -50f);
+        _panel.transform.localPosition = new Vector3(2.35f, 0f, -50f);
 
         // 背景
         var bg = new GameObject("TAHS_GuessPanelBG").AddComponent<SpriteRenderer>();
         bg.sprite = GetSolidSprite();
         bg.color = new Color(0.05f, 0.05f, 0.08f, 0.92f);
         bg.transform.SetParent(_panel.transform, false);
-        bg.transform.localScale = new Vector3(5.5f, 1.2f + 0.55f * (entries.Count + 1), 1f);
+        bg.transform.localScale = new Vector3(4.6f, 1.0f + 0.55f * (entries.Count + 1), 1f);
 
         // 标题
         var title = Object.Instantiate(template, _panel.transform);
@@ -197,7 +197,7 @@ public static class GuesserPatch
             label.transform.localPosition = new Vector3(0f, y, -1f);
 
             var col = label.gameObject.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(4.5f, 0.5f);
+            col.size = new Vector2(4.2f, 0.5f);
             _panelItems.Add((col, entry));
 
             y -= 0.55f;
@@ -293,7 +293,7 @@ public static class GuesserPatch
         return _crosshairSprite;
     }
 
-    /// <summary>1x1 纯色图（面板背景用，颜色由 SpriteRenderer.color 控制）</summary>
+    /// <summary>1x1 纯色图（面板背景用，颜色由 SpriteRenderer.color 控制）。ppu=1：缩放值即世界单位</summary>
     private static Sprite GetSolidSprite()
     {
         if (_solidSprite != null) return _solidSprite;
@@ -302,7 +302,7 @@ public static class GuesserPatch
         tex.SetPixel(0, 0, Color.white);
         tex.Apply();
 
-        _solidSprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 100f);
+        _solidSprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
         return _solidSprite;
     }
 }
