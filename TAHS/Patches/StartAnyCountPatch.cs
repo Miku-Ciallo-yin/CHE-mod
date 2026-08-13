@@ -28,13 +28,23 @@ public static class StartAnyCountPatch
         __instance.MinPlayers = 1;
     }
 
-    /// <summary>持续压制，防止原版逻辑把 MinPlayers 改回去</summary>
+    /// <summary>持续压制，防止原版逻辑把 MinPlayers 改回去；同时周期性兜底分配玩家 ID</summary>
     [HarmonyPatch(nameof(GameStartManager.Update)), HarmonyPostfix]
     public static void UpdatePostfix(GameStartManager __instance)
     {
         if (__instance.MinPlayers > 1)
             __instance.MinPlayers = 1;
+
+        // 大厅中每 2 秒兜底分配一次 ID（进房钩子未触发/时序异常时自愈）
+        _idEnsureTimer += UnityEngine.Time.deltaTime;
+        if (_idEnsureTimer >= 2f)
+        {
+            _idEnsureTimer = 0f;
+            Modules.PlayerIdManager.EnsureAllAssigned();
+        }
     }
+
+    private static float _idEnsureTimer;
 
     [HarmonyPatch(nameof(GameStartManager.BeginGame)), HarmonyPrefix]
     public static bool BeginGamePrefix(GameStartManager __instance)

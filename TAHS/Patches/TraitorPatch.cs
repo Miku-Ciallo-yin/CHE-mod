@@ -16,7 +16,7 @@ public static class TraitorEndCriteriaPatch
     public static bool Prefix()
     {
         if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return true;
-        if (CustomOptions.TestMode.Value == 1) return true; // 测试模式由其补丁阻断原版判定
+        if (CustomOptions.TestMode.Value == 1) return true; // 测试模式：自动结束由 RpcEndGame 补丁拦截
         if (CustomOptions.TraitorCountAsImpostor.Value != 1) return true;
         if (GameManager.Instance == null || GameData.Instance == null) return true;
 
