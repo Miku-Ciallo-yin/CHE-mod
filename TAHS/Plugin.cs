@@ -29,6 +29,7 @@ public class TAHSPlugin : BasePlugin
 
         Modules.ModConfig.Init(Config);
         Modules.CustomOptions.Init();
+        Modules.PresetManager.Init();
         Modules.ModeratorManager.Init();
         Modules.BanManager.Init();
         Patches.ForceEndPatch.Init();

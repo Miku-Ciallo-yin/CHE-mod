@@ -108,6 +108,27 @@ public static class ModOptionsMenuPatch
                     AddOptionRow(menu, opt, y);
                     y -= RowHeight;
                 }
+
+                // 预设方案（参考 TONE）：切换并读取 / 保存当前设置（仅主机可操作）
+                var isHost = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
+
+                var presetRow = CreateDisplayRow(menu, "预设方案（点击切换并读取）", $"预设 {PresetManager.Current}", y);
+                MakeClickable(presetRow, () =>
+                {
+                    if (!isHost) return;
+                    PresetManager.SwitchNext();
+                    RpcSync.BroadcastOptions();
+                    BuildContent(menu);
+                });
+                y -= RowHeight;
+
+                var saveRow = CreateDisplayRow(menu, "保存当前设置到该预设", string.Empty, y);
+                MakeClickable(saveRow, () =>
+                {
+                    if (!isHost) return;
+                    PresetManager.Save();
+                });
+                y -= RowHeight;
             }
             else if (menu.name == "TAHS_RolesTab")
             {

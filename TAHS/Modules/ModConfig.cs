@@ -59,6 +59,9 @@ public static class ModConfig
     /// <summary>模组设置：首刀保护（默认关，上一局首死者本局免首刀）</summary>
     public static ConfigEntry<bool> FirstKillProtection { get; private set; } = null!;
 
+    /// <summary>当前预设编号（1~5）</summary>
+    public static ConfigEntry<int> CurrentPreset { get; private set; } = null!;
+
     /// <summary>猜测模式：总开关</summary>
     public static ConfigEntry<bool> GuessMode { get; private set; } = null!;
     /// <summary>猜测模式：船员可猜测</summary>
@@ -250,6 +253,8 @@ public static class ModConfig
         AutoStartMinPlayers = config.Bind("模组设置 Mod", "自动开始最少人数 AutoStartMinPlayers", 10, "达到该人数后自动开始倒计时");
         AutoStartCountdown = config.Bind("模组设置 Mod", "自动开始倒计时 AutoStartCountdown", 10, "自动开始的倒计时秒数");
         FirstKillProtection = config.Bind("模组设置 Mod", "首刀保护 FirstKillProtection", false, "上一局第一个死亡的玩家本局不能被首刀");
+
+        CurrentPreset = config.Bind("预设 Preset", "当前预设 CurrentPreset", 1, "模组设置页当前使用的预设编号（1~5）");
 
         ModeratorList = config.Bind("模组设置 Mod", "协管名单 ModeratorList", false,
             "开启后协管名单（TAHS-DATA/Moderators.txt）内的玩家可使用 /start、/end 等房主指令");
