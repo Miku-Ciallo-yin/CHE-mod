@@ -50,15 +50,7 @@ public static class PilotPatch
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.MurderPlayer))]
     public static class KillControl
     {
-        public static bool Prefix(PlayerControl __instance)
-        {
-            // 技能击杀走的是受害者自杀式 RPC（killer==target），不受影响；
-            // 这里只拦中东机长的主动击杀
-            if (CustomRoleManager.GetRole(__instance) is Pilot
-                && CustomOptions.PilotCanNormalKill.Value != 1)
-                return false;
-            return true;
-        }
+        // 主动击杀的拦截在 CheckMurderPatch（主机验证关口，广播前阻断）
 
         public static void Postfix(PlayerControl __instance, PlayerControl target, MurderResultFlags resultFlags)
         {

@@ -8,32 +8,13 @@ namespace TAHS.Patches;
 
 /// <summary>
 /// 月跑入机配套补丁：
-/// - 击杀拦截：技能期间无敌 / 追杀者在后者死前无法被击杀
+/// - 击杀拦截（在 CheckMurderPatch 主机验证关口）：技能期间无敌 / 追杀者受保护 / 追杀者只能杀后者
 /// - 投票拦截：受保护的追杀者无法被投票（返还投票并提示）
 /// - 速度增益：PlayerPhysics.FixedUpdate 应用倍率
 /// - 追杀箭头：追杀者本机显示指向后者的箭头
 /// </summary>
 public static class MoonRunnerPatch
 {
-    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.MurderPlayer))]
-    public static class MurderBlock
-    {
-        public static bool Prefix(PlayerControl __instance, PlayerControl target)
-        {
-            if (target == null || __instance == null) return true;
-
-            // 月跑入机技能期间（有激活增益）无敌
-            if (MoonRunner.HasActiveBuffAnywhere(target)) return false;
-            // 追杀者在后者死亡前无法被击杀
-            if (MoonRunner.IsProtectedHunter(target)) return false;
-            // 追杀者只能击杀后者（击杀按钮路径也要拦）
-            if (MoonRunner.HunterPrey.TryGetValue(__instance.PlayerId, out var preyId)
-                && target.PlayerId != preyId)
-                return false;
-            return true;
-        }
-    }
-
     [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.CmdCastVote))]
     public static class VoteBlock
     {

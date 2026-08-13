@@ -43,7 +43,8 @@
 2. **技能职业**：主动技能一律挂原版变形按钮（Shift），在 `Shapeshift` 补丁中劫持触发，
    不触发原版变形。
 3. 非内鬼阵营获得按钮时登记 `FakeImpostors`，对内鬼隐藏其红名。
-4. 击杀规则（阵营判定、冷却、限制）统一在 `KillRulesPatch` 前缀实现。
+4. 击杀规则（阵营判定、冷却、限制）统一在 `CheckMurderPatch` 前缀实现（主机验证关口，
+   广播前阻断，无模组端结果一致；**禁止**在 MurderPlayer 前缀拦截按钮击杀——广播会泄漏到无模组端）。
 
 ## 自定义 RPC 通道（PlayerControl NetObject，CallId）
 
