@@ -6,9 +6,10 @@ namespace TAHS.Modules;
 
 /// <summary>
 /// 私有名牌（参考 TONE 的定向改名技巧）：
-/// 通过只发给指定客户端的 SetName RPC，让"只有某个玩家"看到某玩家的
-/// 自定义名字颜色 / 名字下方标签——无模组客户端原生渲染，其他玩家完全看不到。
-/// 全部操作仅主机执行，每 2 秒刷新一次防止被游戏同步重置。
+/// 通过只发给指定客户端的 SetName RPC，让"只有某个玩家"看到某玩家名字上的
+/// 自定义颜色 / 附加文字——无模组客户端原生渲染，其他玩家完全看不到。
+/// 全部操作仅主机执行，高频刷新防止被游戏同步重置（GameData 会把干净名字刷回）。
+/// 附加文字与名字同行显示（vanilla 客户端对名字中的换行渲染不可靠）。
 /// </summary>
 public static class PrivateTag
 {
@@ -19,7 +20,7 @@ public static class PrivateTag
     private static readonly Dictionary<(int Viewer, byte Player), string> _colors = new();
 
     private static float _refreshTimer;
-    private const float RefreshInterval = 2f;
+    private const float RefreshInterval = 0.6f; // 高频刷新：对抗 GameData 同步把干净名字刷回
 
     private static bool IsHost => AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
 
@@ -103,7 +104,7 @@ public static class PrivateTag
         }
     }
 
-    /// <summary>定向改名：按当前登记的颜色与标签合成名字</summary>
+    /// <summary>定向改名：按当前登记的颜色与标签合成名字（标签与名字同行，vanilla 渲染可靠）</summary>
     private static void Apply(int viewerClientId, PlayerControl player)
     {
         var baseName = player.Data?.PlayerName;
@@ -117,7 +118,7 @@ public static class PrivateTag
         // 首刀保护的蓝色十字前缀（全员可见的一部分，定向合成时保留）
         name = (FirstKillProtection.NamePrefixFor(player.PlayerId) ?? string.Empty) + name;
         if (_tags.TryGetValue((viewerClientId, player.PlayerId), out var tag))
-            name = $"{name}\n<size=60%>{tag}</size>";
+            name = $"{name}<size=60%>({tag})</size>";
 
         var writer = AmongUsClient.Instance.StartRpcImmediately(
             player.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, viewerClientId);
