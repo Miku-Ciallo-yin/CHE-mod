@@ -864,11 +864,8 @@ public static class ForceEndPatch
             var newName = string.Join(' ', parts.Skip(1));
             if (newName.Length > 20) newName = newName[..20];
 
-            // 主机权威广播 SetName（PrivateTag 同款写法）+ 主机本地应用
-            var writer = AmongUsClient.Instance.StartRpcImmediately(
-                source.NetId, (byte)RpcCalls.SetName, Hazel.SendOption.Reliable, -1);
-            writer.Write(newName);
-            AmongUsClient.Instance.FinishRpcImmediately(writer);
+            // 主机权威广播改名（本版本游戏数据消息通道）+ 主机本地应用
+            Modules.PrivateTag.SendNameMessage(source, newName, -1);
             source.SetName(newName);
             tell($"[TAHS] 已改名为：{newName}");
         }

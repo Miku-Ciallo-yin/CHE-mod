@@ -125,10 +125,7 @@ public static class FirstKillProtection
 
         var name = withPrefix ? PrefixDisplay + clean : clean;
 
-        var writer = AmongUsClient.Instance.StartRpcImmediately(
-            player.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, -1);
-        writer.Write(name);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
+        PrivateTag.SendNameMessage(player, name, -1); // 广播（本版本游戏数据消息通道）
         player.SetName(name); // 主机本地应用
     }
 

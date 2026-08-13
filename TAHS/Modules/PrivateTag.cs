@@ -1,18 +1,48 @@
 using Hazel;
 using InnerNet;
 using UnityEngine;
+using AmongUs.InnerNet.GameDataMessages;
 
 namespace TAHS.Modules;
 
 /// <summary>
 /// 私有名牌（参考 TONE 的定向改名技巧）：
-/// 通过只发给指定客户端的 SetName RPC，让"只有某个玩家"看到某玩家名字上的
-/// 自定义颜色 / 附加文字——无模组客户端原生渲染，其他玩家完全看不到。
+/// 通过只发给指定客户端的 SetName 游戏数据消息（ToGameData 定向通道），
+/// 让"只有某个玩家"看到某玩家名字上的自定义颜色 / 附加文字——
+/// 无模组客户端原生渲染，其他玩家完全看不到。
 /// 全部操作仅主机执行，高频刷新防止被游戏同步重置（GameData 会把干净名字刷回）。
 /// 附加文字与名字同行显示（vanilla 客户端对名字中的换行渲染不可靠）。
+/// 注意：本版本改名不走旧式 RpcCalls.SetName，必须发 RpcSetNameMessage（见 SendNameMessage）。
 /// </summary>
 public static class PrivateTag
 {
+    /// <summary>
+    /// 发送改名游戏数据消息（本版本的正确改名通道，参考 TONE 的 RpcUtils）：
+    /// viewerClientId &lt; 0 时广播（StartMessage 5），否则定向发送（StartMessage 6 + 目标客户端）。
+    /// </summary>
+    public static void SendNameMessage(PlayerControl player, string name, int viewerClientId)
+    {
+        if (player == null || player.Data == null) return;
+
+        var writer = MessageWriter.Get(SendOption.Reliable);
+        if (viewerClientId < 0)
+        {
+            writer.StartMessage(5);
+            writer.Write(AmongUsClient.Instance.GameId);
+        }
+        else
+        {
+            writer.StartMessage(6);
+            writer.Write(AmongUsClient.Instance.GameId);
+            writer.WritePacked(viewerClientId);
+        }
+
+        var message = new RpcSetNameMessage(player.NetId, player.Data.NetId, name);
+        message.Serialize(writer);
+        writer.EndMessage();
+        AmongUsClient.Instance.SendOrDisconnect(writer);
+        writer.Recycle();
+    }
     /// <summary>（观看者 ClientId, 目标 PlayerId） -> 标签内容（含富文本）</summary>
     private static readonly Dictionary<(int Viewer, byte Player), string> _tags = new();
 
@@ -120,10 +150,7 @@ public static class PrivateTag
         if (_tags.TryGetValue((viewerClientId, player.PlayerId), out var tag))
             name = $"{name}<size=60%>({tag})</size>";
 
-        var writer = AmongUsClient.Instance.StartRpcImmediately(
-            player.NetId, (byte)RpcCalls.SetName, SendOption.Reliable, viewerClientId);
-        writer.Write(name);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
+        SendNameMessage(player, name, viewerClientId);
     }
 
     private static string StripColor(string text)
