@@ -4,8 +4,8 @@ using UnityEngine;
 namespace TAHS.Roles.Crewmate;
 
 /// <summary>
-/// 佃农（船员阵营）：靠近其他船员可抢夺其任务；
-/// 抢够数量并完成现有任务后获得击杀能力（按 Q 击杀最近玩家）；
+/// 佃农（船员阵营）：靠近其他船员可抢夺其任务（不抢带刀玩家）；
+/// 抢夺数量达到解锁击杀所需数即停止抢夺，完成现有任务后获得击杀能力（按 Q 击杀最近玩家）；
 /// 若击杀船员阵营玩家则转化为中立阵营。
 /// 概率 / 所需任务数 / 击杀冷却 / 抢夺范围均可在 BepInEx 配置中调整。
 /// </summary>
@@ -80,9 +80,12 @@ public class Farmer : RoleBase
         GameArchive.RecordTransition($"佃农 {Player?.Data?.PlayerName} 误杀船员，转变为中立阵营");
     }
 
-    /// <summary>对范围内的每个船员按概率抢夺一个任务</summary>
+    /// <summary>对范围内的每个船员按概率抢夺一个任务（达到解锁击杀所需数后不再抢夺；不抢带刀玩家）</summary>
     private void TryStealFromNearby()
     {
+        // 抢夺数量上限与解锁击杀所需抢夺数一致：抢满即停
+        if (StealCount >= CustomOptions.FarmerStealsForKill.Value) return;
+
         var range = CustomOptions.FarmerStealRange.ScaledValue;
         var chance = Mathf.Clamp01(CustomOptions.FarmerStealChance.ScaledValue);
         if (chance <= 0f) return;
@@ -92,6 +95,8 @@ public class Farmer : RoleBase
             if (victim == null || victim == Player) continue;
             if (victim.Data == null || victim.Data.IsDead) continue;
             if (CustomRoleManager.GetFaction(victim) != Faction.Crewmate) continue;
+            // 不抢带刀玩家（内鬼系身份：原版内鬼/变形者及持原版刀的职业）
+            if (victim.Data.Role != null && victim.Data.Role.IsImpostor) continue;
             if (Vector2.Distance(Player!.GetTruePosition(), victim.GetTruePosition()) > range) continue;
             if (_rng.NextDouble() > chance) continue;
 
