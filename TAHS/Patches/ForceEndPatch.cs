@@ -99,6 +99,11 @@ public static class ForceEndPatch
                 ShowEnabledRoles();
                 return false;
             }
+            if (text.StartsWith("/r ", System.StringComparison.OrdinalIgnoreCase))
+            {
+                ShowRoleInfo(text.Substring(3).Trim());
+                return false;
+            }
             if (text.Equals("/d", System.StringComparison.OrdinalIgnoreCase))
             {
                 ShowMyKiller();
@@ -565,6 +570,44 @@ public static class ForceEndPatch
             Modules.ChatHelper.ShowMany(BuildEnabledRolesLines());
         }
 
+        /// <summary>/r <职业名>：查看指定职业介绍（参考 TONE）</summary>
+        private static void ShowRoleInfo(string name)
+        {
+            Modules.ChatHelper.ShowMany(BuildRoleInfoLines(name));
+        }
+
+        /// <summary>/r <职业名> 内容（本地显示与主机私信共用）：按中/英文名精确匹配职业或附加职业</summary>
+        public static List<string> BuildRoleInfoLines(string name)
+        {
+            foreach (var (_, sample) in Roles.CustomRoleManager.GetRoleSamples())
+                if (NameMatches(sample.Name, sample.NameEn, name))
+                    return BuildDetail(sample.Name, sample.NameEn, sample.Faction.ToString(), sample.Description);
+
+            foreach (var (_, sample) in Roles.CustomRoleManager.GetAddonSamples())
+                if (NameMatches(sample.Name, sample.NameEn, name))
+                    return BuildDetail(sample.Name, sample.NameEn, "附加职业", sample.Description);
+
+            return new List<string> { $"[TAHS] 未找到职业：{name}（/r 查看本局已开启职业）" };
+
+            static bool NameMatches(string cn, string en, string input)
+            {
+                return cn.Equals(input, System.StringComparison.OrdinalIgnoreCase)
+                       || en.Equals(input, System.StringComparison.OrdinalIgnoreCase);
+            }
+
+            static List<string> BuildDetail(string cn, string en, string faction, string description)
+            {
+                var lines = new List<string>
+                {
+                    "<color=#4FC3F7>===== 职业介绍 =====</color>",
+                    $"{cn} / {en}（{faction}）",
+                };
+                if (!string.IsNullOrEmpty(description))
+                    lines.Add(description);
+                return lines;
+            }
+        }
+
         /// <summary>/r 内容（本地显示与主机代收无模组端指令时私信共用）：按船员/内鬼/中立分节</summary>
         public static List<string> BuildEnabledRolesLines()
         {
@@ -699,7 +742,7 @@ public static class ForceEndPatch
             "/tpout — 传送到飞船外面（大厅/死亡后）",
             "/tpin — 传送回飞船内（大厅/死亡后）",
             "/m — 查看自己本局职业介绍",
-            "/r — 查看本局已开启的全部职业",
+            "/r [职业名] — 查看本局已开启职业 / 指定职业介绍",
             "/d — 死亡后查看击杀自己的玩家",
             "/l — 查看上一局身份转换详情及击杀记录",
             "/kc — 查看存活内鬼与中立人数（需场上有存活使徒）",
@@ -727,6 +770,8 @@ public static class ForceEndPatch
             { Modules.ChatHelper.ShowPrivateMany(source, BuildHelpLines()); return; }
             if (text.Equals("/r", System.StringComparison.OrdinalIgnoreCase))
             { Modules.ChatHelper.ShowPrivateMany(source, BuildEnabledRolesLines()); return; }
+            if (text.StartsWith("/r ", System.StringComparison.OrdinalIgnoreCase))
+            { Modules.ChatHelper.ShowPrivateMany(source, BuildRoleInfoLines(text.Substring(3).Trim())); return; }
             if (text.Equals("/id", System.StringComparison.OrdinalIgnoreCase))
             { Modules.ChatHelper.ShowPrivateMany(source, BuildPlayerIdLines(source)); return; }
             if (text.Equals("/m", System.StringComparison.OrdinalIgnoreCase))
