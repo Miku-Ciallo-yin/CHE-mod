@@ -41,6 +41,9 @@ public static class MinisterPatch
     {
         public static void Postfix()
         {
+            // 算命师：上一轮预言在新会议开始时失效
+            Roles.Impostor.FortuneTeller.OnMeetingStart();
+
             if (Minister.PendingKillers.Count == 0) return;
 
             foreach (var playerId in Minister.PendingKillers.ToArray())

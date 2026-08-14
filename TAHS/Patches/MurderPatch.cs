@@ -19,6 +19,10 @@ public static class MurderPatch
         Modules.GameArchive.RecordKill(KillText(__instance, target));
         ConverterPatch.ApostleTags.TagForApostles(target); // 使徒私有标签（含无模组端使徒）
         CustomRoleManager.GetRole(__instance)?.OnMurder(target);
+
+        // 算命师预言结算（仅主机）
+        if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+            Roles.Impostor.FortuneTeller.OnDeath(target);
     }
 
     private static string KillText(PlayerControl killer, PlayerControl victim)

@@ -30,6 +30,8 @@ public static class CustomRoleManager
         (13, () => new Balancer()),  // 船员阵营：平衡主义者
         (14, () => new Miner()),   // 内鬼阵营：埋雷兵
         (16, () => new FrenchArmy()), // 船员阵营：法军
+        (17, () => new FortuneTeller()), // 内鬼阵营：算命师
+        (18, () => new FengshuiMaster()), // 船员阵营：风水师
     };
 
     /// <summary>
@@ -337,9 +339,9 @@ public static class CustomRoleManager
     /// <summary>把玩家转变为指定职业实例（替换原有职业，如凶手变内阁）</summary>
     public static void TransformToRole(PlayerControl player, RoleBase newRole)
     {
-        // 转变前回收旧职业的原版按钮
+        // 转变前回收旧职业的原版按钮（新职业是内鬼阵营则转为内鬼身份）
         if (FakeImpostors.Contains(player.PlayerId))
-            RevokeVanillaButtons(player);
+            RevokeVanillaButtons(player, toImpostor: newRole.Faction == Faction.Impostor);
 
         // ID 取新职业在注册表中的 ID（猜测/判定依赖职业 ID）
         newRole.Id = RoleRegistry.FirstOrDefault(r => r.Factory().GetType() == newRole.GetType()).Id;

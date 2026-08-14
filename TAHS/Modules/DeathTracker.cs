@@ -32,6 +32,26 @@ public static class DeathTracker
         _causeByVictim[exiled.PlayerId] = "放逐";
     }
 
+    /// <summary>设置自定义死因（算命/风水不好等；主机本地记录 + RpcSync 广播给模组端）</summary>
+    public static void SetCause(byte victimId, string cause)
+    {
+        _causeByVictim[victimId] = cause;
+    }
+
+    /// <summary>
+    /// 主机：以指定死因处死一名玩家（自杀式官方 RPC，各端一致），
+    /// 记录并广播死因，写入 /l 归档。
+    /// </summary>
+    public static void KillWithCause(PlayerControl victim, string cause)
+    {
+        if (victim == null || victim.Data == null || victim.Data.IsDead) return;
+
+        victim.RpcMurderPlayer(victim, true);
+        SetCause(victim.PlayerId, cause); // 主机本地
+        RpcSync.BroadcastDeathCause(victim.PlayerId, cause); // 模组端同步
+        GameArchive.RecordKill($"{victim.Data.PlayerName} 死亡（{cause}）");
+    }
+
     /// <summary>查询被害者的击杀者信息，无记录返回 null</summary>
     public static string? GetKillerInfo(byte victimId)
     {

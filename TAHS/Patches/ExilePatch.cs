@@ -18,6 +18,10 @@ public static class ExilePatch
         Modules.DeathTracker.RecordExile(player.Object);
         ConverterPatch.ApostleTags.TagForApostles(player.Object); // 使徒私有标签
 
+        // 算命师预言结算（放逐也算死亡，仅主机）
+        if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+            Roles.Impostor.FortuneTeller.OnDeath(player.Object);
+
         var role = CustomRoleManager.GetRole(player.Object);
         if (role == null) return;
 

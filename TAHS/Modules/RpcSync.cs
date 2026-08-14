@@ -42,6 +42,22 @@ public static class RpcSync
     /// <summary>地雷同步（主机 -> 全模组端）：kind 1=放置 2=移除。</summary>
     public const byte MineSyncCallId = 228;
 
+    /// <summary>死因同步（主机 -> 全模组端）：算命/风水不好等自定义死因。</summary>
+    public const byte DeathCauseCallId = 229;
+
+    /// <summary>主机：广播自定义死因。</summary>
+    public static void BroadcastDeathCause(byte victimId, string cause)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, DeathCauseCallId, SendOption.Reliable, -1);
+        writer.Write(victimId);
+        writer.Write(cause);
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>主机：广播地雷放置/移除。</summary>
     public static void SendMineSync(byte kind, int index, Vector2 pos, float range, float visibleSeconds)
     {
@@ -293,6 +309,15 @@ public static class RpcSync
                 return true;
             }
 
+            if (kind == 6)
+            {
+                // /btd 请求：算命师预言（所有人可发，校验在 Predict 内）
+                var predictedId = reader.ReadInt32();
+                if (CustomRoleManager.GetRole(sender) is Roles.Impostor.FortuneTeller)
+                    Roles.Impostor.FortuneTeller.Predict(sender, PlayerIdManager.GetPlayerById(predictedId));
+                return true;
+            }
+
             if (!ModeratorManager.IsEnabled || !ModeratorManager.IsModerator(sender)) return true;
 
             if (kind == 1)
@@ -359,6 +384,12 @@ public static class RpcSync
 
             if (kind == 1) MineVisuals.OnPlace(index, new Vector2(x, y), range, visible);
             else MineVisuals.Remove(index);
+            return true;
+        }
+
+        if (callId == DeathCauseCallId)
+        {
+            DeathTracker.SetCause(reader.ReadByte(), reader.ReadString());
             return true;
         }
 

@@ -19,6 +19,14 @@ public static class ApostlePatch
         public static void Postfix(PlayerControl __instance)
         {
             if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
+
+            // 风水师：完成任务随机暴毙一名玩家
+            if (CustomRoleManager.GetRole(__instance) is FengshuiMaster fengshui)
+            {
+                fengshui.OnTaskComplete();
+                return;
+            }
+
             if (CustomRoleManager.GetRole(__instance) is not Apostle) return;
 
             TAHSPlugin.Log.LogInfo($"[TAHS] 使徒 {__instance.Data?.PlayerName} 完成任务，赐予良性附加职业");
