@@ -47,6 +47,35 @@ public static class PilotPatch
         }
     }
 
+    /// <summary>
+    /// 技能直发按钮（手机端/模组端便捷操作，参考 TONE）：
+    /// 忏悔者/中东机长/埋雷兵点变形按钮直接放技能，不打开选人菜单、不消耗变形次数。
+    /// 走原版 RpcShapeshift（自身为目标），主机按 ShapeshiftHijack 劫持执行——
+    /// 无模组端打开菜单选人后殊途同归（同样由主机劫持）。
+    /// 月跑入机需要选人目标，保留菜单流程。
+    /// </summary>
+    [HarmonyPatch(typeof(ShapeshifterRole), nameof(ShapeshifterRole.UseAbility))]
+    public static class DirectSkillButton
+    {
+        public static bool Prefix()
+        {
+            var local = PlayerControl.LocalPlayer;
+            if (local == null) return true;
+
+            var trigger = CustomRoleManager.GetRole(local) switch
+            {
+                Repenter repenter => repenter.CanConvert,
+                Pilot pilot => pilot.SkillTimer <= 0f && !pilot.Dashing,
+                Miner => true, // 冷却/数量校验在 PlaceMine 内
+                _ => false,
+            };
+            if (!trigger) return true;
+
+            local.RpcShapeshift(local, false); // 主机劫持为技能
+            return false; // 不打开选人菜单，不消耗次数
+        }
+    }
+
     [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.MurderPlayer))]
     public static class KillControl
     {

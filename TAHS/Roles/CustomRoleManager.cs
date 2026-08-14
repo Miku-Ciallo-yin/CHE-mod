@@ -240,6 +240,10 @@ public static class CustomRoleManager
                     : AmongUs.GameOptions.RoleTypes.Crewmate;
                 if (player.Data.Role == null || player.Data.Role.Role != want)
                     player.RpcSetRole(want);
+
+                // 变形次数拉满：技能挂在变形按钮上，防止次数为 0 时按钮不显示（移动端/无模组端）
+                if (impostorFamily && player.Data.Role != null)
+                    player.Data.Role.SetAbilityUsesRemaining(100);
             }
 
             TAHSPlugin.Log.LogInfo($"[TAHS] {player.Data.PlayerName} -> {role.Name} ({role.Faction})");
