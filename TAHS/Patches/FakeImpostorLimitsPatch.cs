@@ -51,4 +51,26 @@ public static class FakeImpostorLimitsPatch
                 __instance.AbilityButton.gameObject.SetActive(false);
         }
     }
+
+    /// <summary>
+    /// 破坏拦截（参考 TONE 的 MessageReaderUpdateSystemPatch）：
+    /// 破坏走 ShipStatus.RpcUpdateSystem → 主机 UpdateSystem(SystemTypes.Sabotage)，
+    /// 主机在 RPC 处理处拦截，破坏不会应用也不会转发，各端一致（无模组端点破坏无效）。
+    /// </summary>
+    [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.UpdateSystem),
+        new[] { typeof(SystemTypes), typeof(PlayerControl), typeof(Hazel.MessageReader) })]
+    public static class SabotageBlock
+    {
+        public static bool Prefix(SystemTypes systemType, PlayerControl player)
+        {
+            if (systemType != SystemTypes.Sabotage) return true;
+            if (player == null || player.Data == null) return true;
+
+            // 仅内鬼阵营可破坏（带刀中立/假内鬼不可）
+            if (CustomRoleManager.GetFaction(player) == Faction.Impostor) return true;
+
+            TAHSPlugin.Log.LogInfo($"[TAHS] 拦截非内鬼破坏：{player.Data.PlayerName}");
+            return false;
+        }
+    }
 }
