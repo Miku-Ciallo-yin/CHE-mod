@@ -32,6 +32,7 @@ public static class CustomRoleManager
         (16, () => new FrenchArmy()), // 船员阵营：法军
         (17, () => new FortuneTeller()), // 内鬼阵营：算命师
         (18, () => new FengshuiMaster()), // 船员阵营：风水师
+        (19, () => new Amnesiac()),  // 中立阵营（友好）：失忆者
     };
 
     /// <summary>
