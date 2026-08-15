@@ -250,6 +250,14 @@ public static class GuesserPatch
             : CustomRoleManager.GetRole(target)?.Id == entry.Id;
 
         var victim = correct ? target : guesser;
+
+        // 摄梦免疫：抵消猜测致死
+        if (Roles.Impostor.DreamEater.TryConsumeImmunity(victim))
+        {
+            TAHSPlugin.Log.LogInfo($"[TAHS] 猜测致死的目标 {victim.Data?.PlayerName} 被摄梦免疫保护");
+            return;
+        }
+
         TAHSPlugin.Log.LogInfo(
             $"[TAHS] {guesser.Data.PlayerName} 猜测 {target.Data.PlayerName} 是 {entry.Name}" +
             $"：{(correct ? "正确" : "错误")}，{victim.Data!.PlayerName} 死亡");

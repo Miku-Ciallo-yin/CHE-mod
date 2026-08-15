@@ -31,6 +31,17 @@ public static class CheckMurderPatch
 
         var host = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
 
+        // 摄梦免疫（目标侧）：抵消一次任意击杀
+        if (DreamEater.IsImmune(target))
+        {
+            if (host)
+            {
+                DreamEater.TryConsumeImmunity(target);
+                Modules.ChatHelper.ShowPrivate(__instance, "[TAHS] 目标处于摄梦保护中，本次击杀被抵消");
+            }
+            return false;
+        }
+
         // 首刀保护（目标侧）：上一局第一个死亡的玩家不能被首刀
         if (Modules.FirstKillProtection.IsProtected(target))
         {

@@ -43,6 +43,8 @@ public static class MinisterPatch
         {
             // 算命师：上一轮预言在新会议开始时失效
             Roles.Impostor.FortuneTeller.OnMeetingStart();
+            // 摄梦人：重置每会一次的摄梦限制
+            Roles.Impostor.DreamEater.OnMeetingStart();
 
             if (Minister.PendingKillers.Count == 0) return;
 

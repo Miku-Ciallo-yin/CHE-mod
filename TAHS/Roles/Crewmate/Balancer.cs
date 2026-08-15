@@ -130,6 +130,13 @@ public class Balancer : RoleBase
         var (_, targets) = exceeding[rng.Next(exceeding.Count)];
         var victim = targets[rng.Next(targets.Count)];
 
+        // 摄梦免疫：抵消处决且不消耗次数
+        if (Roles.Impostor.DreamEater.TryConsumeImmunity(victim))
+        {
+            ChatHelper.ShowPrivate(user, "[TAHS] 目标处于摄梦保护中，处决被抵消（未消耗次数）");
+            return;
+        }
+
         balancer.UsesLeft--;
         victim.RpcMurderPlayer(victim, true);
 

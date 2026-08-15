@@ -87,6 +87,8 @@ public static class ForceEndPatch
                 return HandleBet(text);
             if (text.StartsWith("/btd", System.StringComparison.OrdinalIgnoreCase))
                 return HandleFortune(text);
+            if (text.StartsWith("/sm", System.StringComparison.OrdinalIgnoreCase))
+                return HandleDream(text);
             if (text.Equals("/id", System.StringComparison.OrdinalIgnoreCase))
             {
                 ShowPlayerIds();
@@ -195,6 +197,52 @@ public static class ForceEndPatch
             return false;
         }
 
+        /// <summary>/sm id：摄梦人摄梦该玩家（仅摄梦人、会议中）</summary>
+        private static bool HandleDream(string text)
+        {
+            var show = Modules.ChatHelper.Show;
+
+            if (AmongUsClient.Instance == null
+                || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
+            {
+                show("[TAHS] /sm 仅对局中可用");
+                return false;
+            }
+            if (MeetingHud.Instance == null)
+            {
+                show("[TAHS] /sm 仅会议中可用");
+                return false;
+            }
+
+            var local = PlayerControl.LocalPlayer;
+            if (local == null) return false;
+            if (Roles.CustomRoleManager.GetRole(local) is not Roles.Impostor.DreamEater)
+            {
+                show("[TAHS] /sm 仅摄梦人可用");
+                return false;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
+            {
+                show("[TAHS] 用法：/sm <玩家ID>，如 /sm 2");
+                return false;
+            }
+
+            var target = Modules.PlayerIdManager.GetPlayerById(id);
+            if (target == null)
+            {
+                show($"[TAHS] 未找到 ID 为 {id} 的玩家");
+                return false;
+            }
+
+            if (IsHost())
+                Roles.Impostor.DreamEater.Dream(local, target);
+            else
+                Modules.RpcSync.SendModCommand(7, id); // 请求主机执行
+            return false;
+        }
+
         /// <summary>/kill id：直接击杀对应玩家（仅房主，对局中）</summary>
         private static bool HandleKill(string text)
         {
@@ -228,6 +276,11 @@ public static class ForceEndPatch
             if (target.Data.IsDead)
             {
                 show($"[TAHS] [{id}] {target.Data.PlayerName} 已经死亡");
+                return false;
+            }
+            if (Roles.Impostor.DreamEater.TryConsumeImmunity(target))
+            {
+                show($"[TAHS] [{id}] {target.Data.PlayerName} 处于摄梦保护中，击杀被抵消");
                 return false;
             }
 
@@ -797,6 +850,7 @@ public static class ForceEndPatch
             "/kc — 查看存活内鬼与中立人数（需场上有存活使徒）",
             "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
             "/btd <玩家ID> — 算命师预言该玩家下轮死亡（仅算命师/会议中）",
+            "/sm <玩家ID> — 摄梦人摄梦该玩家（仅摄梦人/会议中）",
             "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主/协管）",
             "/end — 强制结束对局返回大厅（仅房主/协管，对局中）",
             "/dump — 导出日志到桌面并显示最近日志（仅房主）",
@@ -841,6 +895,10 @@ public static class ForceEndPatch
             // 算命师预言（主机验证职业并执行）
             if (text.StartsWith("/btd", System.StringComparison.OrdinalIgnoreCase))
             { HostFortune(source, text, tell); return; }
+
+            // 摄梦人摄梦（主机验证职业并执行）
+            if (text.StartsWith("/sm", System.StringComparison.OrdinalIgnoreCase))
+            { HostDream(source, text, tell); return; }
 
             // 平衡主义者处决（主机验证职业并执行）
             if (text.Equals("/ph", System.StringComparison.OrdinalIgnoreCase))
@@ -970,6 +1028,38 @@ public static class ForceEndPatch
             }
 
             Roles.Impostor.FortuneTeller.Predict(source, target); // 会议校验在 Predict 内
+        }
+
+        /// <summary>主机代收 /sm：验证职业后执行摄梦（与 /btd 同模式）</summary>
+        private static void HostDream(PlayerControl source, string text, System.Action<string> tell)
+        {
+            if (AmongUsClient.Instance == null
+                || AmongUsClient.Instance.GameState != InnerNet.InnerNetClient.GameStates.Started)
+            {
+                tell("[TAHS] /sm 仅对局中可用");
+                return;
+            }
+            if (Roles.CustomRoleManager.GetRole(source) is not Roles.Impostor.DreamEater)
+            {
+                tell("[TAHS] /sm 仅摄梦人可用");
+                return;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
+            {
+                tell("[TAHS] 用法：/sm <玩家ID>，如 /sm 2");
+                return;
+            }
+
+            var target = Modules.PlayerIdManager.GetPlayerById(id);
+            if (target == null)
+            {
+                tell($"[TAHS] 未找到 ID 为 {id} 的玩家");
+                return;
+            }
+
+            Roles.Impostor.DreamEater.Dream(source, target); // 会议校验在 Dream 内
         }
 
         /// <summary>主机代收 /rn：代为广播改名（受开关与大厅限制）</summary>

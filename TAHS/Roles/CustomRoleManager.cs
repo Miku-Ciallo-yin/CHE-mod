@@ -33,6 +33,7 @@ public static class CustomRoleManager
         (17, () => new FortuneTeller()), // 内鬼阵营：算命师
         (18, () => new FengshuiMaster()), // 船员阵营：风水师
         (19, () => new Amnesiac()),  // 中立阵营（友好）：失忆者
+        (20, () => new DreamEater()), // 内鬼阵营：摄梦人
     };
 
     /// <summary>
@@ -344,6 +345,12 @@ public static class CustomRoleManager
         if (FakeImpostors.Contains(player.PlayerId))
             RevokeVanillaButtons(player, toImpostor: newRole.Faction == Faction.Impostor);
 
+        // 新职业非内鬼阵营但当前是内鬼系身份：压回普通船员（如摄梦人变失忆者）
+        if (newRole.Faction != Faction.Impostor
+            && player.Data != null && player.Data.Role != null && player.Data.Role.IsImpostor
+            && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+            player.RpcSetRole(AmongUs.GameOptions.RoleTypes.Crewmate);
+
         // ID 取新职业在注册表中的 ID（猜测/判定依赖职业 ID）
         newRole.Id = RoleRegistry.FirstOrDefault(r => r.Factory().GetType() == newRole.GetType()).Id;
         newRole.OnAssign(player);
@@ -506,6 +513,7 @@ public static class CustomRoleManager
         GameArchive.ArchiveAndReset();
         MoonRunner.ResetStatics();
         Balancer.ResetStatics();
+        DreamEater.ResetStatics();
         PrivateTag.ClearAll();
         MineVisuals.Clear();
     }

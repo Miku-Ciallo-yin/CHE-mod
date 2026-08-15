@@ -45,6 +45,7 @@ public static class DeathTracker
     public static void KillWithCause(PlayerControl victim, string cause)
     {
         if (victim == null || victim.Data == null || victim.Data.IsDead) return;
+        if (Roles.Impostor.DreamEater.TryConsumeImmunity(victim)) return; // 摄梦免疫抵消
 
         victim.RpcMurderPlayer(victim, true);
         SetCause(victim.PlayerId, cause); // 主机本地

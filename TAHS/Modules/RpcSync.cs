@@ -318,6 +318,15 @@ public static class RpcSync
                 return true;
             }
 
+            if (kind == 7)
+            {
+                // /sm 请求：摄梦人摄梦（所有人可发，校验在 Dream 内）
+                var dreamId = reader.ReadInt32();
+                if (CustomRoleManager.GetRole(sender) is Roles.Impostor.DreamEater)
+                    Roles.Impostor.DreamEater.Dream(sender, PlayerIdManager.GetPlayerById(dreamId));
+                return true;
+            }
+
             if (!ModeratorManager.IsEnabled || !ModeratorManager.IsModerator(sender)) return true;
 
             if (kind == 1)
