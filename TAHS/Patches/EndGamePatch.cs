@@ -17,6 +17,7 @@ public static class EndGamePatch
         if (winners.Count == 0)
         {
             AdjustForTraitors();
+            AdjustForSchrodinger();
             return;
         }
 
@@ -24,6 +25,50 @@ public static class EndGamePatch
         foreach (var winner in winners)
             if (winner != null && winner.Data != null)
                 EndGameResult.CachedWinners.Add(new CachedPlayerData(winner.Data));
+    }
+
+    /// <summary>
+    /// 薛定谔的船员：死亡则跟随内鬼胜利，存活按船员结算。
+    /// 因其带刀持变形者身份（内鬼系），原版结算天然把存活的排除出船员胜利、
+    /// 死亡（任一结果下按身份）已符合"跟随内鬼"——只需修正存活的：
+    /// 内鬼获胜时把存活的移出胜利名单，船员获胜时把存活的并入。
+    /// 无模组客户端走原版结算（Host Only 降级点）。
+    /// </summary>
+    private static void AdjustForSchrodinger()
+    {
+        var alive = new System.Collections.Generic.List<PlayerControl>();
+        foreach (var p in PlayerControl.AllPlayerControls)
+            if (p != null && p.Data != null && !p.Data.IsDead
+                && CustomRoleManager.GetRole(p) is Roles.Crewmate.SchrodingerCrew)
+                alive.Add(p);
+        if (alive.Count == 0) return;
+
+        var reason = EndGameResult.CachedGameOverReason;
+        var impostorWin = reason is GameOverReason.ImpostorsByKill
+            or GameOverReason.ImpostorsBySabotage
+            or GameOverReason.ImpostorsByVote
+            or GameOverReason.ImpostorDisconnect;
+
+        foreach (var p in alive)
+        {
+            var exists = false;
+            for (var i = 0; i < EndGameResult.CachedWinners.Count; i++)
+                if (EndGameResult.CachedWinners[i].PlayerName == p.Data.PlayerName) { exists = true; break; }
+
+            if (impostorWin)
+            {
+                // 存活=按船员结算：内鬼胜利时移出
+                if (exists)
+                    for (var i = EndGameResult.CachedWinners.Count - 1; i >= 0; i--)
+                        if (EndGameResult.CachedWinners[i].PlayerName == p.Data.PlayerName)
+                            EndGameResult.CachedWinners.RemoveAt(i);
+            }
+            else if (!exists)
+            {
+                // 非内鬼结果（船员胜利）：并入
+                EndGameResult.CachedWinners.Add(new CachedPlayerData(p.Data));
+            }
+        }
     }
 
     /// <summary>

@@ -34,6 +34,7 @@ public static class CustomRoleManager
         (18, () => new FengshuiMaster()), // 船员阵营：风水师
         (19, () => new Amnesiac()),  // 中立阵营（友好）：失忆者
         (20, () => new DreamEater()), // 内鬼阵营：摄梦人
+        (21, () => new SchrodingerCrew()), // 船员阵营：薛定谔的船员
     };
 
     /// <summary>

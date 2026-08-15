@@ -97,6 +97,9 @@ public static class CheckMurderPatch
 
             case FrenchArmy army:
                 return !army.Disarmed && army.KillTimer <= 0f;
+
+            case SchrodingerCrew schrodinger:
+                return schrodinger.KillTimer <= 0f;
         }
         return true;
     }
