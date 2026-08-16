@@ -7,16 +7,18 @@ namespace TAHS.Patches;
 /// 自定义社区服务器（参考 TONE/EHR 的 RegionInstall 做法）：
 /// 向服务器列表注入社区服条目，在社区服开公开房不受官方反作弊管辖
 /// （官方服开模组公开房有被 ban 风险，请改用社区服）。
-/// 与 TONE 同名注入（Niko-AS / Niko-CN），两模组共存时不会重复出现。
+/// 选用当前实测可用的 MAS/MNA/MEU（/api/games 返回 401 的真实 Impostor 匹配服）。
 /// </summary>
 [HarmonyPatch(typeof(ServerManager))]
 public static class CustomServerPatch
 {
-    /// <summary>注入的社区服（名称、Ping 地址、服务器地址），与 TONE/EHR 保持一致</summary>
+    /// <summary>注入的社区服（名称、Ping 地址、服务器地址），与社区主流模组服一致</summary>
     private static readonly (string Name, string Ping, string Ip)[] CustomRegions =
     {
-        ("Niko-AS", "https://au-as.niko233.me", "https://au-as.niko233.me"),
-        ("Niko-CN", "play.simpfun.cn", "https://au-cn.niko233.me"),
+        // Niko 系列（au-*.niko233.me）已被 WAF JS 挑战拦截，游戏客户端无法通过，弃用
+        ("Modded Asia (MAS)", "https://au-as.duikbo.at", "https://au-as.duikbo.at"),
+        ("Modded NA (MNA)", "https://aumods.org", "https://aumods.org"),
+        ("Modded EU (MEU)", "https://au-eu.duikbo.at", "https://au-eu.duikbo.at"),
     };
 
     [HarmonyPatch(nameof(ServerManager.Awake)), HarmonyPostfix]
