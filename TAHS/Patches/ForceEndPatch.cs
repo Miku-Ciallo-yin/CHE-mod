@@ -94,6 +94,10 @@ public static class ForceEndPatch
                 ShowPlayerIds();
                 return false;
             }
+            if (text.Equals("/ds", System.StringComparison.OrdinalIgnoreCase))
+                return HandleDraftStart();
+            if (text.StartsWith("/ds ", System.StringComparison.OrdinalIgnoreCase))
+                return HandleDraftPick(text);
             if (text.Equals("/m", System.StringComparison.OrdinalIgnoreCase))
             {
                 ShowMyRole();
@@ -194,6 +198,59 @@ public static class ForceEndPatch
                 Roles.Impostor.FortuneTeller.Predict(local, target);
             else
                 Modules.RpcSync.SendModCommand(6, id); // 请求主机执行
+            return false;
+        }
+
+        /// <summary>/ds：开始选秀（房主/协管，仅大厅中）</summary>
+        private static bool HandleDraftStart()
+        {
+            var show = Modules.ChatHelper.Show;
+
+            if (AmongUsClient.Instance != null
+                && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
+            {
+                show("[TAHS] /ds 仅大厅中可用");
+                return false;
+            }
+            if (!CanUseHostCommands(Modules.CustomOptions.ModAllowStart))
+            {
+                show("[TAHS] /ds 仅房主或协管可用");
+                return false;
+            }
+
+            if (IsHost())
+                Modules.DraftManager.Start();
+            else
+                Modules.RpcSync.SendModCommand(8, 0); // 请求主机开始选秀
+            return false;
+        }
+
+        /// <summary>/ds 序号：从自己的选秀池选择职业（所有人可用，仅大厅中）</summary>
+        private static bool HandleDraftPick(string text)
+        {
+            var show = Modules.ChatHelper.Show;
+
+            if (AmongUsClient.Instance != null
+                && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
+            {
+                show("[TAHS] 选秀选择仅大厅中可用");
+                return false;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !int.TryParse(parts[1], out var index))
+            {
+                show("[TAHS] 用法：/ds <序号>，如 /ds 1");
+                return false;
+            }
+
+            var local = PlayerControl.LocalPlayer;
+            if (local == null) return false;
+
+            if (IsHost())
+                Modules.DraftManager.Pick(local, index);
+            else
+                Modules.RpcSync.SendModCommand(9, index); // 请求主机记录选择
             return false;
         }
 
@@ -851,6 +908,7 @@ public static class ForceEndPatch
             "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
             "/btd <玩家ID> — 算命师预言该玩家下轮死亡（仅算命师/会议中）",
             "/sm <玩家ID> — 摄梦人摄梦该玩家（仅摄梦人/会议中）",
+            "/ds [序号] — 大厅开始选秀（房主/协管）；带序号从自己的职业池选择",
             "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主/协管）",
             "/end — 强制结束对局返回大厅（仅房主/协管，对局中）",
             "/dump — 导出日志到桌面并显示最近日志（仅房主）",
@@ -899,6 +957,12 @@ public static class ForceEndPatch
             // 摄梦人摄梦（主机验证职业并执行）
             if (text.StartsWith("/sm", System.StringComparison.OrdinalIgnoreCase))
             { HostDream(source, text, tell); return; }
+
+            // 选秀：/ds 开始（协管权限）与 /ds <n> 选择（所有人）
+            if (text.Equals("/ds", System.StringComparison.OrdinalIgnoreCase))
+            { HostDraftStart(source, tell); return; }
+            if (text.StartsWith("/ds ", System.StringComparison.OrdinalIgnoreCase))
+            { HostDraftPick(source, text, tell); return; }
 
             // 平衡主义者处决（主机验证职业并执行）
             if (text.Equals("/ph", System.StringComparison.OrdinalIgnoreCase))
@@ -1028,6 +1092,45 @@ public static class ForceEndPatch
             }
 
             Roles.Impostor.FortuneTeller.Predict(source, target); // 会议校验在 Predict 内
+        }
+
+        /// <summary>主机代收 /ds：无模组协管请求开始选秀（沿用 /start 权限）</summary>
+        private static void HostDraftStart(PlayerControl source, System.Action<string> tell)
+        {
+            if (AmongUsClient.Instance != null
+                && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
+            {
+                tell("[TAHS] /ds 仅大厅中可用");
+                return;
+            }
+            if (!IsCoModWith(source, Modules.CustomOptions.ModAllowStart))
+            {
+                tell("[TAHS] /ds 仅房主或协管可用");
+                return;
+            }
+
+            TAHSPlugin.Log.LogInfo($"[TAHS] 无模组协管 {source.Data?.PlayerName} 请求开始选秀");
+            Modules.DraftManager.Start();
+        }
+
+        /// <summary>主机代收 /ds 序号：记录无模组端玩家的选秀选择</summary>
+        private static void HostDraftPick(PlayerControl source, string text, System.Action<string> tell)
+        {
+            if (AmongUsClient.Instance != null
+                && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
+            {
+                tell("[TAHS] 选秀选择仅大厅中可用");
+                return;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !int.TryParse(parts[1], out var index))
+            {
+                tell("[TAHS] 用法：/ds <序号>，如 /ds 1");
+                return;
+            }
+
+            Modules.DraftManager.Pick(source, index);
         }
 
         /// <summary>主机代收 /sm：验证职业后执行摄梦（与 /btd 同模式）</summary>

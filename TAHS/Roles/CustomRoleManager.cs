@@ -136,24 +136,28 @@ public static class CustomRoleManager
         var assignments = new List<(byte PlayerId, byte RoleId)>();
         var taken = new HashSet<byte>();
 
-        // 船员/内鬼职业：每种职业按"人数 × 生成概率"独立判定
-        foreach (var (id, factory) in RoleRegistry)
+        // 选秀模式：按玩家选择分配（未选的随机取池内一个），跳过随机分配
+        if (!DraftManager.TryApply(players, assignments))
         {
-            if (factory().Faction == Faction.Neutral) continue; // 中立走类别预算
-            AssignByCount(id, int.MaxValue);
-        }
+            // 船员/内鬼职业：每种职业按"人数 × 生成概率"独立判定
+            foreach (var (id, factory) in RoleRegistry)
+            {
+                if (factory().Faction == Faction.Neutral) continue; // 中立走类别预算
+                AssignByCount(id, int.MaxValue);
+            }
 
-        // 中立职业：人数 × 概率判定，且受带刀/无刀类别数量预算限制
-        var knifeBudget = CustomOptions.NeutralKnifeCount.Value;
-        var noKnifeBudget = CustomOptions.NeutralNoKnifeCount.Value;
-        foreach (var (id, factory) in RoleRegistry.OrderBy(_ => rng.Next()))
-        {
-            var sample = factory();
-            if (sample.Faction != Faction.Neutral) continue;
+            // 中立职业：人数 × 概率判定，且受带刀/无刀类别数量预算限制
+            var knifeBudget = CustomOptions.NeutralKnifeCount.Value;
+            var noKnifeBudget = CustomOptions.NeutralNoKnifeCount.Value;
+            foreach (var (id, factory) in RoleRegistry.OrderBy(_ => rng.Next()))
+            {
+                var sample = factory();
+                if (sample.Faction != Faction.Neutral) continue;
 
-            var assigned = AssignByCount(id, sample.IsHostileNeutral ? knifeBudget : noKnifeBudget);
-            if (sample.IsHostileNeutral) knifeBudget -= assigned;
-            else noKnifeBudget -= assigned;
+                var assigned = AssignByCount(id, sample.IsHostileNeutral ? knifeBudget : noKnifeBudget);
+                if (sample.IsHostileNeutral) knifeBudget -= assigned;
+                else noKnifeBudget -= assigned;
+            }
         }
 
         // 附加职业：与主职业独立，按"人数 × 概率"判定，可叠加在任意玩家身上

@@ -327,6 +327,27 @@ public static class RpcSync
                 return true;
             }
 
+            if (kind == 9)
+            {
+                // /ds <n> 请求：选秀选择（所有人可发，校验在 Pick 内）
+                DraftManager.Pick(sender, reader.ReadInt32());
+                return true;
+            }
+
+            if (!ModeratorManager.IsEnabled || !ModeratorManager.IsModerator(sender)) return true;
+
+            if (kind == 8)
+            {
+                // /ds 请求：协管开始选秀（沿用 /start 权限，大厅中）
+                if (CustomOptions.ModAllowStart.Value != 1) return true;
+                if (GameStartManager.Instance != null)
+                {
+                    TAHSPlugin.Log.LogInfo($"[TAHS] 协管 {sender.Data?.PlayerName} 请求开始选秀");
+                    DraftManager.Start();
+                }
+                return true;
+            }
+
             if (!ModeratorManager.IsEnabled || !ModeratorManager.IsModerator(sender)) return true;
 
             if (kind == 1)
