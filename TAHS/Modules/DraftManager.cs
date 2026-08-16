@@ -122,8 +122,36 @@ public static class DraftManager
             if (sample == null) continue;
             lines.Add($"{i + 1}. {sample.Name}（{sample.Faction}）— {sample.Description}");
         }
-        lines.Add("输入 /ds <序号> 选择（如 /ds 1）");
+        lines.Add("输入 /draft <序号> 选择，/dd <序号> 查看介绍");
         ChatHelper.ShowPrivateMany(player, lines);
+    }
+
+    /// <summary>查看池内职业介绍（/dd 序号，index 从 1 起）</summary>
+    public static void Describe(PlayerControl player, int index)
+    {
+        System.Action<string> tell = msg => ChatHelper.ShowPrivate(player, msg);
+
+        if (!Active || !_pools.TryGetValue(player.PlayerId, out var pool))
+        {
+            tell("[TAHS] 当前没有进行中的选秀");
+            return;
+        }
+        if (index < 1 || index > pool.Count)
+        {
+            tell($"[TAHS] 序号超出范围（1~{pool.Count}）");
+            return;
+        }
+
+        var sample = Roles.CustomRoleManager.GetRoleSamples()
+            .FirstOrDefault(s => s.Id == pool[index - 1]).Sample;
+        if (sample == null) return;
+
+        ChatHelper.ShowPrivateMany(player, new[]
+        {
+            $"<color=#4FC3F7>===== 选秀池 #{index} 介绍 =====</color>",
+            $"{sample.Name} / {sample.NameEn}（{sample.Faction}）",
+            string.IsNullOrEmpty(sample.Description) ? "（无介绍）" : sample.Description,
+        });
     }
 
     /// <summary>玩家选择池内职业（index 从 1 起）</summary>

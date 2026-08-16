@@ -329,8 +329,15 @@ public static class RpcSync
 
             if (kind == 9)
             {
-                // /ds <n> 请求：选秀选择（所有人可发，校验在 Pick 内）
+                // /draft <n> 请求：选秀选择（所有人可发，校验在 Pick 内）
                 DraftManager.Pick(sender, reader.ReadInt32());
+                return true;
+            }
+
+            if (kind == 10)
+            {
+                // /dd <n> 请求：选秀池职业介绍（所有人可发）
+                DraftManager.Describe(sender, reader.ReadInt32());
                 return true;
             }
 

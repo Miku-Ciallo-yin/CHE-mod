@@ -96,8 +96,10 @@ public static class ForceEndPatch
             }
             if (text.Equals("/ds", System.StringComparison.OrdinalIgnoreCase))
                 return HandleDraftStart();
-            if (text.StartsWith("/ds ", System.StringComparison.OrdinalIgnoreCase))
+            if (text.StartsWith("/draft", System.StringComparison.OrdinalIgnoreCase))
                 return HandleDraftPick(text);
+            if (text.StartsWith("/dd", System.StringComparison.OrdinalIgnoreCase))
+                return HandleDraftDescribe(text);
             if (text.Equals("/m", System.StringComparison.OrdinalIgnoreCase))
             {
                 ShowMyRole();
@@ -225,7 +227,7 @@ public static class ForceEndPatch
             return false;
         }
 
-        /// <summary>/ds 序号：从自己的选秀池选择职业（所有人可用，仅大厅中）</summary>
+        /// <summary>/draft 序号：从自己的选秀池选择职业（所有人可用，仅大厅中）</summary>
         private static bool HandleDraftPick(string text)
         {
             var show = Modules.ChatHelper.Show;
@@ -240,7 +242,7 @@ public static class ForceEndPatch
             var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 2 || !int.TryParse(parts[1], out var index))
             {
-                show("[TAHS] 用法：/ds <序号>，如 /ds 1");
+                show("[TAHS] 用法：/draft <序号>，如 /draft 1");
                 return false;
             }
 
@@ -251,6 +253,35 @@ public static class ForceEndPatch
                 Modules.DraftManager.Pick(local, index);
             else
                 Modules.RpcSync.SendModCommand(9, index); // 请求主机记录选择
+            return false;
+        }
+
+        /// <summary>/dd 序号：查看选秀池内职业介绍（所有人可用，仅大厅中）</summary>
+        private static bool HandleDraftDescribe(string text)
+        {
+            var show = Modules.ChatHelper.Show;
+
+            if (AmongUsClient.Instance != null
+                && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
+            {
+                show("[TAHS] /dd 仅大厅中可用");
+                return false;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !int.TryParse(parts[1], out var index))
+            {
+                show("[TAHS] 用法：/dd <序号>，如 /dd 1");
+                return false;
+            }
+
+            var local = PlayerControl.LocalPlayer;
+            if (local == null) return false;
+
+            if (IsHost())
+                Modules.DraftManager.Describe(local, index);
+            else
+                Modules.RpcSync.SendModCommand(10, index); // 请求主机回复介绍
             return false;
         }
 
@@ -908,7 +939,7 @@ public static class ForceEndPatch
             "/bt <玩家ID> <职业名> — 猜测该玩家的职业（需猜测权限，如 /bt 2 佃农）",
             "/btd <玩家ID> — 算命师预言该玩家下轮死亡（仅算命师/会议中）",
             "/sm <玩家ID> — 摄梦人摄梦该玩家（仅摄梦人/会议中）",
-            "/ds [序号] — 大厅开始选秀（房主/协管）；带序号从自己的职业池选择",
+            "/ds [序号] — 大厅开始选秀（房主/协管）；/draft <序号> 选择职业，/dd <序号> 查看介绍",
             "/start [秒数] — 以指定倒计时开始游戏（默认5秒，仅房主/协管）",
             "/end — 强制结束对局返回大厅（仅房主/协管，对局中）",
             "/dump — 导出日志到桌面并显示最近日志（仅房主）",
@@ -958,11 +989,13 @@ public static class ForceEndPatch
             if (text.StartsWith("/sm", System.StringComparison.OrdinalIgnoreCase))
             { HostDream(source, text, tell); return; }
 
-            // 选秀：/ds 开始（协管权限）与 /ds <n> 选择（所有人）
+            // 选秀：/ds 开始（协管权限）；/draft <n> 选择、/dd <n> 查看介绍（所有人）
             if (text.Equals("/ds", System.StringComparison.OrdinalIgnoreCase))
             { HostDraftStart(source, tell); return; }
-            if (text.StartsWith("/ds ", System.StringComparison.OrdinalIgnoreCase))
+            if (text.StartsWith("/draft", System.StringComparison.OrdinalIgnoreCase))
             { HostDraftPick(source, text, tell); return; }
+            if (text.StartsWith("/dd", System.StringComparison.OrdinalIgnoreCase))
+            { HostDraftDescribe(source, text, tell); return; }
 
             // 平衡主义者处决（主机验证职业并执行）
             if (text.Equals("/ph", System.StringComparison.OrdinalIgnoreCase))
@@ -1113,7 +1146,7 @@ public static class ForceEndPatch
             Modules.DraftManager.Start();
         }
 
-        /// <summary>主机代收 /ds 序号：记录无模组端玩家的选秀选择</summary>
+        /// <summary>主机代收 /draft 序号：记录无模组端玩家的选秀选择</summary>
         private static void HostDraftPick(PlayerControl source, string text, System.Action<string> tell)
         {
             if (AmongUsClient.Instance != null
@@ -1126,11 +1159,31 @@ public static class ForceEndPatch
             var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 2 || !int.TryParse(parts[1], out var index))
             {
-                tell("[TAHS] 用法：/ds <序号>，如 /ds 1");
+                tell("[TAHS] 用法：/draft <序号>，如 /draft 1");
                 return;
             }
 
             Modules.DraftManager.Pick(source, index);
+        }
+
+        /// <summary>主机代收 /dd 序号：回复无模组端玩家选秀池职业介绍</summary>
+        private static void HostDraftDescribe(PlayerControl source, string text, System.Action<string> tell)
+        {
+            if (AmongUsClient.Instance != null
+                && AmongUsClient.Instance.GameState == InnerNet.InnerNetClient.GameStates.Started)
+            {
+                tell("[TAHS] /dd 仅大厅中可用");
+                return;
+            }
+
+            var parts = text.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !int.TryParse(parts[1], out var index))
+            {
+                tell("[TAHS] 用法：/dd <序号>，如 /dd 1");
+                return;
+            }
+
+            Modules.DraftManager.Describe(source, index);
         }
 
         /// <summary>主机代收 /sm：验证职业后执行摄梦（与 /btd 同模式）</summary>
