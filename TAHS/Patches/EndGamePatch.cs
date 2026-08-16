@@ -18,6 +18,7 @@ public static class EndGamePatch
         {
             AdjustForTraitors();
             AdjustForSchrodinger();
+            AdjustForTon();
             return;
         }
 
@@ -25,6 +26,35 @@ public static class EndGamePatch
         foreach (var winner in winners)
             if (winner != null && winner.Data != null)
                 EndGameResult.CachedWinners.Add(new CachedPlayerData(winner.Data));
+    }
+
+    /// <summary>
+    /// TON：跟随对象在胜利名单中时并入（选择状态经变形 RPC 广播，各端本地一致）。
+    /// 跟随对象死亡/未选择时不跟随。击杀满额的直接胜利走 CustomWinners 整单替换。
+    /// </summary>
+    private static void AdjustForTon()
+    {
+        foreach (var p in PlayerControl.AllPlayerControls)
+        {
+            if (p == null || p.Data == null) continue;
+            if (CustomRoleManager.GetRole(p) is not Roles.Neutral.TON ton) continue;
+            if (ton.SelectedId is not { } selectedId) continue;
+
+            var master = PlayerControl.AllPlayerControls.ToArray()
+                .FirstOrDefault(x => x != null && x.PlayerId == selectedId);
+            if (master == null || master.Data == null) continue;
+
+            var masterWon = false;
+            foreach (var w in EndGameResult.CachedWinners)
+                if (w.PlayerName == master.Data.PlayerName) { masterWon = true; break; }
+            if (!masterWon) continue;
+
+            var exists = false;
+            foreach (var w in EndGameResult.CachedWinners)
+                if (w.PlayerName == p.Data.PlayerName) { exists = true; break; }
+            if (!exists)
+                EndGameResult.CachedWinners.Add(new CachedPlayerData(p.Data));
+        }
     }
 
     /// <summary>

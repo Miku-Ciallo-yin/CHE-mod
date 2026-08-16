@@ -103,6 +103,13 @@ public static class CustomOptions
     public static CustomOption AutoStartMinPlayers { get; private set; } = null!;
     public static CustomOption AutoStartCountdown { get; private set; } = null!;
     public static CustomOption FirstKillProtection { get; private set; } = null!;
+    public static CustomOption KnifeNeutralVision { get; private set; } = null!;
+    public static CustomOption TonKillCd { get; private set; } = null!;
+    public static CustomOption TonSelectCount { get; private set; } = null!;
+    public static CustomOption TonKillsToWin { get; private set; } = null!;
+    public static CustomOption TonCanGuess { get; private set; } = null!;
+    public static CustomOption TonCanVent { get; private set; } = null!;
+    public static CustomOption TonVision { get; private set; } = null!;
     public static CustomOption ModAllowStart { get; private set; } = null!;
     public static CustomOption ModAllowS { get; private set; } = null!;
     public static CustomOption ModAllowEnd { get; private set; } = null!;
@@ -206,6 +213,22 @@ public static class CustomOptions
             ModConfig.AutoStartCountdown.Value, 0, 60, 1, 1f, parentId: 174);
         FirstKillProtection = CustomOption.Register(177, ModGroupId, "首刀保护",
             ModConfig.FirstKillProtection.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        KnifeNeutralVision = CustomOption.Register(184, ModGroupId, "带刀中立内鬼视野",
+            ModConfig.KnifeNeutralVision.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+
+        // TON 参数（RoleId 22，挂在其生成概率下作下级选项）
+        TonKillCd = CustomOption.Register(178, 22, "击杀CD(秒)",
+            (int)ModConfig.TonKillCd.Value, 5, 120, 5, 1f, parentId: 22);
+        TonSelectCount = CustomOption.Register(179, 22, "可选择玩家次数",
+            ModConfig.TonSelectCount.Value, 1, 10, 1, 1f, parentId: 22);
+        TonKillsToWin = CustomOption.Register(180, 22, "击杀多少玩家获胜",
+            ModConfig.TonKillsToWin.Value, 1, 10, 1, 1f, parentId: 22);
+        TonCanGuess = CustomOption.Register(181, 22, "可使用赌怪功能",
+            ModConfig.TonCanGuess.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 22);
+        TonCanVent = CustomOption.Register(182, 22, "可使用管道",
+            ModConfig.TonCanVent.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 22);
+        TonVision = CustomOption.Register(183, 22, "拥有内鬼视野",
+            ModConfig.TonVision.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true, parentId: 22);
         CheatAction = CustomOption.Register(133, ModGroupId, "作弊处理方式",
             ModConfig.CheatAction.Value, 0, 3, 1, 1f,
             formatNames: new[] { "警告", "踢出", "封禁", "加入黑名单" });

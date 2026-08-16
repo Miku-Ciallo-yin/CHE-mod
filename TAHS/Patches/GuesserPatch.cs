@@ -42,6 +42,9 @@ public static class GuesserPatch
     public static bool CanGuess(PlayerControl player)
     {
         if (CustomRoleManager.HasAddon(player, Guesser.AddonId)) return true;
+        // TON 按配置可使用猜测功能
+        if (CustomRoleManager.GetRole(player) is Roles.Neutral.TON
+            && CustomOptions.TonCanGuess.Value == 1) return true;
         if (CustomOptions.GuessMode.Value != 1) return false;
 
         var faction = CustomRoleManager.GetFaction(player);

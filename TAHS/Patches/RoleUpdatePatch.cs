@@ -20,6 +20,10 @@ public static class RoleUpdatePatch
         var role = CustomRoleManager.GetRole(__instance);
         if (role == null) return;
 
+        // 非内鬼带刀职业的视野规则（按配置收回内鬼视野；每帧应用自愈，等待身份同步到位）
+        if (__instance.AmOwner)
+            CustomRoleManager.ApplyVisionRule(__instance);
+
         if (client.AmHost)
         {
             // 会议/放逐动画期间暂停职业逻辑：

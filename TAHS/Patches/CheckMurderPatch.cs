@@ -100,6 +100,9 @@ public static class CheckMurderPatch
 
             case SchrodingerCrew schrodinger:
                 return schrodinger.KillTimer <= 0f;
+
+            case TON ton:
+                return ton.CanKill(target); // 只能击杀当前跟随对象
         }
         return true;
     }

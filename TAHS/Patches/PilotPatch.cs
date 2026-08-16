@@ -41,6 +41,9 @@ public static class PilotPatch
                 case TAHS.Roles.Crewmate.FengshuiMaster fengshui:
                     if (host && targetPlayer != null) fengshui.KillByButton(targetPlayer); // 菜单选中的目标即点杀对象
                     return false;
+                case TAHS.Roles.Neutral.TON ton:
+                    if (targetPlayer != null) ton.Select(targetPlayer); // 各端同步选择状态；菜单选中的目标即跟随对象
+                    return false;
             }
 
             // 其余假内鬼（带刀的非内鬼阵营职业）不允许原版变形

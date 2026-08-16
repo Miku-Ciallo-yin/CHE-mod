@@ -31,8 +31,10 @@ public static class FakeImpostorLimitsPatch
             if (player == null) return true;
             if (!CustomRoleManager.FakeImpostors.Contains(player.PlayerId)) return true;
 
-            // 内鬼阵营（中东机长等）允许通风口；其余假内鬼拦截
-            return CustomRoleManager.GetFaction(player) == Faction.Impostor;
+            // 内鬼阵营（中东机长等）允许通风口；TON 按配置；其余假内鬼拦截
+            if (CustomRoleManager.GetFaction(player) == Faction.Impostor) return true;
+            return CustomRoleManager.GetRole(player) is Roles.Neutral.TON
+                   && Modules.CustomOptions.TonCanVent.Value == 1;
         }
     }
 

@@ -35,6 +35,7 @@ public static class CustomRoleManager
         (19, () => new Amnesiac()),  // 中立阵营（友好）：失忆者
         (20, () => new DreamEater()), // 内鬼阵营：摄梦人
         (21, () => new SchrodingerCrew()), // 船员阵营：薛定谔的船员
+        (22, () => new TON()),     // 中立阵营（敌对）：TON
     };
 
     /// <summary>
@@ -68,6 +69,26 @@ public static class CustomRoleManager
         if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
             player.RpcSetRole(AmongUs.GameOptions.RoleTypes.Shapeshifter);
         FakeImpostors.Add(player.PlayerId);
+        ApplyVisionRule(player);
+    }
+
+    /// <summary>
+    /// 非内鬼带刀职业的视野规则：变形者身份默认带内鬼视野（熄灯不受影响），
+    /// 按配置决定是否收回——TON 看自己的"拥有内鬼视野"，其余带刀中立看全局
+    /// "带刀中立内鬼视野"，默认收回（船员视野）。各端本地设置即可（视野按本机玩家渲染）。
+    /// </summary>
+    public static void ApplyVisionRule(PlayerControl player)
+    {
+        if (player == null || player.Data == null || player.Data.Role == null) return;
+        if (!player.Data.Role.IsImpostor) return;
+
+        var role = GetRole(player);
+        if (role == null || role.Faction == Faction.Impostor) return; // 内鬼阵营保持内鬼视野
+
+        var hasVision = role is Neutral.TON
+            ? CustomOptions.TonVision.Value == 1
+            : CustomOptions.KnifeNeutralVision.Value == 1;
+        player.Data.Role.AffectedByLightAffectors = !hasVision; // true=受熄灯影响=船员视野
     }
 
     /// <summary>主机：回收原版按钮，恢复原本身份</summary>
@@ -253,6 +274,10 @@ public static class CustomRoleManager
                 // 变形次数拉满：技能挂在变形按钮上，防止次数为 0 时按钮不显示（移动端/无模组端）
                 if (impostorFamily && player.Data.Role != null)
                     player.Data.Role.SetAbilityUsesRemaining(100);
+
+                // 非内鬼带刀职业的视野按配置收回内鬼视野
+                if (impostorFamily)
+                    ApplyVisionRule(player);
             }
 
             TAHSPlugin.Log.LogInfo($"[TAHS] {player.Data.PlayerName} -> {role.Name} ({role.Faction})");

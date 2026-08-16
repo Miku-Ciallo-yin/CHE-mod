@@ -59,6 +59,22 @@ public static class ModConfig
     /// <summary>模组设置：首刀保护（默认关，上一局首死者本局免首刀）</summary>
     public static ConfigEntry<bool> FirstKillProtection { get; private set; } = null!;
 
+    /// <summary>模组设置：带刀中立拥有内鬼视野（默认关）</summary>
+    public static ConfigEntry<bool> KnifeNeutralVision { get; private set; } = null!;
+
+    /// <summary>TON：击杀冷却（秒，默认 30）</summary>
+    public static ConfigEntry<float> TonKillCd { get; private set; } = null!;
+    /// <summary>TON：可选择玩家次数（默认 3）</summary>
+    public static ConfigEntry<int> TonSelectCount { get; private set; } = null!;
+    /// <summary>TON：击杀多少玩家获胜（默认 3）</summary>
+    public static ConfigEntry<int> TonKillsToWin { get; private set; } = null!;
+    /// <summary>TON：可使用赌怪功能（默认关）</summary>
+    public static ConfigEntry<bool> TonCanGuess { get; private set; } = null!;
+    /// <summary>TON：可使用管道（默认关）</summary>
+    public static ConfigEntry<bool> TonCanVent { get; private set; } = null!;
+    /// <summary>TON：拥有内鬼视野（默认关）</summary>
+    public static ConfigEntry<bool> TonVision { get; private set; } = null!;
+
     /// <summary>当前预设编号（1~5）</summary>
     public static ConfigEntry<int> CurrentPreset { get; private set; } = null!;
 
@@ -253,6 +269,14 @@ public static class ModConfig
         AutoStartMinPlayers = config.Bind("模组设置 Mod", "自动开始最少人数 AutoStartMinPlayers", 10, "达到该人数后自动开始倒计时");
         AutoStartCountdown = config.Bind("模组设置 Mod", "自动开始倒计时 AutoStartCountdown", 10, "自动开始的倒计时秒数");
         FirstKillProtection = config.Bind("模组设置 Mod", "首刀保护 FirstKillProtection", false, "上一局第一个死亡的玩家本局不能被首刀");
+        KnifeNeutralVision = config.Bind("模组设置 Mod", "带刀中立内鬼视野 KnifeNeutralVision", false, "开启后带刀中立职业不受熄灯影响");
+
+        TonKillCd = config.Bind("TON", "击杀CD KillCooldown", 30f, "TON 击杀冷却时间");
+        TonSelectCount = config.Bind("TON", "可选择玩家次数 SelectCount", 3, "TON 可选择跟随对象的次数上限");
+        TonKillsToWin = config.Bind("TON", "击杀获胜数 KillsToWin", 3, "TON 击杀多少名玩家后直接获胜");
+        TonCanGuess = config.Bind("TON", "可使用赌怪功能 CanGuess", false, "TON 是否可以使用猜测功能");
+        TonCanVent = config.Bind("TON", "可使用管道 CanVent", false, "TON 是否可以使用通风口");
+        TonVision = config.Bind("TON", "拥有内鬼视野 ImpostorVision", false, "TON 是否不受熄灯影响");
 
         CurrentPreset = config.Bind("预设 Preset", "当前预设 CurrentPreset", 1, "模组设置页当前使用的预设编号（1~5）");
 
