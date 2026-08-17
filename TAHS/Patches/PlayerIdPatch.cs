@@ -15,6 +15,7 @@ public static class PlayerIdPatch
     {
         if (client == null) return;
         PlayerIdManager.OnPlayerJoined(client.Id);
+        VoiceManager.OnPlayerJoined(client.Id); // 语音系统：新进玩家模组检测
     }
 
     [HarmonyPatch(typeof(MainMenuManager), nameof(MainMenuManager.Start)), HarmonyPostfix]
