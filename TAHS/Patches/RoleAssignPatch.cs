@@ -29,6 +29,8 @@ public static class RoleAssignPatch
         {
             if (CustomRoleManager.Assigned)
                 CustomRoleManager.Reset();
+            Modules.DraftManager.Clear();
+            Modules.VoiceManager.Clear();
             return;
         }
 

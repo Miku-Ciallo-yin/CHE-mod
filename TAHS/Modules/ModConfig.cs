@@ -62,6 +62,11 @@ public static class ModConfig
     /// <summary>模组设置：带刀中立拥有内鬼视野（默认关）</summary>
     public static ConfigEntry<bool> KnifeNeutralVision { get; private set; } = null!;
 
+    /// <summary>模组设置：开启语音系统（默认关，需局内全员模组端）</summary>
+    public static ConfigEntry<bool> VoiceEnabled { get; private set; } = null!;
+    /// <summary>模组设置：声音传播距离倍率（默认 0.5，超出即静音）</summary>
+    public static ConfigEntry<float> VoiceRange { get; private set; } = null!;
+
     /// <summary>TON：击杀冷却（秒，默认 30）</summary>
     public static ConfigEntry<float> TonKillCd { get; private set; } = null!;
     /// <summary>TON：可选择玩家次数（默认 3）</summary>
@@ -270,6 +275,8 @@ public static class ModConfig
         AutoStartCountdown = config.Bind("模组设置 Mod", "自动开始倒计时 AutoStartCountdown", 10, "自动开始的倒计时秒数");
         FirstKillProtection = config.Bind("模组设置 Mod", "首刀保护 FirstKillProtection", false, "上一局第一个死亡的玩家本局不能被首刀");
         KnifeNeutralVision = config.Bind("模组设置 Mod", "带刀中立内鬼视野 KnifeNeutralVision", false, "开启后带刀中立职业不受熄灯影响");
+        VoiceEnabled = config.Bind("模组设置 Mod", "开启语音系统 VoiceEnabled", false, "按住 V 说话；仅当局内玩家全部为模组端时可开启");
+        VoiceRange = config.Bind("模组设置 Mod", "声音传播距离 VoiceRange", 0.5f, "语音最远距离倍率（0.1~1.0），到达该值时音量最小，超出即静音");
 
         TonKillCd = config.Bind("TON", "击杀CD KillCooldown", 30f, "TON 击杀冷却时间");
         TonSelectCount = config.Bind("TON", "可选择玩家次数 SelectCount", 3, "TON 可选择跟随对象的次数上限");

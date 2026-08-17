@@ -104,6 +104,8 @@ public static class CustomOptions
     public static CustomOption AutoStartCountdown { get; private set; } = null!;
     public static CustomOption FirstKillProtection { get; private set; } = null!;
     public static CustomOption KnifeNeutralVision { get; private set; } = null!;
+    public static CustomOption VoiceEnabled { get; private set; } = null!;
+    public static CustomOption VoiceRange { get; private set; } = null!;
     public static CustomOption TonKillCd { get; private set; } = null!;
     public static CustomOption TonSelectCount { get; private set; } = null!;
     public static CustomOption TonKillsToWin { get; private set; } = null!;
@@ -215,6 +217,10 @@ public static class CustomOptions
             ModConfig.FirstKillProtection.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
         KnifeNeutralVision = CustomOption.Register(184, ModGroupId, "带刀中立内鬼视野",
             ModConfig.KnifeNeutralVision.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        VoiceEnabled = CustomOption.Register(185, ModGroupId, "开启语音系统",
+            ModConfig.VoiceEnabled.Value ? 1 : 0, 0, 1, 1, 1f, isBool: true);
+        VoiceRange = CustomOption.Register(186, ModGroupId, "声音传播距离×0.1",
+            (int)(ModConfig.VoiceRange.Value * 10), 1, 10, 1, 0.1f, parentId: 185);
 
         // TON 参数（RoleId 22，挂在其生成概率下作下级选项）
         TonKillCd = CustomOption.Register(178, 22, "击杀CD(秒)",

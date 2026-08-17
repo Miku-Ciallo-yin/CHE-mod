@@ -501,6 +501,20 @@ public static class ModOptionRowPatches
             if (!TryGetRow(__instance, out var info)) return true;
             if (info.Opt == null || !IsHost) return false;
 
+            // 语音系统：开启前校验局内必须全员模组端
+            if (info.Opt == CustomOptions.VoiceEnabled && info.Opt.Value == 0)
+            {
+                foreach (var p in PlayerControl.AllPlayerControls)
+                {
+                    if (p == null || p.Data == null) continue;
+                    if (Modules.PlayerIdManager.IsModdedClient(p)) continue;
+
+                    __instance.CheckMark.enabled = false;
+                    Modules.ChatHelper.Show("[TAHS] 存在非模组端玩家，无法开启语音系统");
+                    return false;
+                }
+            }
+
             info.Opt.Value = info.Opt.Value == 1 ? 0 : 1;
             __instance.CheckMark.enabled = info.Opt.Value == 1;
             RpcSync.BroadcastOptions();

@@ -13,6 +13,7 @@ public static class AnnouncementPatch
         PrivateTag.Tick();
         TraitorNameColors.Tick();
         FirstKillProtection.Tick();
+        VoiceManager.Tick();
         AutoReturnLobby.Tick();
         MineVisuals.Tick();
     }

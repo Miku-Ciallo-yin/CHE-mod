@@ -45,6 +45,23 @@ public static class RpcSync
     /// <summary>死因同步（主机 -> 全模组端）：算命/风水不好等自定义死因。</summary>
     public const byte DeathCauseCallId = 229;
 
+    /// <summary>语音帧（模组端 -> 全模组端）：50ms μ-law 帧，仅模组端处理。</summary>
+    public const byte VoiceCallId = 230;
+
+    /// <summary>模组端：广播一帧语音（不可靠发送，丢包可容忍）。</summary>
+    public static void BroadcastVoice(byte[] frame, int count)
+    {
+        var client = AmongUsClient.Instance;
+        if (client == null || client.allClients.Count <= 1) return;
+
+        var writer = client.StartRpcImmediately(
+            PlayerControl.LocalPlayer.NetId, VoiceCallId, SendOption.None, -1);
+        writer.Write(count);
+        for (var i = 0; i < count; i++)
+            writer.Write(frame[i]);
+        client.FinishRpcImmediately(writer);
+    }
+
     /// <summary>主机：广播自定义死因。</summary>
     public static void BroadcastDeathCause(byte victimId, string cause)
     {
@@ -427,6 +444,16 @@ public static class RpcSync
         if (callId == DeathCauseCallId)
         {
             DeathTracker.SetCause(reader.ReadByte(), reader.ReadString());
+            return true;
+        }
+
+        if (callId == VoiceCallId)
+        {
+            var count = reader.ReadInt32();
+            var frame = new byte[count];
+            for (var i = 0; i < count; i++)
+                frame[i] = reader.ReadByte();
+            VoiceManager.OnVoiceReceived(sender.PlayerId, frame);
             return true;
         }
 
