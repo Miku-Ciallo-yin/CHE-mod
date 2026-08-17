@@ -65,12 +65,35 @@ public static class ChatHelper
     {
         if (player == null) return;
 
+        foreach (var msg in SplitLines(lines))
+            ShowPrivate(player, msg);
+    }
+
+    /// <summary>
+    /// 限流版多行私信（主机调用）：逐条经 RateLimiter 分帧发送，
+    /// 用于开局等对多人群发的场景，防止打包成超大包被拦截（8+ 人黑屏根因）。
+    /// </summary>
+    public static void ShowPrivateManyThrottled(PlayerControl player, IEnumerable<string> lines)
+    {
+        if (player == null) return;
+
+        foreach (var msg in SplitLines(lines))
+        {
+            var m = msg;
+            RateLimiter.Enqueue(() => ShowPrivate(player, m));
+        }
+    }
+
+    /// <summary>按聊天字数限制把多行合并/拆分为若干条消息</summary>
+    private static List<string> SplitLines(IEnumerable<string> lines)
+    {
+        var result = new List<string>();
         var sb = new System.Text.StringBuilder();
         foreach (var line in lines)
         {
             if (sb.Length > 0 && sb.Length + line.Length + 1 > MaxMessageLength)
             {
-                ShowPrivate(player, sb.ToString());
+                result.Add(sb.ToString());
                 sb.Clear();
             }
 
@@ -79,6 +102,7 @@ public static class ChatHelper
         }
 
         if (sb.Length > 0)
-            ShowPrivate(player, sb.ToString());
+            result.Add(sb.ToString());
+        return result;
     }
 }

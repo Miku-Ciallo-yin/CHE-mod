@@ -67,7 +67,11 @@ public static class CustomRoleManager
     {
         if (player == null) return;
         if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
-            player.RpcSetRole(AmongUs.GameOptions.RoleTypes.Shapeshifter);
+            Modules.RateLimiter.Enqueue(() =>
+            {
+                if (player != null && player.Data != null)
+                    player.RpcSetRole(AmongUs.GameOptions.RoleTypes.Shapeshifter);
+            });
         FakeImpostors.Add(player.PlayerId);
         ApplyVisionRule(player);
     }
@@ -269,7 +273,11 @@ public static class CustomRoleManager
                     ? AmongUs.GameOptions.RoleTypes.Shapeshifter
                     : AmongUs.GameOptions.RoleTypes.Crewmate;
                 if (player.Data.Role == null || player.Data.Role.Role != want)
-                    player.RpcSetRole(want);
+                    Modules.RateLimiter.Enqueue(() =>
+                    {
+                        if (player != null && player.Data != null)
+                            player.RpcSetRole(want);
+                    });
 
                 // 变形次数拉满：技能挂在变形按钮上，防止次数为 0 时按钮不显示（移动端/无模组端）
                 if (impostorFamily && player.Data.Role != null)
@@ -320,8 +328,9 @@ public static class CustomRoleManager
                 if (role == null) continue;
 
                 TAHSPlugin.Log.LogInfo($"[TAHS] 向无模组端 {player.Data.PlayerName} 发送职业介绍与名牌标签");
-                ChatHelper.ShowPrivateMany(player, Patches.ForceEndPatch.ChatCommandPatch.BuildRoleLines(player));
-                PrivateTag.SetTag(player.OwnerId, player, $"<color=#4FC3F7>你的职业：{role.Name}</color>");
+                ChatHelper.ShowPrivateManyThrottled(player, Patches.ForceEndPatch.ChatCommandPatch.BuildRoleLines(player));
+                Modules.RateLimiter.Enqueue(() =>
+                    PrivateTag.SetTag(player.OwnerId, player, $"<color=#4FC3F7>你的职业：{role.Name}</color>"));
             }
         }
     }
@@ -539,6 +548,7 @@ public static class CustomRoleManager
         Assigned = false;
         CustomWinners.Clear();
         FakeImpostors.Clear();
+        Modules.RateLimiter.Clear();
         DeathTracker.Clear();
         GameArchive.ArchiveAndReset();
         MoonRunner.ResetStatics();

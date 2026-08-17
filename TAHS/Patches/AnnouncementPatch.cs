@@ -9,6 +9,7 @@ public static class AnnouncementPatch
 {
     public static void Postfix()
     {
+        RateLimiter.Tick();
         Announcement.Tick();
         PrivateTag.Tick();
         TraitorNameColors.Tick();
