@@ -145,6 +145,7 @@ public static class CustomRoleManager
 
     /// <summary>
     /// 主机随机分配职业和附加职业，并广播给所有客户端。
+    /// 分配优先级：内鬼阵营 → 中立阵营 → 船员阵营（名额不足时高优先级先占位）。
     /// 船员/内鬼职业每种最多一名玩家（按生成概率）；
     /// 中立职业按"带刀中立数量 / 无刀中立数量"配置分配（同职业可分配给多人）。
     /// </summary>
@@ -164,10 +165,13 @@ public static class CustomRoleManager
         // 选秀模式：按玩家选择分配（未选的随机取池内一个），跳过随机分配
         if (!DraftManager.TryApply(players, assignments))
         {
-            // 船员/内鬼职业：每种职业按"人数 × 生成概率"独立判定
+            // 分配优先级：内鬼阵营 → 中立阵营 → 船员阵营
+            // （职业配置总数超过玩家数时，高优先级阵营先占满名额）
+
+            // 内鬼阵营职业：每种职业按"人数 × 生成概率"独立判定
             foreach (var (id, factory) in RoleRegistry)
             {
-                if (factory().Faction == Faction.Neutral) continue; // 中立走类别预算
+                if (factory().Faction != Faction.Impostor) continue;
                 AssignByCount(id, int.MaxValue);
             }
 
@@ -182,6 +186,13 @@ public static class CustomRoleManager
                 var assigned = AssignByCount(id, sample.IsHostileNeutral ? knifeBudget : noKnifeBudget);
                 if (sample.IsHostileNeutral) knifeBudget -= assigned;
                 else noKnifeBudget -= assigned;
+            }
+
+            // 船员阵营职业：每种职业按"人数 × 生成概率"独立判定
+            foreach (var (id, factory) in RoleRegistry)
+            {
+                if (factory().Faction != Faction.Crewmate) continue;
+                AssignByCount(id, int.MaxValue);
             }
         }
 
